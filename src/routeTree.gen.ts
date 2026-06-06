@@ -13,6 +13,7 @@ import { Route as DashRouteImport } from './routes/dash'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
@@ -40,6 +41,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SSlugRoute = SSlugRouteImport.update({
+  id: '/s/$slug',
+  path: '/s/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dash': typeof DashRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/s/$slug': typeof SSlugRoute
   '/app/alerts': typeof AuthenticatedAppAlertsRoute
   '/app/brand': typeof AuthenticatedAppBrandRoute
   '/app/competitors': typeof AuthenticatedAppCompetitorsRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dash': typeof DashRoute
+  '/s/$slug': typeof SSlugRoute
   '/app/alerts': typeof AuthenticatedAppAlertsRoute
   '/app/brand': typeof AuthenticatedAppBrandRoute
   '/app/competitors': typeof AuthenticatedAppCompetitorsRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dash': typeof DashRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/s/$slug': typeof SSlugRoute
   '/_authenticated/app/alerts': typeof AuthenticatedAppAlertsRoute
   '/_authenticated/app/brand': typeof AuthenticatedAppBrandRoute
   '/_authenticated/app/competitors': typeof AuthenticatedAppCompetitorsRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dash'
     | '/app'
+    | '/s/$slug'
     | '/app/alerts'
     | '/app/brand'
     | '/app/competitors'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dash'
+    | '/s/$slug'
     | '/app/alerts'
     | '/app/brand'
     | '/app/competitors'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dash'
     | '/_authenticated/app'
+    | '/s/$slug'
     | '/_authenticated/app/alerts'
     | '/_authenticated/app/brand'
     | '/_authenticated/app/competitors'
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DashRoute: typeof DashRoute
+  SSlugRoute: typeof SSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -213,6 +226,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s/$slug': {
+      id: '/s/$slug'
+      path: '/s/$slug'
+      fullPath: '/s/$slug'
+      preLoaderRoute: typeof SSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app': {
@@ -322,7 +342,18 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DashRoute: DashRoute,
+  SSlugRoute: SSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
