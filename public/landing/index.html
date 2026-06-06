@@ -686,6 +686,46 @@
   const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 8);
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Scroll reveal via IntersectionObserver
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach((el, i) => {
+      // stagger siblings inside same grid
+      const parent = el.parentElement;
+      if (parent && (parent.classList.contains('feat-grid') || parent.classList.contains('stats') || parent.classList.contains('steps') || parent.classList.contains('price-grid'))) {
+        const idx = Array.from(parent.children).indexOf(el);
+        el.style.transitionDelay = (idx * 80) + 'ms';
+      }
+      io.observe(el);
+    });
+  } else {
+    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('in'));
+  }
+
+  // Subtle parallax on hero visual
+  const heroVisual = document.querySelector('.hero-visual');
+  if (heroVisual && !reduce) {
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const y = Math.min(window.scrollY, 600);
+          heroVisual.style.transform = 'translateY(' + (y * -0.06) + 'px)';
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+  }
 </script>
 </body>
 </html>
