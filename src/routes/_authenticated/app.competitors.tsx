@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { startCompetitorCrawl } from "@/lib/api/firecrawl";
-import { Trash2, RefreshCw, Pause, Play, Plus } from "lucide-react";
+import { Trash2, RefreshCw, Pause, Play, Plus, Loader2, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/app/competitors")({
@@ -52,6 +52,38 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
+function CrawlStatusBadge({ task }: { task: { status: string; error_message?: string | null; details?: any } }) {
+  if (task.status === "Running") {
+    const target = task.details?.target ?? "site";
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-blue-700 bg-blue-50 dark:text-blue-300 dark:bg-blue-950/40">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Crawling {target}…
+      </span>
+    );
+  }
+  if (task.status === "Failed") {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40 cursor-help"
+        title={task.error_message ?? "Crawl failed"}
+      >
+        <AlertCircle className="h-3 w-3" />
+        Crawl failed
+      </span>
+    );
+  }
+  if (task.status === "Completed") {
+    const found = task.details?.found ?? 0;
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40">
+        ✓ Found {found} product{found !== 1 ? "s" : ""}
+      </span>
+    );
+  }
+  return null;
+}
+
 function CompetitorsPage() {
   const qc = useQueryClient();
   const [name, setName] = useState("");
@@ -79,6 +111,63 @@ function CompetitorsPage() {
     },
   });
 
+  // Latest crawl task per competitor (last 24h, not dismissed)
+  const { data: crawlTasks = [] } = useQuery({
+    queryKey: ["crawl-tasks"],
+    queryFn: async () => {
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("background_tasks")
+        .select("id, status, error_message, details, updated_at")
+        .eq("task_type", "Crawl Competitor")
+        .eq("dismissed", false)
+        .gte("created_at", since)
+        .order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  // Realtime: watch background_tasks and refresh when crawl finishes
+  useEffect(() => {
+    const channel = supabase
+      .channel("crawl-tasks-live")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "background_tasks",
+          filter: "task_type=eq.Crawl Competitor",
+        },
+        (payload) => {
+          qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
+          const row = payload.new as any;
+          if (row?.status === "Completed") {
+            qc.invalidateQueries({ queryKey: ["competitors"] });
+            qc.invalidateQueries({ queryKey: ["products"] });
+            const found = row?.details?.found ?? 0;
+            toast.success(`Crawl complete — ${found} product${found !== 1 ? "s" : ""} found`);
+          }
+          if (row?.status === "Failed") {
+            toast.error(`Crawl failed: ${row?.error_message ?? "unknown error"}`);
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
+  // Map competitorId → latest task
+  const taskByCompetitor = new Map<string, (typeof crawlTasks)[number]>();
+  for (const task of crawlTasks) {
+    const cid = (task.details as any)?.competitorId;
+    if (!cid) continue;
+    if (!taskByCompetitor.has(cid)) taskByCompetitor.set(cid, task);
+  }
+
   async function addCompetitor(e: React.FormEvent) {
     e.preventDefault();
     if (!url) return;
@@ -105,11 +194,10 @@ function CompetitorsPage() {
     setUrl("");
     setOpen(false);
     qc.invalidateQueries({ queryKey: ["competitors"] });
-    toast.success("Competitor added — starting first crawl");
+    toast.success("Competitor added — crawl starting…");
     try {
       await startCompetitorCrawl(inserted.id);
-      qc.invalidateQueries({ queryKey: ["competitors"] });
-      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
     } catch (e: any) {
       toast.error(e?.message ?? "Crawl failed to start");
     }
@@ -129,8 +217,9 @@ function CompetitorsPage() {
 
   async function recrawl(id: string) {
     try {
+      toast.info("Starting crawl…");
       await startCompetitorCrawl(id);
-      toast.success("Crawl started");
+      qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to start crawl");
     }
@@ -166,6 +255,9 @@ function CompetitorsPage() {
         ) : (
           competitors.map((c) => {
             const count = products.filter((p) => p.competitor_id === c.id).length;
+            const activeTask = taskByCompetitor.get(c.id);
+            const isCrawling = activeTask?.status === "Running";
+
             return (
               <div
                 key={c.id}
@@ -183,19 +275,44 @@ function CompetitorsPage() {
                     <div className="text-xs text-muted-foreground truncate">{hostOf(c.url)}</div>
                   </div>
                 </div>
-                <div>
-                  <StatusPill status={c.status} />
+
+                <div className="flex flex-col gap-1">
+                  {activeTask && activeTask.status !== "Completed" ? (
+                    <CrawlStatusBadge task={activeTask} />
+                  ) : (
+                    <StatusPill status={c.status} />
+                  )}
                 </div>
-                <div className="font-mono font-semibold text-sm">{count}</div>
+
+                <div className="font-mono font-semibold text-sm">
+                  {isCrawling ? (
+                    <span className="text-muted-foreground">…</span>
+                  ) : (
+                    count
+                  )}
+                </div>
+
                 <div className="text-xs text-muted-foreground">
-                  {c.last_crawled_at
-                    ? formatDistanceToNow(new Date(c.last_crawled_at), { addSuffix: true })
-                    : "never"}
+                  {isCrawling ? (
+                    <span className="text-blue-500 animate-pulse">crawling now</span>
+                  ) : c.last_crawled_at ? (
+                    formatDistanceToNow(new Date(c.last_crawled_at), { addSuffix: true })
+                  ) : (
+                    "never"
+                  )}
                 </div>
+
                 <div className="flex justify-end gap-1">
                   {c.status === "Active" && (
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => recrawl(c.id)} title="Recrawl">
-                      <RefreshCw className="h-4 w-4" />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={() => recrawl(c.id)}
+                      disabled={isCrawling}
+                      title={isCrawling ? "Crawl in progress" : "Recrawl"}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isCrawling ? "animate-spin opacity-40" : ""}`} />
                     </Button>
                   )}
                   <Button
@@ -203,6 +320,7 @@ function CompetitorsPage() {
                     variant="ghost"
                     className="h-8 w-8"
                     onClick={() => toggleStatus(c.id, c.status)}
+                    disabled={isCrawling}
                     title={c.status === "Active" ? "Pause" : "Resume"}
                   >
                     {c.status === "Active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}

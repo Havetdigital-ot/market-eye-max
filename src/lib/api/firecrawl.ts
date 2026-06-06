@@ -20,7 +20,7 @@ export async function startCompetitorCrawl(competitorId: string) {
       user_id: userId,
       task_type: "Crawl Competitor",
       status: "Running",
-      details: { target: comp?.display_name ?? "competitor" },
+      details: { target: comp?.display_name ?? "competitor", competitorId },
     })
     .select("id")
     .single();
