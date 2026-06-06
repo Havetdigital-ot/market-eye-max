@@ -5,10 +5,74 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Sparkles, Star, ChevronRight, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { generateBrandIdentity } from "@/lib/firecrawl.functions";
+
+const NICHE_PRESETS: { value: string; label: string; description: string }[] = [
+  {
+    value: "premium-espresso",
+    label: "Premium home espresso gear",
+    description:
+      "Premium home espresso gear for design-conscious enthusiasts who care about ritual and craft.",
+  },
+  {
+    value: "skincare-clean",
+    label: "Clean skincare & beauty",
+    description:
+      "Clean, science-backed skincare for millennials who want minimalist routines and transparent ingredients.",
+  },
+  {
+    value: "activewear",
+    label: "Activewear & athleisure",
+    description:
+      "Sustainable activewear for women who train hard and want pieces that look as good off the mat as on it.",
+  },
+  {
+    value: "pet-supplies",
+    label: "Premium pet supplies",
+    description:
+      "Modern, vet-approved pet supplies for design-savvy owners who treat their dogs and cats like family.",
+  },
+  {
+    value: "home-decor",
+    label: "Home decor & lifestyle",
+    description:
+      "Warm, modern home decor for first-time apartment owners building a cozy, Instagram-ready space on a budget.",
+  },
+  {
+    value: "supplements",
+    label: "Wellness supplements",
+    description:
+      "Clinically-formulated daily supplements for busy professionals who want energy, focus, and better sleep.",
+  },
+  {
+    value: "kids-toys",
+    label: "Kids & educational toys",
+    description:
+      "Montessori-inspired wooden toys for parents of toddlers who value screen-free, open-ended play.",
+  },
+  {
+    value: "outdoor-gear",
+    label: "Outdoor & adventure gear",
+    description:
+      "Lightweight outdoor gear for weekend backpackers and thru-hikers who count every gram in their pack.",
+  },
+  {
+    value: "kitchen-tools",
+    label: "Kitchen tools & cookware",
+    description:
+      "Heirloom-quality kitchen tools for home cooks who watch YouTube tutorials and care about technique.",
+  },
+];
 
 export const Route = createFileRoute("/_authenticated/app/brand")({
   component: BrandPage,
@@ -33,6 +97,7 @@ function timeAgo(d: string) {
 
 function BrandPage() {
   const qc = useQueryClient();
+  const [nicheKey, setNicheKey] = useState<string>("");
   const [desc, setDesc] = useState("");
   const [phase, setPhase] = useState<"idle" | "generating" | "review">("idle");
   const [draft, setDraft] = useState<any | null>(null);
@@ -104,6 +169,7 @@ function BrandPage() {
     setPhase("idle");
     setDraft(null);
     setDesc("");
+    setNicheKey("");
   }
 
   return (
@@ -121,17 +187,48 @@ function BrandPage() {
         <div className="space-y-5">
           <Card className="p-5">
             <label className="text-[13px] font-semibold text-foreground">
-              Product / niche description
+              Product / niche
             </label>
-            <Textarea
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-              placeholder="e.g. Premium home espresso gear for design-conscious enthusiasts who care about ritual and craft…"
-              className="mt-2 min-h-[120px] resize-none"
-            />
-            <p className="text-xs text-muted-foreground mt-1.5">
-              The more specific, the better the result.
-            </p>
+            <Select
+              value={nicheKey}
+              onValueChange={(v) => {
+                setNicheKey(v);
+                if (v === "other") {
+                  setDesc("");
+                } else {
+                  const preset = NICHE_PRESETS.find((n) => n.value === v);
+                  setDesc(preset?.description ?? "");
+                }
+              }}
+            >
+              <SelectTrigger className="mt-2 h-11">
+                <SelectValue placeholder="Choose a niche…" />
+              </SelectTrigger>
+              <SelectContent>
+                {NICHE_PRESETS.map((n) => (
+                  <SelectItem key={n.value} value={n.value}>
+                    {n.label}
+                  </SelectItem>
+                ))}
+                <SelectItem value="other">Other (write your own)</SelectItem>
+              </SelectContent>
+            </Select>
+            {nicheKey && (
+              <>
+                <label className="text-[13px] font-semibold text-foreground mt-4 block">
+                  {nicheKey === "other" ? "Describe your product or niche" : "Description (edit if needed)"}
+                </label>
+                <Textarea
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                  placeholder="e.g. Premium home espresso gear for design-conscious enthusiasts who care about ritual and craft…"
+                  className="mt-2 min-h-[120px] resize-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  The more specific, the better the result.
+                </p>
+              </>
+            )}
             <Button
               onClick={generate}
               disabled={phase === "generating"}
