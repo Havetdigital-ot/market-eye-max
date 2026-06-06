@@ -281,6 +281,56 @@ export type Database = {
           },
         ]
       }
+      generated_stores: {
+        Row: {
+          brand_asset_id: string | null
+          content: Json
+          created_at: string
+          description: string
+          id: string
+          name: string
+          palette: Json
+          published: boolean
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_asset_id?: string | null
+          content?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          palette?: Json
+          published?: boolean
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_asset_id?: string | null
+          content?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          palette?: Json
+          published?: boolean
+          slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_stores_brand_asset_id_fkey"
+            columns: ["brand_asset_id"]
+            isOneToOne: false
+            referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_history: {
         Row: {
           competitor_product_id: string
