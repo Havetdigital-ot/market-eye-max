@@ -3,20 +3,20 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MarketForge AI" },
-      { name: "description", content: "MarketForge AI — competitor monitoring, product discovery, brand building, SEO and store generation." },
-      { property: "og:title", content: "MarketForge AI" },
+      { title: "Market Eye" },
+      { name: "description", content: "Market Eye — competitor monitoring, product discovery, brand building, SEO and store generation." },
+      { property: "og:title", content: "Market Eye" },
       { property: "og:description", content: "Competitor monitoring, product discovery, brand building, SEO and store generation." },
     ],
   }),
-  component: MarketForgePage,
+  component: MarketEyePage,
 });
 
-function MarketForgePage() {
+function MarketEyePage() {
   return (
     <iframe
       src="/mf/index.html"
-      title="MarketForge AI"
+      title="Market Eye"
       style={{
         position: "fixed",
         inset: 0,
