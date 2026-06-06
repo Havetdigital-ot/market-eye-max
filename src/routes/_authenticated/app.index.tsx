@@ -100,18 +100,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: lastStore } = useQuery({
-    queryKey: ["stores", "latest"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("generated_stores")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-  });
+  const lastStore: any = null;
 
   const hour = new Date().getHours();
   const greet = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
