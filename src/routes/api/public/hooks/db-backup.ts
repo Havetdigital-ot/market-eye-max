@@ -19,7 +19,6 @@ const TABLES = [
 ] as const;
 
 function isoDateFolder(d: Date) {
-  // YYYY-MM-DD-HHMM (UTC) — sortable, unique per run
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
     `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}` +
@@ -47,12 +46,9 @@ async function runBackup() {
     pruned: [],
   };
 
-  // Dump each table to JSON
   for (const table of TABLES) {
     try {
-      const { data, error } = await supabaseAdmin
-        .from(table)
-        .select("*");
+      const { data, error } = await supabaseAdmin.from(table).select("*");
       if (error) throw error;
       const rows = data ?? [];
       const body = JSON.stringify(rows, null, 2);
@@ -73,7 +69,6 @@ async function runBackup() {
     }
   }
 
-  // Retention: list snapshot folders and delete those older than RETENTION_DAYS
   try {
     const { data: folders, error: listErr } = await supabaseAdmin.storage
       .from(BUCKET)
@@ -82,7 +77,6 @@ async function runBackup() {
 
     const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
     for (const entry of folders ?? []) {
-      // Folder name like "2026-06-06-0300"
       const m = entry.name.match(/^(\d{4})-(\d{2})-(\d{2})-(\d{2})(\d{2})$/);
       if (!m) continue;
       const folderDate = Date.UTC(
@@ -111,15 +105,14 @@ async function runBackup() {
 
   manifest.finished_at = new Date().toISOString();
 
-  // Upload manifest last
   await supabaseAdmin.storage
     .from(BUCKET)
-    .upload(`snapshots/${folder}/manifest.json`, JSON.stringify(manifest, null, 2), {
-      contentType: "application/json",
-      upsert: true,
-    });
+    .upload(
+      `snapshots/${folder}/manifest.json`,
+      JSON.stringify(manifest, null, 2),
+      { contentType: "application/json", upsert: true },
+    );
 
-  // Also keep a top-level "latest.json" pointer
   await supabaseAdmin.storage
     .from(BUCKET)
     .upload(`latest.json`, JSON.stringify(manifest, null, 2), {
@@ -134,7 +127,6 @@ export const Route = createFileRoute("/api/public/hooks/db-backup")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        // Require the Supabase anon/publishable key in apikey header.
         const apikey = request.headers.get("apikey");
         const expected =
           process.env.SUPABASE_PUBLISHABLE_KEY ||
@@ -162,7 +154,6 @@ export const Route = createFileRoute("/api/public/hooks/db-backup")({
         }
       },
       GET: async () => {
-        // Health probe
         return new Response(
           JSON.stringify({
             ok: true,
