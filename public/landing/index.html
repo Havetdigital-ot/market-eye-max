@@ -165,10 +165,35 @@
   /* ---------- Logo cloud ---------- */
   .cloud { padding: 44px 0 8px; }
   .cloud p { text-align: center; font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 22px; }
-  .cloud-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
-  .logo-ph { height: 46px; display: grid; place-items: center; }
-  .logo-ph img { max-height: 30px; max-width: 100%; object-fit: contain; mix-blend-mode: multiply; filter: grayscale(1); opacity: 0.62; transition: opacity .2s ease; }
-  .logo-ph:hover img { opacity: 0.95; }
+  /* Infinite marquee */
+  .cloud-marquee { position: relative; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .cloud-track { display: flex; width: max-content; gap: 64px; animation: marquee 32s linear infinite; will-change: transform; }
+  .cloud-marquee:hover .cloud-track { animation-play-state: paused; }
+  .cloud-track .logo-ph { flex: 0 0 auto; width: 160px; height: 56px; display: grid; place-items: center; }
+  .logo-ph img { max-height: 32px; max-width: 100%; object-fit: contain; mix-blend-mode: multiply; filter: grayscale(1); opacity: 0.6; transition: opacity .2s ease, transform .2s ease; }
+  .logo-ph:hover img { opacity: 0.95; transform: scale(1.05); }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* Scroll reveal */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); will-change: opacity, transform; }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal-delay-1 { transition-delay: .08s; }
+  .reveal-delay-2 { transition-delay: .16s; }
+  .reveal-delay-3 { transition-delay: .24s; }
+  .reveal-delay-4 { transition-delay: .32s; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .cloud-track { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+  /* Float-in hero */
+  @keyframes floatIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  .hero-anim > * { animation: floatIn .9s cubic-bezier(.16,1,.3,1) both; }
+  .hero-anim > *:nth-child(2) { animation-delay: .12s; }
+  .hero-anim > *:nth-child(3) { animation-delay: .22s; }
+  .hero-anim > *:nth-child(4) { animation-delay: .32s; }
+  .hero-anim > *:nth-child(5) { animation-delay: .42s; }
 
   /* ---------- Section frame ---------- */
   section.block { padding: 92px 0; }
@@ -319,7 +344,7 @@
 <!-- ================= HERO ================= -->
 <section class="hero">
   <div class="wrap hero-grid">
-    <div class="hero-text">
+    <div class="hero-text hero-anim">
       <span class="eyebrow">Competitive intelligence, automated</span>
       <h1>See every competitor move <span class="hl">before</span> it costs you a sale.</h1>
       <p class="sub">Market Eye Pro tracks competitor pricing, surfaces winning products, and generates store-ready content — all from one live dashboard built for ecommerce teams.</p>
@@ -354,13 +379,31 @@
 <!-- ================= LOGO CLOUD ================= -->
 <section class="cloud">
   <div class="wrap">
-    <p>Powering competitive teams at fast-growing brands</p>
-    <div class="cloud-row">
-      <div class="logo-ph"><img src="assets/logo-1.png" alt="SwiftCart" /></div>
-      <div class="logo-ph"><img src="assets/logo-2.png" alt="NovaShop" /></div>
-      <div class="logo-ph"><img src="assets/logo-3.png" alt="Zenith" /></div>
-      <div class="logo-ph"><img src="assets/logo-4.png" alt="Lumina" /></div>
-      <div class="logo-ph"><img src="assets/logo-5.png" alt="ApexRetail" /></div>
+    <p class="reveal">Powering competitive teams at fast-growing brands</p>
+    <div class="cloud-marquee reveal reveal-delay-1">
+      <div class="cloud-track">
+        <div class="logo-ph"><img src="assets/logo-1.png" alt="SwiftCart" /></div>
+        <div class="logo-ph"><img src="assets/logo-2.png" alt="NovaShop" /></div>
+        <div class="logo-ph"><img src="assets/logo-3.png" alt="Zenith" /></div>
+        <div class="logo-ph"><img src="assets/logo-4.png" alt="Lumina" /></div>
+        <div class="logo-ph"><img src="assets/logo-5.png" alt="ApexRetail" /></div>
+        <div class="logo-ph"><img src="assets/logo-1.png" alt="SwiftCart" /></div>
+        <div class="logo-ph"><img src="assets/logo-2.png" alt="NovaShop" /></div>
+        <div class="logo-ph"><img src="assets/logo-3.png" alt="Zenith" /></div>
+        <div class="logo-ph"><img src="assets/logo-4.png" alt="Lumina" /></div>
+        <div class="logo-ph"><img src="assets/logo-5.png" alt="ApexRetail" /></div>
+        <!-- duplicate set for seamless infinite loop -->
+        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-1.png" alt="" /></div>
+        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-2.png" alt="" /></div>
+        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-3.png" alt="" /></div>
+        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-4.png" alt="" /></div>
+        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-5.png" alt="" /></div>
+        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-1.png" alt="" /></div>
+        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-2.png" alt="" /></div>
+        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-3.png" alt="" /></div>
+        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-4.png" alt="" /></div>
+        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-5.png" alt="" /></div>
+      </div>
     </div>
   </div>
 </section>
@@ -369,10 +412,10 @@
 <section class="block" style="padding-top:64px;">
   <div class="wrap">
     <div class="stats">
-      <div class="stat"><div class="n">8.4<span class="u">M</span></div><div class="l">SKUs tracked daily across 60+ marketplaces</div></div>
-      <div class="stat"><div class="n">&lt;30<span class="u">s</span></div><div class="l">From a competitor price change to your alert</div></div>
-      <div class="stat"><div class="n">31<span class="u">%</span></div><div class="l">Average margin lift in the first 90 days</div></div>
-      <div class="stat"><div class="n">4,200<span class="u">+</span></div><div class="l">Ecommerce teams running on Market Eye Pro</div></div>
+      <div class="stat reveal"><div class="n">8.4<span class="u">M</span></div><div class="l">SKUs tracked daily across 60+ marketplaces</div></div>
+      <div class="stat reveal"><div class="n">&lt;30<span class="u">s</span></div><div class="l">From a competitor price change to your alert</div></div>
+      <div class="stat reveal"><div class="n">31<span class="u">%</span></div><div class="l">Average margin lift in the first 90 days</div></div>
+      <div class="stat reveal"><div class="n">4,200<span class="u">+</span></div><div class="l">Ecommerce teams running on Market Eye Pro</div></div>
     </div>
   </div>
 </section>
@@ -380,38 +423,38 @@
 <!-- ================= FEATURE GRID ================= -->
 <section class="block" id="features" style="padding-top:24px;">
   <div class="wrap">
-    <div class="sec-head center">
+    <div class="sec-head center reveal">
       <span class="eyebrow">One platform</span>
       <h2>Everything you need to outmaneuver the competition</h2>
       <p>Stop stitching together spreadsheets and scrapers. Market Eye Pro unifies monitoring, discovery, and content into a single intelligence layer.</p>
     </div>
     <div class="feat-grid">
-      <div class="feat-card">
+      <div class="feat-card reveal">
         <div class="feat-ico"><svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 4 8-9"/><path d="M3 21h18"/></svg></div>
         <h3>Competitor Monitor</h3>
         <p>Watch pricing, stock, and listing changes across every rival in real time, with full price history.</p>
       </div>
-      <div class="feat-card">
+      <div class="feat-card reveal">
         <div class="feat-ico"><svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
         <h3>Product Discovery</h3>
         <p>Surface trending and high-margin products before they saturate, ranked by opportunity score.</p>
       </div>
-      <div class="feat-card">
+      <div class="feat-card reveal">
         <div class="feat-ico"><svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8h14M7 13h10"/></svg></div>
         <h3>SEO Content Generator</h3>
         <p>Turn a keyword into store-ready descriptions, titles, and meta in seconds — on brand, every time.</p>
       </div>
-      <div class="feat-card">
+      <div class="feat-card reveal">
         <div class="feat-ico"><svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 18v3M16 18v3"/></svg></div>
         <h3>Store Generator</h3>
         <p>Spin up a launch-ready storefront from a niche — layout, copy, and products auto-assembled.</p>
       </div>
-      <div class="feat-card">
+      <div class="feat-card reveal">
         <div class="feat-ico"><svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.6-1.5z"/></svg></div>
         <h3>Brand Builder</h3>
         <p>Generate names, palettes, and voice guidelines so new lines launch with a consistent identity.</p>
       </div>
-      <div class="feat-card">
+      <div class="feat-card reveal">
         <div class="feat-ico"><svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M10.5 21a1.8 1.8 0 0 0 3 0"/></svg></div>
         <h3>Real-time Alerts</h3>
         <p>Get notified the moment a competitor undercuts you — by email, Slack, or in-app task log.</p>
@@ -487,23 +530,23 @@
 <!-- ================= HOW IT WORKS ================= -->
 <section class="block" id="how" style="background:var(--bg-soft); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft);">
   <div class="wrap">
-    <div class="sec-head center">
+    <div class="sec-head center reveal">
       <span class="eyebrow">How it works</span>
       <h2>Live in minutes, not months</h2>
       <p>No scrapers to maintain, no data engineers required. Connect your catalog and Market Eye Pro starts watching the market.</p>
     </div>
     <div class="steps">
-      <div class="step">
+      <div class="step reveal">
         <div class="num">01</div>
         <h4>Connect your catalog</h4>
         <p>Import products from Shopify, Woo, or a CSV. We map your SKUs to live competitor listings automatically.</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
         <div class="num">02</div>
         <h4>Set what matters</h4>
         <p>Pick the competitors and thresholds you care about. Alert rules take two minutes to configure.</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
         <div class="num">03</div>
         <h4>Act on the signal</h4>
         <p>Get alerts, repricing suggestions, and generated content the moment the market moves.</p>
@@ -515,7 +558,7 @@
 <!-- ================= QUOTE ================= -->
 <section class="block">
   <div class="wrap">
-    <div class="quote-wrap">
+    <div class="quote-wrap reveal">
       <div>
         <blockquote>We caught a competitor's flash sale within 30 seconds and repriced before lunch. Market Eye Pro paid for itself in a single afternoon.</blockquote>
         <div class="quote-by">
@@ -536,13 +579,13 @@
 <!-- ================= PRICING ================= -->
 <section class="block" id="pricing" style="padding-top:24px;">
   <div class="wrap">
-    <div class="sec-head center">
+    <div class="sec-head center reveal">
       <span class="eyebrow">Pricing</span>
       <h2>Simple plans that scale with your catalog</h2>
       <p>Start free for 14 days. No credit card, no setup fees, cancel anytime.</p>
     </div>
     <div class="price-grid">
-      <div class="price-card">
+      <div class="price-card reveal">
         <div class="tier">Starter</div>
         <div class="desc">For solo operators validating their first products.</div>
         <div class="amt">$0<span> / 14-day trial</span></div>
@@ -553,7 +596,7 @@
           <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg></span>Daily refresh + email alerts</li>
         </ul>
       </div>
-      <div class="price-card feat">
+      <div class="price-card feat reveal">
         <span class="price-badge">Most popular</span>
         <div class="tier">Growth</div>
         <div class="desc">For growing brands that live and die by margin.</div>
@@ -566,7 +609,7 @@
           <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg></span>Slack + webhook integrations</li>
         </ul>
       </div>
-      <div class="price-card">
+      <div class="price-card reveal">
         <div class="tier">Scale</div>
         <div class="desc">For multi-brand teams and agencies.</div>
         <div class="amt">Custom</div>
@@ -643,6 +686,46 @@
   const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 8);
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Scroll reveal via IntersectionObserver
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach((el, i) => {
+      // stagger siblings inside same grid
+      const parent = el.parentElement;
+      if (parent && (parent.classList.contains('feat-grid') || parent.classList.contains('stats') || parent.classList.contains('steps') || parent.classList.contains('price-grid'))) {
+        const idx = Array.from(parent.children).indexOf(el);
+        el.style.transitionDelay = (idx * 80) + 'ms';
+      }
+      io.observe(el);
+    });
+  } else {
+    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('in'));
+  }
+
+  // Subtle parallax on hero visual
+  const heroVisual = document.querySelector('.hero-visual');
+  if (heroVisual && !reduce) {
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const y = Math.min(window.scrollY, 600);
+          heroVisual.style.transform = 'translateY(' + (y * -0.06) + 'px)';
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+  }
 </script>
 </body>
 </html>
