@@ -243,8 +243,9 @@ function SeoPage() {
             <div className="space-y-4 max-w-3xl mx-auto">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <TypePill type={selected.type} />
-                  <StatusPill status={selected.status} />
+                  <TypePill type={selected.type ?? ""} />
+                  <StatusPill status={selected.status ?? "Draft"} />
+
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={saveEdits}>
