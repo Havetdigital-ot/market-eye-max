@@ -29,7 +29,7 @@
     return h('aside', { className: 'sidebar' },
       h('div', { className: 'brand' },
         h('div', { className: 'brand-mark' }, h(Icon, { name: 'radar', size: 19, style: { color: '#fff' } })),
-        h('div', { className: 'brand-name' }, 'MarketForge', ' ', h('span', null, 'AI'))),
+        h('div', { className: 'brand-name' }, 'Market Eye')),
       h('nav', { className: 'nav' },
         h('div', { className: 'nav-label' }, 'Workspace'),
         NAV.map((n) => h('div', {
@@ -56,7 +56,7 @@
     return h(window.React.Fragment, null,
       h('header', { className: 'topbar' },
         h('h1', null,
-          crumb ? h('span', null, h('span', { className: 'crumb', style: { cursor: 'pointer' }, onClick: () => onNav(crumb) }, TITLES[crumb]), ' / ', 'Detail') : TITLES[route] || 'MarketForge AI'),
+          crumb ? h('span', null, h('span', { className: 'crumb', style: { cursor: 'pointer' }, onClick: () => onNav(crumb) }, TITLES[crumb]), ' / ', 'Detail') : TITLES[route] || 'Market Eye'),
         h('div', { className: 'topbar-spacer' }),
         h('div', { className: 'searchbox' },
           h(Icon, { name: 'search', size: 16 }),
