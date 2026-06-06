@@ -43,9 +43,7 @@ const NAV = [
   { to: "/app/discovery", label: "Product Discovery", icon: Sparkles },
   { to: "/app/brand", label: "Brand Builder", icon: Star },
   { to: "/app/seo", label: "SEO Content", icon: FileText },
-  { to: "/app/store", label: "Store Generator", icon: Store },
-  { to: "/app/tasks", label: "Task Log", icon: ListChecks, badgeKey: "tasks" as const },
-];
+] as const;
 
 const TITLES: Record<string, string> = {
   "/app": "Dashboard",
@@ -53,8 +51,6 @@ const TITLES: Record<string, string> = {
   "/app/discovery": "Product Discovery",
   "/app/brand": "Brand Builder",
   "/app/seo": "SEO Content",
-  "/app/store": "Store Generator",
-  "/app/tasks": "Task Log",
 };
 
 function AppShell() {
