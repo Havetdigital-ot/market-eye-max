@@ -4,11 +4,10 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { startTrendScan } from "@/lib/api/firecrawl";
-import { Bookmark, BookmarkCheck, ExternalLink } from "lucide-react";
+import { Check, ExternalLink, Search, RefreshCw } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 type Platform = "TikTok" | "Amazon" | "Reddit" | "Other";
 const PLATFORMS: Platform[] = ["TikTok", "Amazon", "Reddit", "Other"];
@@ -16,6 +15,40 @@ const PLATFORMS: Platform[] = ["TikTok", "Amazon", "Reddit", "Other"];
 export const Route = createFileRoute("/_authenticated/app/discovery")({
   component: DiscoveryPage,
 });
+
+const PLATFORM_STYLES: Record<Platform, string> = {
+  TikTok: "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300",
+  Amazon: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+  Reddit: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300",
+  Other: "bg-muted text-muted-foreground",
+};
+
+function PlatformBadge({ platform }: { platform: string }) {
+  const cls = PLATFORM_STYLES[(platform as Platform)] ?? PLATFORM_STYLES.Other;
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${cls}`}>
+      {platform}
+    </span>
+  );
+}
+
+function ScoreBar({ value, hue = "b" }: { value: number; hue?: "b" | "v" | "a" }) {
+  const v = Math.max(0, Math.min(100, value ?? 0));
+  const color =
+    hue === "v"
+      ? "bg-violet-500"
+      : hue === "a"
+      ? "bg-amber-500"
+      : "bg-primary";
+  return (
+    <div className="flex items-center gap-3 w-full">
+      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden max-w-[140px]">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${v}%` }} />
+      </div>
+      <span className="font-mono font-semibold text-sm tabular-nums w-8 text-right">{v}</span>
+    </div>
+  );
+}
 
 function DiscoveryPage() {
   const qc = useQueryClient();
@@ -27,6 +60,7 @@ function DiscoveryPage() {
     Other: false,
   });
   const [running, setRunning] = useState(false);
+  const [savedOnly, setSavedOnly] = useState(false);
 
   const { data: trends = [] } = useQuery({
     queryKey: ["trends"],
@@ -40,14 +74,12 @@ function DiscoveryPage() {
     },
   });
 
+  const rows = savedOnly ? trends.filter((t: any) => t.saved) : trends;
+
   async function scan(e: React.FormEvent) {
     e.preventDefault();
-    const kws = keywords
-      .split(",")
-      .map((k) => k.trim())
-      .filter(Boolean);
+    const kws = keywords.split(",").map((k) => k.trim()).filter(Boolean);
     const plats = PLATFORMS.filter((p) => selected[p]);
-    if (kws.length === 0) return toast.error("Enter at least one keyword");
     if (plats.length === 0) return toast.error("Select at least one platform");
     setRunning(true);
     try {
@@ -68,74 +100,144 @@ function DiscoveryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Product Discovery</h1>
-        <p className="text-sm text-muted-foreground">Find trending products across platforms with Firecrawl.</p>
+        <h1 className="text-[28px] font-semibold tracking-tight">Product Discovery</h1>
+        <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+          Scan social and marketplace signals to surface trending products before they peak.
+        </p>
       </div>
 
-      <Card className="p-4 space-y-3">
-        <form onSubmit={scan} className="space-y-3">
-          <Input
-            placeholder="Keywords (comma-separated): cold brew, matcha"
-            value={keywords}
-            onChange={(e) => setKeywords(e.target.value)}
-          />
-          <div className="flex flex-wrap gap-2">
-            {PLATFORMS.map((p) => (
-              <button
-                type="button"
-                key={p}
-                onClick={() => setSelected((s) => ({ ...s, [p]: !s[p] }))}
-                className={`px-3 py-1 rounded-full text-sm border ${
-                  selected[p] ? "bg-primary text-primary-foreground border-primary" : "bg-background"
-                }`}
-              >
-                {p}
-              </button>
-            ))}
+      {/* Scan form card */}
+      <div className="rounded-xl border bg-card p-5">
+        <form onSubmit={scan} className="flex flex-col lg:flex-row gap-5 lg:items-end">
+          <div className="flex-1 min-w-0 space-y-2">
+            <label className="text-sm font-semibold">Keywords</label>
+            <Input
+              placeholder="Enter keywords to scan…"
+              value={keywords}
+              onChange={(e) => setKeywords(e.target.value)}
+              className="h-11"
+            />
+            <p className="text-xs text-muted-foreground">
+              Comma-separated — e.g. cold brew, matcha, frother
+            </p>
           </div>
-          <Button type="submit" disabled={running}>
-            {running ? "Starting…" : "Scan trends"}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold">Platforms</label>
+            <div className="flex flex-wrap gap-2">
+              {PLATFORMS.map((p) => {
+                const on = selected[p];
+                return (
+                  <button
+                    type="button"
+                    key={p}
+                    onClick={() => setSelected((s) => ({ ...s, [p]: !s[p] }))}
+                    className={`inline-flex items-center gap-1.5 px-3.5 h-9 rounded-full text-sm font-medium border transition-colors ${
+                      on
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border hover:bg-muted"
+                    }`}
+                  >
+                    {on && <Check className="h-3.5 w-3.5" />}
+                    {p}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <Button type="submit" disabled={running} className="h-11 px-5 gap-2 shrink-0">
+            {running ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            {running ? "Scanning…" : "Scan trends"}
           </Button>
         </form>
-      </Card>
+      </div>
 
-      <Card className="p-0 overflow-hidden">
-        <div className="grid grid-cols-12 gap-2 text-xs uppercase tracking-wide text-muted-foreground px-4 py-2 border-b bg-muted/30">
-          <div className="col-span-5">Product</div>
-          <div className="col-span-2">Platform</div>
-          <div className="col-span-2">Score</div>
-          <div className="col-span-2">Discovered</div>
-          <div className="col-span-1 text-right">Save</div>
+      {/* Results header */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-bold">{rows.length} trends</div>
+        <button
+          type="button"
+          onClick={() => setSavedOnly((s) => !s)}
+          className={`inline-flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium border transition-colors ${
+            savedOnly
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-background border-border hover:bg-muted"
+          }`}
+        >
+          <Check className="h-3.5 w-3.5" />
+          Saved only
+        </button>
+      </div>
+
+      {/* Trends table */}
+      <div className="rounded-xl border bg-card overflow-hidden">
+        <div className="grid grid-cols-[1.6fr_0.7fr_1fr_1fr_1fr_0.7fr_0.6fr] gap-4 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
+          <div>Product</div>
+          <div>Platform</div>
+          <div>Trend</div>
+          <div>Virality</div>
+          <div>Seasonality</div>
+          <div>Found</div>
+          <div className="text-right"></div>
         </div>
-        {trends.length === 0 && (
-          <p className="text-sm text-muted-foreground p-4">No trends yet — run a scan above.</p>
-        )}
-        {trends.map((t) => (
-          <div key={t.id} className="grid grid-cols-12 gap-2 items-center px-4 py-3 border-b last:border-0 text-sm">
-            <div className="col-span-5 min-w-0">
-              <div className="font-medium truncate">{t.product_name}</div>
-              <div className="text-xs text-muted-foreground truncate">
-                {t.keyword}
+
+        {rows.length === 0 ? (
+          <div className="px-6 py-12 text-center text-sm text-muted-foreground">
+            {savedOnly ? "No saved trends yet." : "No trends found — run a scan above."}
+          </div>
+        ) : (
+          rows.map((t: any) => (
+            <div
+              key={t.id}
+              className="grid grid-cols-[1.6fr_0.7fr_1fr_1fr_1fr_0.7fr_0.6fr] gap-4 px-6 py-4 items-center border-b last:border-b-0 hover:bg-muted/30 transition-colors"
+            >
+              <div className="min-w-0">
+                <div className="font-medium truncate">{t.product_name}</div>
                 {t.source_url && (
-                  <a href={t.source_url} target="_blank" rel="noreferrer" className="inline-flex items-center ml-2 hover:text-primary">
-                    <ExternalLink className="h-3 w-3" />
+                  <a
+                    href={t.source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-0.5"
+                  >
+                    Source <ExternalLink className="h-3 w-3" />
                   </a>
                 )}
               </div>
+              <div>
+                <PlatformBadge platform={t.platform} />
+              </div>
+              <div>
+                <ScoreBar value={t.trend_score} hue="b" />
+              </div>
+              <div>
+                <ScoreBar value={t.virality_potential} hue="v" />
+              </div>
+              <div>
+                <ScoreBar value={t.seasonality_score} hue="a" />
+              </div>
+              <div className="text-xs text-muted-foreground font-mono">
+                {t.discovered_at
+                  ? formatDistanceToNow(new Date(t.discovered_at), { addSuffix: true })
+                  : "—"}
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => toggleSave(t.id, t.saved)}
+                  className={`inline-flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium border transition-colors ${
+                    t.saved
+                      ? "bg-primary/10 border-primary/20 text-primary"
+                      : "bg-background border-border hover:bg-muted"
+                  }`}
+                >
+                  {t.saved ? <Check className="h-3.5 w-3.5" /> : <span className="text-base leading-none">+</span>}
+                  {t.saved ? "Saved" : "Save"}
+                </button>
+              </div>
             </div>
-            <div className="col-span-2"><Badge variant="secondary">{t.platform}</Badge></div>
-            <div className="col-span-2 font-medium">{t.trend_score}</div>
-            <div className="col-span-2 text-xs text-muted-foreground">
-              {new Date(t.discovered_at).toLocaleDateString()}
-            </div>
-            <div className="col-span-1 text-right">
-              <Button size="icon" variant="ghost" onClick={() => toggleSave(t.id, t.saved)}>
-                {t.saved ? <BookmarkCheck className="h-4 w-4 text-primary" /> : <Bookmark className="h-4 w-4" />}
-              </Button>
-            </div>
-          </div>
-        ))}
-      </Card>
+          ))
+        )}
+      </div>
     </div>
   );
 }
