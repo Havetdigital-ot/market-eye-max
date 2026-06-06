@@ -1,54 +1,75 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Package,
+  Radar,
+  ListChecks,
   Bell,
   Sparkles,
+  TrendingUp,
+  TrendingDown,
+  ChevronRight,
+  ArrowRight,
+  Store,
+  Palette,
+  FileText,
+  Clock,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: DashboardPage,
 });
 
-const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2, 200 70% 50%))", "hsl(var(--chart-3, 280 60% 55%))", "hsl(var(--chart-4, 30 80% 55%))", "hsl(var(--chart-5, 160 60% 45%))"];
+function money0(n: number | string | null | undefined) {
+  const v = Number(n ?? 0);
+  return "$" + Math.round(v).toLocaleString();
+}
+
+function timeAgo(d: string) {
+  try {
+    return formatDistanceToNow(new Date(d), { addSuffix: true });
+  } catch {
+    return "—";
+  }
+}
 
 function DashboardPage() {
+  const { data: profile } = useQuery({
+    queryKey: ["me"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    },
+  });
+
   const { data: counts } = useQuery({
     queryKey: ["dashboard-counts"],
     queryFn: async () => {
-      const [comp, prod, alerts, trends] = await Promise.all([
-        supabase.from("competitors").select("id", { count: "exact", head: true }),
-        supabase.from("competitor_products").select("id", { count: "exact", head: true }),
-        supabase.from("alerts").select("id", { count: "exact", head: true }).eq("is_read", false),
-        supabase.from("trends").select("id", { count: "exact", head: true }),
+      const [comp, tasks, alerts, trends] = await Promise.all([
+        supabase
+          .from("competitors")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "Active"),
+        supabase
+          .from("background_tasks")
+          .select("id", { count: "exact", head: true })
+          .in("status", ["Running", "Pending"])
+          .eq("dismissed", false),
+        supabase
+          .from("alerts")
+          .select("id", { count: "exact", head: true })
+          .eq("is_read", false),
+        supabase
+          .from("trends")
+          .select("id", { count: "exact", head: true })
+          .eq("saved", true),
       ]);
       return {
         competitors: comp.count ?? 0,
-        products: prod.count ?? 0,
+        tasks: tasks.count ?? 0,
         alerts: alerts.count ?? 0,
         trends: trends.count ?? 0,
       };
@@ -62,320 +83,314 @@ function DashboardPage() {
         .from("alerts")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(5);
       return data ?? [];
     },
   });
 
-  const { data: tasks = [] } = useQuery({
-    queryKey: ["tasks", "recent"],
+  const { data: topTrends = [] } = useQuery({
+    queryKey: ["trends", "top"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("background_tasks")
+        .from("trends")
         .select("*")
-        .order("created_at", { ascending: false })
-        .limit(8);
+        .order("trend_score", { ascending: false })
+        .limit(3);
       return data ?? [];
     },
   });
 
-  const { data: priceSeries = [] } = useQuery({
-    queryKey: ["price-history-trend"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("price_history")
-        .select("price, observed_at")
-        .order("observed_at", { ascending: true })
-        .limit(200);
-      // Bucket by day, average price
-      const buckets = new Map<string, { sum: number; n: number }>();
-      (data ?? []).forEach((row: any) => {
-        const day = new Date(row.observed_at).toISOString().slice(0, 10);
-        const b = buckets.get(day) ?? { sum: 0, n: 0 };
-        b.sum += Number(row.price) || 0;
-        b.n += 1;
-        buckets.set(day, b);
-      });
-      return Array.from(buckets.entries()).map(([day, b]) => ({
-        day: day.slice(5),
-        avg: +(b.sum / b.n).toFixed(2),
-      }));
-    },
-  });
+  const lastStore: any = null;
 
-  const { data: alertsByDay = [] } = useQuery({
-    queryKey: ["alerts-by-day"],
-    queryFn: async () => {
-      const since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
-      const { data } = await supabase
-        .from("alerts")
-        .select("type, created_at")
-        .gte("created_at", since);
-      const buckets = new Map<string, { day: string; price: number; new: number }>();
-      (data ?? []).forEach((a: any) => {
-        const day = new Date(a.created_at).toISOString().slice(5, 10);
-        const b = buckets.get(day) ?? { day, price: 0, new: 0 };
-        if (a.type === "Price Change") b.price += 1;
-        else b.new += 1;
-        buckets.set(day, b);
-      });
-      return Array.from(buckets.values());
-    },
-  });
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const firstName =
+    (profile?.user_metadata as any)?.full_name?.split(" ")[0] ??
+    profile?.email?.split("@")[0] ??
+    "there";
 
-  const { data: topCompetitors = [] } = useQuery({
-    queryKey: ["top-competitors"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("competitor_products")
-        .select("competitor_id, competitors(name)")
-        .limit(500);
-      const counts = new Map<string, number>();
-      (data ?? []).forEach((row: any) => {
-        const name = row.competitors?.name ?? "Unknown";
-        counts.set(name, (counts.get(name) ?? 0) + 1);
-      });
-      return Array.from(counts.entries())
-        .map(([name, products]) => ({ name, products }))
-        .sort((a, b) => b.products - a.products)
-        .slice(0, 6);
-    },
-  });
-
-  const { data: trendPlatforms = [] } = useQuery({
-    queryKey: ["trend-platforms"],
-    queryFn: async () => {
-      const { data } = await supabase.from("trends").select("platform").limit(500);
-      const counts = new Map<string, number>();
-      (data ?? []).forEach((t: any) => {
-        const key = t.platform ?? "Other";
-        counts.set(key, (counts.get(key) ?? 0) + 1);
-      });
-      return Array.from(counts.entries()).map(([name, value]) => ({ name, value }));
-    },
-  });
-
-  const priceChanges = alerts.filter((a: any) => a.type === "Price Change");
-  const avgDelta =
-    priceChanges.length > 0
-      ? priceChanges.reduce(
-          (s: number, a: any) => s + (Number(a.new_price) - Number(a.old_price)),
-          0,
-        ) / priceChanges.length
-      : 0;
-
-  const tiles = [
+  const stats = [
     {
-      label: "Competitors",
+      label: "Active competitors",
       value: counts?.competitors ?? 0,
-      icon: Users,
-      hint: "tracked storefronts",
+      icon: Radar,
+      iconBg: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+      to: "/app/competitors",
     },
     {
-      label: "Products tracked",
-      value: counts?.products ?? 0,
-      icon: Package,
-      hint: "across catalogs",
+      label: "Running tasks",
+      value: counts?.tasks ?? 0,
+      icon: ListChecks,
+      iconBg: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400",
+      to: "/app",
     },
     {
       label: "Unread alerts",
       value: counts?.alerts ?? 0,
       icon: Bell,
-      hint: avgDelta !== 0 ? `avg Δ $${avgDelta.toFixed(2)}` : "no recent changes",
-      trend: avgDelta > 0 ? "up" : avgDelta < 0 ? "down" : "flat",
+      iconBg: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
+      to: "/app/competitors",
     },
     {
-      label: "Trends discovered",
+      label: "Saved trends",
       value: counts?.trends ?? 0,
       icon: Sparkles,
-      hint: "from discovery scans",
+      iconBg: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
+      to: "/app/discovery",
     },
+  ] as const;
+
+  const quickLinks = [
+    { to: "/app/competitors", label: "Competitor Monitor", icon: Radar },
+    { to: "/app/discovery", label: "Product Discovery", icon: Sparkles },
+    { to: "/app/brand", label: "Brand Builder", icon: Palette },
+    { to: "/app/seo", label: "SEO Content", icon: FileText },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Live market intelligence across competitors, prices, and trends.</p>
-        </div>
-        <Badge variant="outline" className="text-xs">Live · auto-refreshing</Badge>
+    <div className="space-y-6 max-w-[1400px]">
+      {/* Greeting */}
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight leading-tight">
+          {greet}, {firstName} 👋
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Here's what's moving across your market today.
+        </p>
       </div>
 
-      {/* KPI tiles */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {tiles.map((t) => {
-          const Icon = t.icon;
-          const TrendIcon = t.trend === "up" ? TrendingUp : t.trend === "down" ? TrendingDown : null;
+      {/* Stat tiles */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s) => {
+          const Icon = s.icon;
           return (
-            <Card key={t.label} className="p-4 relative overflow-hidden">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">{t.label}</div>
-                  <div className="text-3xl font-semibold mt-1 tabular-nums">{t.value}</div>
+            <Link to={s.to} key={s.label} className="group">
+              <Card className="p-5 hover:shadow-md transition-shadow cursor-pointer h-full">
+                <div className={`w-10 h-10 rounded-lg grid place-items-center ${s.iconBg}`}>
+                  <Icon className="h-5 w-5" />
                 </div>
-                <div className="rounded-md bg-primary/10 text-primary p-2">
-                  <Icon className="h-4 w-4" />
+                <div className="mt-4 text-3xl font-bold tabular-nums tracking-tight">
+                  {s.value}
                 </div>
-              </div>
-              <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
-                {TrendIcon && <TrendIcon className={`h-3 w-3 ${t.trend === "up" ? "text-emerald-500" : "text-rose-500"}`} />}
-                <span>{t.hint}</span>
-              </div>
-            </Card>
+                <div className="text-sm text-muted-foreground mt-1">{s.label}</div>
+              </Card>
+            </Link>
           );
         })}
       </div>
 
-      {/* Charts row */}
+      {/* Row 1: Recent alerts (span 2) + Latest store */}
       <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="p-4 lg:col-span-2">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="font-semibold">Average competitor price</h2>
-              <p className="text-xs text-muted-foreground">Rolling daily average across tracked SKUs.</p>
+        <Card className="lg:col-span-2 overflow-hidden">
+          <div className="flex items-center px-5 py-4 border-b">
+            <h2 className="font-semibold">Recent pricing alerts</h2>
+            <Link to="/app/competitors" className="ml-auto">
+              <Button variant="ghost" size="sm" className="gap-1">
+                View all <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
+          {alerts.length === 0 ? (
+            <div className="px-5 py-12 text-center text-sm text-muted-foreground">
+              No alerts yet.
             </div>
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={priceSeries} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="priceFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} width={40} />
-                <Tooltip contentStyle={{ fontSize: 12 }} />
-                <Area type="monotone" dataKey="avg" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#priceFill)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <th className="text-left font-medium px-5 py-2.5">Competitor</th>
+                  <th className="text-left font-medium px-3 py-2.5">Product</th>
+                  <th className="text-left font-medium px-3 py-2.5">Change</th>
+                  <th className="text-left font-medium px-5 py-2.5">When</th>
+                </tr>
+              </thead>
+              <tbody>
+                {alerts.map((a: any) => {
+                  const drop =
+                    a.type === "Price Change" &&
+                    Number(a.new_price) < Number(a.old_price);
+                  return (
+                    <tr key={a.id} className="border-t">
+                      <td className="px-5 py-3 font-medium">{a.competitor_name}</td>
+                      <td className="px-3 py-3 text-muted-foreground">{a.product_name}</td>
+                      <td className="px-3 py-3 font-mono text-[13px]">
+                        {a.type === "New Product" ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-xs font-medium">
+                            New · {money0(a.new_price)}
+                          </span>
+                        ) : (
+                          <span className="font-semibold">
+                            <span className="text-muted-foreground line-through font-normal mr-1.5">
+                              {money0(a.old_price)}
+                            </span>
+                            <span className={drop ? "text-emerald-600" : "text-rose-600"}>
+                              {money0(a.new_price)}
+                            </span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-muted-foreground font-mono text-xs">
+                        {timeAgo(a.created_at)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </Card>
 
-        <Card className="p-4">
-          <h2 className="font-semibold mb-1">Trend platforms</h2>
-          <p className="text-xs text-muted-foreground mb-3">Where discovered trends are coming from.</p>
-          <div className="h-64">
-            {trendPlatforms.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">No trend data yet</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={trendPlatforms} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={2}>
-                    {trendPlatforms.map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ fontSize: 12 }} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+        {/* Latest store */}
+        <Card className="overflow-hidden">
+          <div className="px-5 py-4 border-b">
+            <h2 className="font-semibold">Latest store</h2>
           </div>
-        </Card>
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="p-4 lg:col-span-2">
-          <h2 className="font-semibold mb-1">Alerts — last 14 days</h2>
-          <p className="text-xs text-muted-foreground mb-3">Price changes vs. new listings.</p>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={alertsByDay} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} width={32} allowDecimals={false} />
-                <Tooltip contentStyle={{ fontSize: 12 }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="price" name="Price change" stackId="a" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="new" name="New product" stackId="a" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <h2 className="font-semibold mb-1">Top competitors</h2>
-          <p className="text-xs text-muted-foreground mb-3">By products tracked.</p>
-          <div className="h-56">
-            {topCompetitors.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">No competitors yet</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topCompetitors} layout="vertical" margin={{ left: 8, right: 12, top: 4, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={90} />
-                  <Tooltip contentStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="products" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </Card>
-      </div>
-
-      {/* Lists */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card className="p-4">
-          <h2 className="font-semibold mb-3">Recent alerts</h2>
-          <div className="space-y-2">
-            {alerts.length === 0 && <p className="text-sm text-muted-foreground">No alerts yet.</p>}
-            {alerts.map((a: any) => {
-              const delta = Number(a.new_price) - Number(a.old_price ?? a.new_price);
-              return (
-                <div key={a.id} className="flex items-start justify-between text-sm border-b last:border-0 pb-2 last:pb-0">
-                  <div>
-                    <div className="font-medium">{a.product_name}</div>
-                    <div className="text-muted-foreground text-xs">
-                      {a.competitor_name} ·{" "}
-                      {a.type === "Price Change"
-                        ? `$${a.old_price} → $${a.new_price}`
-                        : `new at $${a.new_price}`}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {a.type === "Price Change" && (
-                      <span className={`text-xs tabular-nums ${delta < 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                        {delta > 0 ? "+" : ""}
-                        {delta.toFixed(2)}
-                      </span>
-                    )}
-                    <Badge variant={a.is_read ? "secondary" : "default"}>{a.type}</Badge>
-                  </div>
+          <div className="p-5">
+            {lastStore ? (
+              <div>
+                <div className="h-[120px] rounded-md bg-gradient-to-br from-muted to-muted/50 grid place-items-center text-xs text-muted-foreground">
+                  store preview
                 </div>
+                <div className="mt-3.5 flex items-start justify-between gap-2">
+                  <div className="font-semibold text-[15px] leading-tight">
+                    {(lastStore as any).store_name}
+                  </div>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 font-medium shrink-0">
+                    {(lastStore as any).status ?? "Ready"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
+                  <Clock className="h-3 w-3" />
+                  Created {timeAgo((lastStore as any).created_at)}
+                </div>
+                <Button variant="secondary" className="w-full mt-3.5 gap-2">
+                  <Store className="h-4 w-4" /> Open Store Generator
+                </Button>
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-muted grid place-items-center mx-auto mb-3">
+                  <Store className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="font-medium text-sm">No store yet</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Generate your first storefront.
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Row 2: Top trends (span 2) + Quick actions */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2 overflow-hidden">
+          <div className="flex items-center px-5 py-4 border-b">
+            <h2 className="font-semibold">Top trends right now</h2>
+            <Link to="/app/discovery" className="ml-auto">
+              <Button variant="ghost" size="sm" className="gap-1">
+                Discover more <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
+          {topTrends.length === 0 ? (
+            <div className="px-5 py-12 text-center text-sm text-muted-foreground">
+              No trends yet. Run a scan in Product Discovery.
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <th className="text-left font-medium px-5 py-2.5">Product</th>
+                  <th className="text-left font-medium px-3 py-2.5">Platform</th>
+                  <th className="text-left font-medium px-5 py-2.5">Trend score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topTrends.map((t: any) => (
+                  <tr key={t.id} className="border-t">
+                    <td className="px-5 py-3 font-medium">{t.product_name}</td>
+                    <td className="px-3 py-3">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded bg-muted text-xs font-medium">
+                        {t.platform}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 w-[220px]">
+                      <ScoreBar value={t.trend_score ?? 0} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </Card>
+
+        {/* Quick actions */}
+        <Card className="overflow-hidden">
+          <div className="px-5 py-4 border-b">
+            <h2 className="font-semibold">Quick actions</h2>
+          </div>
+          <div className="p-2.5 flex flex-col gap-1">
+            {quickLinks.map((l) => {
+              const Icon = l.icon;
+              return (
+                <Link key={l.to} to={l.to}>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2.5 h-10 font-medium"
+                  >
+                    <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="flex-1 text-left">{l.label}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+                  </Button>
+                </Link>
               );
             })}
           </div>
         </Card>
-        <Card className="p-4">
-          <h2 className="font-semibold mb-3">Background tasks</h2>
-          <div className="space-y-2">
-            {tasks.length === 0 && <p className="text-sm text-muted-foreground">No tasks yet.</p>}
-            {tasks.map((t: any) => (
-              <div key={t.id} className="flex items-start justify-between text-sm border-b last:border-0 pb-2 last:pb-0">
-                <div>
-                  <div className="font-medium">{t.task_type}</div>
-                  <div className="text-muted-foreground text-xs">
-                    {formatDistanceToNow(new Date(t.created_at), { addSuffix: true })}
-                    {t.error_message && <span className="text-destructive ml-1">· {t.error_message.slice(0, 60)}</span>}
-                  </div>
-                </div>
-                <Badge
-                  variant={
-                    t.status === "Completed" ? "secondary" : t.status === "Failed" ? "destructive" : "default"
-                  }
-                >
-                  {t.status}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </Card>
       </div>
+
+      {/* Subtle KPI delta hint (optional) */}
+      <DeltaHint alerts={alerts} />
+    </div>
+  );
+}
+
+function ScoreBar({ value }: { value: number }) {
+  const v = Math.max(0, Math.min(100, Number(value) || 0));
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500"
+          style={{ width: `${v}%` }}
+        />
+      </div>
+      <span className="text-xs font-mono font-semibold tabular-nums w-8 text-right">
+        {Math.round(v)}
+      </span>
+    </div>
+  );
+}
+
+function DeltaHint({ alerts }: { alerts: any[] }) {
+  const priceChanges = alerts.filter((a) => a.type === "Price Change");
+  if (priceChanges.length === 0) return null;
+  const avg =
+    priceChanges.reduce(
+      (s, a) => s + (Number(a.new_price) - Number(a.old_price)),
+      0,
+    ) / priceChanges.length;
+  const up = avg > 0;
+  const Icon = up ? TrendingUp : TrendingDown;
+  return (
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <Icon className={`h-3.5 w-3.5 ${up ? "text-rose-500" : "text-emerald-500"}`} />
+      Average price change across recent alerts:{" "}
+      <span className={`font-mono font-semibold ${up ? "text-rose-600" : "text-emerald-600"}`}>
+        {up ? "+" : ""}
+        {avg.toFixed(2)}
+      </span>
     </div>
   );
 }
