@@ -29,7 +29,7 @@
     return h('aside', { className: 'sidebar' },
       h('div', { className: 'brand' },
         h('div', { className: 'brand-mark' }, h(Icon, { name: 'radar', size: 19, style: { color: '#fff' } })),
-        h('div', { className: 'brand-name' }, 'MarketForge', ' ', h('span', null, 'AI'))),
+        h('div', { className: 'brand-name' }, 'Market Eye')),
       h('nav', { className: 'nav' },
         h('div', { className: 'nav-label' }, 'Workspace'),
         NAV.map((n) => h('div', {
