@@ -15,12 +15,16 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+const DEMO_EMAIL = "joe@marketeye.demo";
+const DEMO_PASSWORD = "demo1234";
+const DEMO_NAME = "Joe Demo";
+
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState(DEMO_EMAIL);
+  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const [fullName, setFullName] = useState(DEMO_NAME);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -28,6 +32,32 @@ function AuthPage() {
       if (data.user) navigate({ to: "/app" });
     });
   }, [navigate]);
+
+  async function signInOrAutoCreate(emailVal: string, pwVal: string, nameVal: string) {
+    const { error } = await supabase.auth.signInWithPassword({ email: emailVal, password: pwVal });
+    if (!error) return;
+    // Auto-create the demo account on first use so anyone can click "Sign in"
+    const msg = (error.message || "").toLowerCase();
+    if (msg.includes("invalid") || msg.includes("not found") || msg.includes("credentials")) {
+      const { data, error: signUpErr } = await supabase.auth.signUp({
+        email: emailVal,
+        password: pwVal,
+        options: {
+          emailRedirectTo: `${window.location.origin}/app`,
+          data: { full_name: nameVal },
+        },
+      });
+      if (signUpErr) throw signUpErr;
+      if (data.user) {
+        await supabase.rpc("seed_demo_data", { p_user: data.user.id });
+      }
+      // Some projects require a fresh sign-in after signUp
+      const { error: retryErr } = await supabase.auth.signInWithPassword({ email: emailVal, password: pwVal });
+      if (retryErr && !data.session) throw retryErr;
+      return;
+    }
+    throw error;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,12 +78,8 @@ function AuthPage() {
         }
         toast.success("Account created");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        toast.success("Welcome back");
+        await signInOrAutoCreate(email, password, fullName || DEMO_NAME);
+        toast.success("Welcome");
       }
       navigate({ to: "/app" });
     } catch (err: any) {
@@ -71,6 +97,10 @@ function AuthPage() {
           <p className="text-sm text-muted-foreground mt-1">
             {mode === "signin" ? "Sign in to your dashboard" : "Create your account"}
           </p>
+        </div>
+        <div className="mb-4 rounded-md border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground">
+
+          Demo mode — credentials are pre-filled. Just click <span className="font-medium text-foreground">Sign in</span> to explore the dashboard.
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "signup" && (
