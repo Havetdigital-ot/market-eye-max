@@ -21,6 +21,7 @@ import { Route as AuthenticatedAppSeoRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAppDiscoveryRouteImport } from './routes/_authenticated/app.discovery'
 import { Route as AuthenticatedAppCompetitorsRouteImport } from './routes/_authenticated/app.competitors'
 import { Route as AuthenticatedAppBrandRouteImport } from './routes/_authenticated/app.brand'
+import { Route as AuthenticatedAppAlertsRouteImport } from './routes/_authenticated/app.alerts'
 
 const DashRoute = DashRouteImport.update({
   id: '/dash',
@@ -83,12 +84,18 @@ const AuthenticatedAppBrandRoute = AuthenticatedAppBrandRouteImport.update({
   path: '/brand',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppAlertsRoute = AuthenticatedAppAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dash': typeof DashRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/app/alerts': typeof AuthenticatedAppAlertsRoute
   '/app/brand': typeof AuthenticatedAppBrandRoute
   '/app/competitors': typeof AuthenticatedAppCompetitorsRoute
   '/app/discovery': typeof AuthenticatedAppDiscoveryRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dash': typeof DashRoute
+  '/app/alerts': typeof AuthenticatedAppAlertsRoute
   '/app/brand': typeof AuthenticatedAppBrandRoute
   '/app/competitors': typeof AuthenticatedAppCompetitorsRoute
   '/app/discovery': typeof AuthenticatedAppDiscoveryRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dash': typeof DashRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/app/alerts': typeof AuthenticatedAppAlertsRoute
   '/_authenticated/app/brand': typeof AuthenticatedAppBrandRoute
   '/_authenticated/app/competitors': typeof AuthenticatedAppCompetitorsRoute
   '/_authenticated/app/discovery': typeof AuthenticatedAppDiscoveryRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dash'
     | '/app'
+    | '/app/alerts'
     | '/app/brand'
     | '/app/competitors'
     | '/app/discovery'
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dash'
+    | '/app/alerts'
     | '/app/brand'
     | '/app/competitors'
     | '/app/discovery'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dash'
     | '/_authenticated/app'
+    | '/_authenticated/app/alerts'
     | '/_authenticated/app/brand'
     | '/_authenticated/app/competitors'
     | '/_authenticated/app/discovery'
@@ -259,10 +271,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppBrandRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/alerts': {
+      id: '/_authenticated/app/alerts'
+      path: '/alerts'
+      fullPath: '/app/alerts'
+      preLoaderRoute: typeof AuthenticatedAppAlertsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
   }
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppAlertsRoute: typeof AuthenticatedAppAlertsRoute
   AuthenticatedAppBrandRoute: typeof AuthenticatedAppBrandRoute
   AuthenticatedAppCompetitorsRoute: typeof AuthenticatedAppCompetitorsRoute
   AuthenticatedAppDiscoveryRoute: typeof AuthenticatedAppDiscoveryRoute
@@ -273,6 +293,7 @@ interface AuthenticatedAppRouteChildren {
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppAlertsRoute: AuthenticatedAppAlertsRoute,
   AuthenticatedAppBrandRoute: AuthenticatedAppBrandRoute,
   AuthenticatedAppCompetitorsRoute: AuthenticatedAppCompetitorsRoute,
   AuthenticatedAppDiscoveryRoute: AuthenticatedAppDiscoveryRoute,

@@ -122,14 +122,14 @@ function DashboardPage() {
       value: counts?.tasks ?? 0,
       icon: ListChecks,
       iconBg: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400",
-      to: "/app",
+      to: "/app/tasks",
     },
     {
       label: "Unread alerts",
       value: counts?.alerts ?? 0,
       icon: Bell,
       iconBg: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
-      to: "/app/competitors",
+      to: "/app/alerts",
     },
     {
       label: "Saved trends",
