@@ -1,5 +1,5 @@
 /* ============================================================
-   MarketForge AI — In-memory data store (mock backend)
+   Market Eye — In-memory data store (mock backend)
    Simulates Supabase tables + Realtime via a pub/sub + setTimeout.
    ============================================================ */
 (function () {

@@ -56,7 +56,7 @@
     return h(window.React.Fragment, null,
       h('header', { className: 'topbar' },
         h('h1', null,
-          crumb ? h('span', null, h('span', { className: 'crumb', style: { cursor: 'pointer' }, onClick: () => onNav(crumb) }, TITLES[crumb]), ' / ', 'Detail') : TITLES[route] || 'MarketForge AI'),
+          crumb ? h('span', null, h('span', { className: 'crumb', style: { cursor: 'pointer' }, onClick: () => onNav(crumb) }, TITLES[crumb]), ' / ', 'Detail') : TITLES[route] || 'Market Eye'),
         h('div', { className: 'topbar-spacer' }),
         h('div', { className: 'searchbox' },
           h(Icon, { name: 'search', size: 16 }),
