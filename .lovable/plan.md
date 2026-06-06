@@ -1,32 +1,43 @@
-# Make the dashboard dynamic (Supabase-backed)
+## Goal
+Turn the topbar's search bar and bell icon into real, working features wired to live data from the database.
 
-The `/dash` view is currently a static iframe loading `public/mf/index.html` with in-memory mock data. To make what you see reflect real database data, I'll replace it with React routes that read from Supabase and write through Firecrawl-backed server functions already in place.
+## 1. Global Search (⌘K command palette)
+- Convert `SearchBox` into a trigger button (keeps current pill look + ⌘K hint).
+- Clicking it (or pressing ⌘K / Ctrl+K anywhere) opens a shadcn `CommandDialog`.
+- The dialog searches across existing tables in parallel:
+  - `competitors` → name / domain
+  - `products` → name
+  - `trends` → keyword / title
+  - `alerts` → title / message
+  - Static app pages (Dashboard, Discovery, SEO, Brand, Store, Tasks, Pricing, Trends, Competitors)
+- Results grouped by type with an icon; selecting a result navigates to the relevant route (e.g. `/app/competitors`, `/app/trends`, etc.).
+- Empty query shows "Quick navigation" with the static pages + recent alerts.
+- Debounced query (200ms), uses `useQuery` per group, results capped at 5 each.
 
-## What you'll get
+## 2. Notifications bell
+- `NotificationButton` becomes a `Popover` trigger.
+- Popover content (~360px wide) shows:
+  - Header "Notifications" + "Mark all read" button
+  - List of latest 10 rows from `alerts` table (title, message, created_at relative time, severity dot)
+  - Unread badge count comes from `alerts.read = false` (already added field — if missing we'll add it in the migration step)
+  - Empty state when none
+  - Footer link "View all alerts" → `/app/pricing` (alerts live there)
+- "Mark all read" updates `alerts.read = true` for the current user and invalidates the query.
+- Clicking a single alert marks just that one read and navigates to `/app/pricing`.
 
-- **Auth gate**: email/password sign-in + sign-up page at `/auth`. On first sign-in, the existing `seed_demo_data()` runs once so the new account has the same demo content you see today.
-- **Authenticated shell** at `/app/*`: sidebar nav + topbar with realtime badges (unread alerts + running tasks), powered by Supabase Realtime on `alerts` and `background_tasks`.
-- **Pages, all reading live from Supabase**:
-  - `/app` — Dashboard: KPI cards, recent alerts, active tasks, recent competitor changes.
-  - `/app/competitors` — list, add, pause/resume, delete; "Recrawl" button calls `startCompetitorCrawl` (Firecrawl).
-  - `/app/discovery` — keyword + platform form; "Scan trends" calls `startTrendScan` (Firecrawl); table of `trends` with save toggle.
-  - `/app/brand` — list of `brand_assets`; create new (form-only, no AI yet).
-  - `/app/seo` — list of `seo_content`; create/edit drafts; publish toggle.
-- **Data flow**: TanStack Query for reads (loaders prime, components subscribe). Mutations through Supabase client with `auth.uid()` scoping. Realtime subscriptions invalidate the relevant query keys.
-- **Old iframe**: `/dash` becomes a redirect to `/app`; `public/mf/*` stays in repo but is no longer rendered.
+## 3. Database
+Check `alerts` schema — if no `read` boolean column exists, add migration:
+- `ALTER TABLE alerts ADD COLUMN read boolean NOT NULL DEFAULT false;`
+- Update existing RLS so users can UPDATE their own alerts.
 
-## Out of scope (ask if you want them too)
+## 4. Files touched
+- `src/routes/_authenticated/app.tsx` — rewrite `SearchBox` + `NotificationButton`, add ⌘K listener.
+- New: `src/components/app/global-search.tsx` (CommandDialog).
+- New: `src/components/app/notifications-popover.tsx`.
+- Migration only if `alerts.read` doesn't already exist.
 
-- Store generator page (no `generated_stores` table in current schema).
-- Actual AI generation for brand/SEO (placeholders only — wire to Lovable AI Gateway in a follow-up).
-- Google sign-in (email/password only for now per your earlier choice).
+## Out of scope
+- Realtime push (will poll on focus via React Query).
+- No visual restyle of topbar — same pill + bell look.
 
-## Technical notes
-
-- New routes under `src/routes/_authenticated/app.*.tsx` using the integration-managed `_authenticated` layout (auto-redirects to `/auth` when signed out).
-- New `/auth` route (public) with email/password forms calling `supabase.auth.signUp` / `signInWithPassword`; after sign-in invokes `supabase.rpc('seed_demo_data', { p_user })`.
-- Realtime: single subscription wired in the `_authenticated` layout, filtered by `user_id`, invalidating `['alerts']` and `['tasks']` query keys.
-- Sidebar badge counts come from two lightweight queries kept fresh by realtime invalidation.
-- Existing `crawlCompetitor` / `scanTrends` server fns already write to the right tables — UI just triggers them and observes results.
-
-After approval I'll ship this in one pass.
+Confirm and I'll build it.
