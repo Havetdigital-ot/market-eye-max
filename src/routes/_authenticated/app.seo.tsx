@@ -126,7 +126,7 @@ function SeoPage() {
 
   function openItem(item: any) {
     setSelectedId(item.id);
-    setEditTitle(item.title);
+    setEditTitle(item.title ?? "");
     setEditBody(item.body ?? "");
   }
 
@@ -256,7 +256,7 @@ function SeoPage() {
                 </div>
               </div>
               <Input
-                value={editTitle}
+                value={editTitle ?? ""}
                 onChange={(e) => setEditTitle(e.target.value)}
                 className="text-xl font-semibold h-12"
               />
