@@ -186,17 +186,48 @@ function BrandPage() {
         <div className="space-y-5">
           <Card className="p-5">
             <label className="text-[13px] font-semibold text-foreground">
-              Product / niche description
+              Product / niche
             </label>
-            <Textarea
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-              placeholder="e.g. Premium home espresso gear for design-conscious enthusiasts who care about ritual and craft…"
-              className="mt-2 min-h-[120px] resize-none"
-            />
-            <p className="text-xs text-muted-foreground mt-1.5">
-              The more specific, the better the result.
-            </p>
+            <Select
+              value={nicheKey}
+              onValueChange={(v) => {
+                setNicheKey(v);
+                if (v === "other") {
+                  setDesc("");
+                } else {
+                  const preset = NICHE_PRESETS.find((n) => n.value === v);
+                  setDesc(preset?.description ?? "");
+                }
+              }}
+            >
+              <SelectTrigger className="mt-2 h-11">
+                <SelectValue placeholder="Choose a niche…" />
+              </SelectTrigger>
+              <SelectContent>
+                {NICHE_PRESETS.map((n) => (
+                  <SelectItem key={n.value} value={n.value}>
+                    {n.label}
+                  </SelectItem>
+                ))}
+                <SelectItem value="other">Other (write your own)</SelectItem>
+              </SelectContent>
+            </Select>
+            {nicheKey && (
+              <>
+                <label className="text-[13px] font-semibold text-foreground mt-4 block">
+                  {nicheKey === "other" ? "Describe your product or niche" : "Description (edit if needed)"}
+                </label>
+                <Textarea
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                  placeholder="e.g. Premium home espresso gear for design-conscious enthusiasts who care about ritual and craft…"
+                  className="mt-2 min-h-[120px] resize-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  The more specific, the better the result.
+                </p>
+              </>
+            )}
             <Button
               onClick={generate}
               disabled={phase === "generating"}
