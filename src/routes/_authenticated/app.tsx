@@ -5,33 +5,28 @@ import {
   useRouterState,
   useNavigate,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
-  Users,
+  Radar,
   Sparkles,
-  Palette,
+  Star,
   FileText,
   Bell,
   LogOut,
+  Search,
+  AtSign,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,18 +34,42 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
 });
 
-const nav = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  badgeKey?: "tasks";
+};
+
+const NAV: NavItem[] = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/app/competitors", label: "Competitors", icon: Users },
+  { to: "/app/competitors", label: "Competitor Monitor", icon: Radar },
   { to: "/app/discovery", label: "Product Discovery", icon: Sparkles },
-  { to: "/app/brand", label: "Brand Builder", icon: Palette },
+  { to: "/app/brand", label: "Brand Builder", icon: Star },
   { to: "/app/seo", label: "SEO Content", icon: FileText },
 ];
+
+const TITLES: Record<string, string> = {
+  "/app": "Dashboard",
+  "/app/competitors": "Competitor Monitor",
+  "/app/discovery": "Product Discovery",
+  "/app/brand": "Brand Builder",
+  "/app/seo": "SEO Content",
+};
 
 function AppShell() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const { data: profile } = useQuery({
+    queryKey: ["me", "profile"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    },
+  });
 
   const { data: unreadAlerts = 0 } = useQuery({
     queryKey: ["badge", "alerts"],
@@ -78,31 +97,19 @@ function AppShell() {
   useEffect(() => {
     const channel = supabase
       .channel("app-sidebar")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "alerts" },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["badge", "alerts"] });
-          queryClient.invalidateQueries({ queryKey: ["alerts"] });
-        },
+      .on("postgres_changes", { event: "*", schema: "public", table: "alerts" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["badge", "alerts"] });
+        queryClient.invalidateQueries({ queryKey: ["alerts"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "background_tasks" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["badge", "tasks"] });
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "competitor_products" }, () =>
+        queryClient.invalidateQueries({ queryKey: ["products"] }),
       )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "background_tasks" },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["badge", "tasks"] });
-          queryClient.invalidateQueries({ queryKey: ["tasks"] });
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "competitor_products" },
-        () => queryClient.invalidateQueries({ queryKey: ["products"] }),
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "trends" },
-        () => queryClient.invalidateQueries({ queryKey: ["trends"] }),
+      .on("postgres_changes", { event: "*", schema: "public", table: "trends" }, () =>
+        queryClient.invalidateQueries({ queryKey: ["trends"] }),
       )
       .subscribe();
     return () => {
@@ -118,68 +125,175 @@ function AppShell() {
     navigate({ to: "/auth", replace: true });
   }
 
+  const fullName =
+    ((profile?.user_metadata as any)?.full_name as string | undefined) ??
+    profile?.email ??
+    "User";
+  const company = ((profile?.user_metadata as any)?.company_name as string | undefined) ?? "Workspace";
+  const initials = fullName
+    .split(/\s+/)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const title = TITLES[pathname] ?? "Market Eye";
+
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full" style={{ background: "var(--canvas)" }}>
         <Sidebar collapsible="icon">
-          <SidebarHeader className="p-4">
-            <div className="font-semibold">Market Eye</div>
+          {/* Brand */}
+          <SidebarHeader className="px-5 pt-5 pb-4">
+            <Link to="/app" className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-[10px] grid place-items-center shrink-0"
+                style={{
+                  background:
+                    "linear-gradient(155deg, oklch(0.66 0.19 268), oklch(0.52 0.2 290))",
+                  boxShadow: "0 4px 14px oklch(0.6 0.2 275 / 0.45)",
+                }}
+              >
+                <AtSign className="h-[20px] w-[20px] text-white" strokeWidth={2.5} />
+              </div>
+              <div className="leading-tight flex items-baseline gap-1.5">
+                <span className="text-white font-extrabold text-[17px] tracking-tight">
+                  Market Eye
+                </span>
+                <span className="text-sidebar-foreground/55 font-semibold text-[13px] tracking-tight">
+                  AI
+                </span>
+              </div>
+            </Link>
           </SidebarHeader>
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Workspace</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {nav.map((item) => {
-                    const active = item.exact
-                      ? pathname === item.to
-                      : pathname.startsWith(item.to);
-                    const badge =
-                      item.to === "/app"
-                        ? unreadAlerts
-                        : item.to === "/app/competitors"
-                          ? runningTasks
-                          : 0;
-                    return (
-                      <SidebarMenuItem key={item.to}>
-                        <SidebarMenuButton asChild isActive={active}>
-                          <Link to={item.to} className="flex items-center gap-2">
-                            <item.icon className="h-4 w-4" />
-                            <span className="flex-1">{item.label}</span>
-                            {badge > 0 && (
-                              <Badge variant="secondary" className="ml-auto">
-                                {badge}
-                              </Badge>
-                            )}
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+
+          {/* Nav */}
+          <SidebarContent className="px-3 gap-0">
+            <div className="text-[11px] font-bold tracking-[0.08em] uppercase text-sidebar-foreground/60 px-3 pt-4 pb-1.5">
+              Workspace
+            </div>
+            <nav className="flex flex-col gap-0.5">
+              {NAV.map((item) => {
+                const active = item.exact
+                  ? pathname === item.to
+                  : pathname.startsWith(item.to);
+                const badge =
+                  item.badgeKey === "tasks" ? runningTasks : 0;
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to as any}
+                    className={`relative flex items-center gap-[11px] px-3 py-[9px] rounded-[9px] text-sm font-medium transition-colors
+                      ${active
+                        ? "bg-sidebar-accent text-white"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-white"}`}
+                  >
+                    {active && (
+                      <span
+                        className="absolute -left-3 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r"
+                        style={{ background: "oklch(0.62 0.176 264)" }}
+                      />
+                    )}
+                    <Icon className="h-[18px] w-[18px] opacity-85 shrink-0" />
+                    <span className="flex-1 whitespace-nowrap">{item.label}</span>
+                    {badge > 0 && (
+                      <span className="ml-auto min-w-[19px] h-[19px] px-1.5 rounded-full grid place-items-center text-[11px] font-bold font-mono text-white"
+                        style={{ background: "oklch(0.62 0.176 264)" }}
+                      >
+                        {badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
           </SidebarContent>
-          <SidebarFooter className="p-2">
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="justify-start">
-              <LogOut className="h-4 w-4 mr-2" /> Sign out
-            </Button>
+
+          {/* User chip */}
+          <SidebarFooter className="border-t border-sidebar-border p-3">
+            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] hover:bg-sidebar-accent cursor-pointer group">
+              <div className="w-8 h-8 rounded-full grid place-items-center text-white font-bold text-[13px] shrink-0"
+                style={{
+                  background:
+                    "linear-gradient(150deg, oklch(0.6 0.13 200), oklch(0.55 0.15 280))",
+                }}
+              >
+                {initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-semibold text-white leading-tight truncate">
+                  {fullName}
+                </div>
+                <div className="text-[12px] text-sidebar-foreground/60 truncate">
+                  {company}
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-sidebar-foreground/60 hover:text-white hover:bg-sidebar-accent"
+                onClick={handleSignOut}
+                title="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </SidebarFooter>
         </Sidebar>
+
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 border-b flex items-center px-4 gap-3">
-            <SidebarTrigger />
+          {/* Topbar */}
+          <header
+            className="h-16 px-6 flex items-center gap-4 border-b bg-background/60 backdrop-blur sticky top-0 z-30"
+            style={{ borderColor: "oklch(0.922 0.005 256)" }}
+          >
+            <SidebarTrigger className="md:hidden" />
+            <h1 className="text-xl font-bold tracking-tight">{title}</h1>
             <div className="flex-1" />
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Bell className="h-4 w-4" />
-              {unreadAlerts} unread · {runningTasks} running
-            </div>
+            <SearchBox />
+            <NotificationButton count={unreadAlerts} />
           </header>
-          <main className="flex-1 overflow-auto p-6">
+
+          <main className="flex-1 overflow-auto p-8">
             <Outlet />
           </main>
         </div>
       </div>
     </SidebarProvider>
+  );
+}
+
+function SearchBox() {
+  const [v, setV] = useState("");
+  return (
+    <div className="hidden md:flex items-center gap-2 px-3.5 h-10 rounded-full bg-white border w-[360px] focus-within:ring-2 focus-within:ring-blue-500/20"
+      style={{ borderColor: "oklch(0.922 0.005 256)" }}
+    >
+      <Search className="h-4 w-4 text-muted-foreground" />
+      <input
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        placeholder="Search competitors, products, trends…"
+        className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
+      />
+      <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-muted-foreground bg-muted">
+        ⌘K
+      </kbd>
+    </div>
+  );
+}
+
+function NotificationButton({ count }: { count: number }) {
+  return (
+    <button className="relative w-10 h-10 rounded-full bg-white border grid place-items-center hover:bg-muted transition-colors"
+      style={{ borderColor: "oklch(0.922 0.005 256)" }}
+    >
+      <Bell className="h-[18px] w-[18px] text-foreground" />
+      {count > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full grid place-items-center text-[10px] font-bold text-white bg-rose-500 border-2 border-white">
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
+    </button>
   );
 }
