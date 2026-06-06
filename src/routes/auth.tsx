@@ -16,7 +16,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 const DEMO_EMAIL = "joe@marketeye.demo";
-const DEMO_PASSWORD = "demo1234";
+const DEMO_PASSWORD = "Demo!MarketEye-2026#Preview";
 const DEMO_NAME = "Joe Demo";
 
 function AuthPage() {
