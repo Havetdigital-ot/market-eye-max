@@ -1,0 +1,11 @@
+alerts
+background_tasks
+brand_assets
+brand_generation_templates
+competitor_products
+competitors
+generated_stores
+price_history
+profiles
+seo_content
+trends
