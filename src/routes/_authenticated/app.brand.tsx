@@ -169,6 +169,7 @@ function BrandPage() {
     setPhase("idle");
     setDraft(null);
     setDesc("");
+    setNicheKey("");
   }
 
   return (
