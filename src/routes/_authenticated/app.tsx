@@ -23,7 +23,6 @@ import {
   Sparkles,
   Star,
   FileText,
-  Bell,
   LogOut,
   Search,
   Store as StoreIcon,
@@ -31,6 +30,8 @@ import {
 } from "lucide-react";
 import marketEyeIcon from "@/assets/market-eye-icon.png.asset.json";
 import { toast } from "sonner";
+import { GlobalSearch } from "@/components/app/global-search";
+import { NotificationsPopover } from "@/components/app/notifications-popover";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
@@ -69,6 +70,18 @@ function AppShell() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const { data: profile } = useQuery({
     queryKey: ["me", "profile"],
@@ -250,9 +263,10 @@ function AppShell() {
             <SidebarTrigger className="md:hidden" />
             <h1 className="text-xl font-bold tracking-tight">{title}</h1>
             <div className="flex-1" />
-            <SearchBox />
-            <NotificationButton count={unreadAlerts} />
+            <SearchBox onOpen={() => setSearchOpen(true)} />
+            <NotificationsPopover count={unreadAlerts} />
           </header>
+          <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
           <main className="flex-1 overflow-auto p-8">
             <Outlet />
@@ -263,37 +277,21 @@ function AppShell() {
   );
 }
 
-function SearchBox() {
-  const [v, setV] = useState("");
+function SearchBox({ onOpen }: { onOpen: () => void }) {
   return (
-    <div className="hidden md:flex items-center gap-2 px-3.5 h-10 rounded-full bg-white border w-[360px] focus-within:ring-2 focus-within:ring-blue-500/20"
+    <button
+      type="button"
+      onClick={onOpen}
+      className="hidden md:flex items-center gap-2 px-3.5 h-10 rounded-full bg-white border w-[360px] hover:bg-muted/40 transition-colors text-left"
       style={{ borderColor: "oklch(0.922 0.005 256)" }}
     >
       <Search className="h-4 w-4 text-muted-foreground" />
-      <input
-        value={v}
-        onChange={(e) => setV(e.target.value)}
-        placeholder="Search competitors, products, trends…"
-        className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
-      />
+      <span className="flex-1 text-sm text-muted-foreground">
+        Search competitors, products, trends…
+      </span>
       <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-muted-foreground bg-muted">
         ⌘K
       </kbd>
-    </div>
-  );
-}
-
-function NotificationButton({ count }: { count: number }) {
-  return (
-    <button className="relative w-10 h-10 rounded-full bg-white border grid place-items-center hover:bg-muted transition-colors"
-      style={{ borderColor: "oklch(0.922 0.005 256)" }}
-    >
-      <Bell className="h-[18px] w-[18px] text-foreground" />
-      {count > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full grid place-items-center text-[10px] font-bold text-white bg-rose-500 border-2 border-white">
-          {count > 9 ? "9+" : count}
-        </span>
-      )}
     </button>
   );
 }
