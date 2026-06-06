@@ -26,8 +26,8 @@ import {
   Bell,
   LogOut,
   Search,
-  AtSign,
 } from "lucide-react";
+import marketEyeIcon from "@/assets/market-eye-icon.png.asset.json";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app")({
