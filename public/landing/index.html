@@ -315,7 +315,10 @@
   /* ---------- Responsive ---------- */
   @media (max-width: 920px) {
     .hero-grid { grid-template-columns: 1fr; gap: 40px; }
-    .stats { grid-template-columns: repeat(2, 1fr); gap: 32px 24px; }
+    .stats { grid-template-columns: repeat(2, 1fr); padding: 40px 28px; }
+    .stat + .stat { border-left: none; }
+    .stat:nth-child(n+2) { border-top: 1px solid oklch(1 0 0 / 0.08); padding-top: 28px; margin-top: 8px; }
+    .stat:nth-child(2) { border-top: none; padding-top: 6px; margin-top: 0; border-left: 1px solid oklch(1 0 0 / 0.08); }
     .feat-grid { grid-template-columns: 1fr 1fr; }
     .spot { grid-template-columns: 1fr; gap: 32px; }
     .spot.flip .spot-text { order: 0; }
