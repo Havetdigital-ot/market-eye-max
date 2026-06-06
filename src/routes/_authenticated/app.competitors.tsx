@@ -90,18 +90,29 @@ function CompetitorsPage() {
     } catch {
       return toast.error("Enter a valid URL");
     }
-    const { error } = await supabase.from("competitors").insert({
-      user_id: user.user.id,
-      display_name: display,
-      url,
-      status: "Active",
-    });
-    if (error) return toast.error(error.message);
+    const { data: inserted, error } = await supabase
+      .from("competitors")
+      .insert({
+        user_id: user.user.id,
+        display_name: display,
+        url,
+        status: "Active",
+      })
+      .select("id")
+      .single();
+    if (error || !inserted) return toast.error(error?.message ?? "Failed");
     setName("");
     setUrl("");
     setOpen(false);
     qc.invalidateQueries({ queryKey: ["competitors"] });
-    toast.success("Competitor added");
+    toast.success("Competitor added — starting first crawl");
+    try {
+      await startCompetitorCrawl(inserted.id);
+      qc.invalidateQueries({ queryKey: ["competitors"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Crawl failed to start");
+    }
   }
 
   async function toggleStatus(id: string, status: string) {
