@@ -26,8 +26,8 @@ import {
   Bell,
   LogOut,
   Search,
-  AtSign,
 } from "lucide-react";
+import marketEyeIcon from "@/assets/market-eye-icon.png.asset.json";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -145,22 +145,15 @@ function AppShell() {
         <Sidebar collapsible="icon">
           {/* Brand */}
           <SidebarHeader className="px-5 pt-5 pb-4">
-            <Link to="/app" className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-[10px] grid place-items-center shrink-0"
-                style={{
-                  background:
-                    "linear-gradient(155deg, oklch(0.66 0.19 268), oklch(0.52 0.2 290))",
-                  boxShadow: "0 4px 14px oklch(0.6 0.2 275 / 0.45)",
-                }}
-              >
-                <AtSign className="h-[20px] w-[20px] text-white" strokeWidth={2.5} />
-              </div>
+            <Link to="/app" className="flex items-center gap-2.5">
+              <img
+                src={marketEyeIcon.url}
+                alt="Market Eye"
+                className="w-9 h-9 object-contain shrink-0"
+              />
               <div className="leading-tight flex items-baseline gap-1.5">
                 <span className="text-white font-extrabold text-[17px] tracking-tight">
                   Market Eye
-                </span>
-                <span className="text-sidebar-foreground/55 font-semibold text-[13px] tracking-tight">
-                  AI
                 </span>
               </div>
             </Link>
