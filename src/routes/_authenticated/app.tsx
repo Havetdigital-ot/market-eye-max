@@ -26,6 +26,8 @@ import {
   Bell,
   LogOut,
   Search,
+  Store as StoreIcon,
+  ListChecks,
 } from "lucide-react";
 import marketEyeIcon from "@/assets/market-eye-icon.png.asset.json";
 import { toast } from "sonner";
@@ -48,6 +50,8 @@ const NAV: NavItem[] = [
   { to: "/app/discovery", label: "Product Discovery", icon: Sparkles },
   { to: "/app/brand", label: "Brand Builder", icon: Star },
   { to: "/app/seo", label: "SEO Content", icon: FileText },
+  { to: "/app/store", label: "Store Generator", icon: StoreIcon },
+  { to: "/app/tasks", label: "Task Log", icon: ListChecks, badgeKey: "tasks" },
 ];
 
 const TITLES: Record<string, string> = {
@@ -56,7 +60,10 @@ const TITLES: Record<string, string> = {
   "/app/discovery": "Product Discovery",
   "/app/brand": "Brand Builder",
   "/app/seo": "SEO Content",
+  "/app/store": "Store Generator",
+  "/app/tasks": "Task Log",
 };
+
 
 function AppShell() {
   const queryClient = useQueryClient();

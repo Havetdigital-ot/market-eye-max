@@ -15,6 +15,8 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
+import { Route as AuthenticatedAppStoreRouteImport } from './routes/_authenticated/app.store'
 import { Route as AuthenticatedAppSeoRouteImport } from './routes/_authenticated/app.seo'
 import { Route as AuthenticatedAppDiscoveryRouteImport } from './routes/_authenticated/app.discovery'
 import { Route as AuthenticatedAppCompetitorsRouteImport } from './routes/_authenticated/app.competitors'
@@ -49,6 +51,16 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppStoreRoute = AuthenticatedAppStoreRouteImport.update({
+  id: '/store',
+  path: '/store',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppSeoRoute = AuthenticatedAppSeoRouteImport.update({
   id: '/seo',
   path: '/seo',
@@ -81,6 +93,8 @@ export interface FileRoutesByFullPath {
   '/app/competitors': typeof AuthenticatedAppCompetitorsRoute
   '/app/discovery': typeof AuthenticatedAppDiscoveryRoute
   '/app/seo': typeof AuthenticatedAppSeoRoute
+  '/app/store': typeof AuthenticatedAppStoreRoute
+  '/app/tasks': typeof AuthenticatedAppTasksRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -91,6 +105,8 @@ export interface FileRoutesByTo {
   '/app/competitors': typeof AuthenticatedAppCompetitorsRoute
   '/app/discovery': typeof AuthenticatedAppDiscoveryRoute
   '/app/seo': typeof AuthenticatedAppSeoRoute
+  '/app/store': typeof AuthenticatedAppStoreRoute
+  '/app/tasks': typeof AuthenticatedAppTasksRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesById {
@@ -104,6 +120,8 @@ export interface FileRoutesById {
   '/_authenticated/app/competitors': typeof AuthenticatedAppCompetitorsRoute
   '/_authenticated/app/discovery': typeof AuthenticatedAppDiscoveryRoute
   '/_authenticated/app/seo': typeof AuthenticatedAppSeoRoute
+  '/_authenticated/app/store': typeof AuthenticatedAppStoreRoute
+  '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRouteTypes {
@@ -117,6 +135,8 @@ export interface FileRouteTypes {
     | '/app/competitors'
     | '/app/discovery'
     | '/app/seo'
+    | '/app/store'
+    | '/app/tasks'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,6 +147,8 @@ export interface FileRouteTypes {
     | '/app/competitors'
     | '/app/discovery'
     | '/app/seo'
+    | '/app/store'
+    | '/app/tasks'
     | '/app'
   id:
     | '__root__'
@@ -139,6 +161,8 @@ export interface FileRouteTypes {
     | '/_authenticated/app/competitors'
     | '/_authenticated/app/discovery'
     | '/_authenticated/app/seo'
+    | '/_authenticated/app/store'
+    | '/_authenticated/app/tasks'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
 }
@@ -193,6 +217,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/tasks': {
+      id: '/_authenticated/app/tasks'
+      path: '/tasks'
+      fullPath: '/app/tasks'
+      preLoaderRoute: typeof AuthenticatedAppTasksRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/store': {
+      id: '/_authenticated/app/store'
+      path: '/store'
+      fullPath: '/app/store'
+      preLoaderRoute: typeof AuthenticatedAppStoreRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/seo': {
       id: '/_authenticated/app/seo'
       path: '/seo'
@@ -229,6 +267,8 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppCompetitorsRoute: typeof AuthenticatedAppCompetitorsRoute
   AuthenticatedAppDiscoveryRoute: typeof AuthenticatedAppDiscoveryRoute
   AuthenticatedAppSeoRoute: typeof AuthenticatedAppSeoRoute
+  AuthenticatedAppStoreRoute: typeof AuthenticatedAppStoreRoute
+  AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
 
@@ -237,6 +277,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppCompetitorsRoute: AuthenticatedAppCompetitorsRoute,
   AuthenticatedAppDiscoveryRoute: AuthenticatedAppDiscoveryRoute,
   AuthenticatedAppSeoRoute: AuthenticatedAppSeoRoute,
+  AuthenticatedAppStoreRoute: AuthenticatedAppStoreRoute,
+  AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }
 
