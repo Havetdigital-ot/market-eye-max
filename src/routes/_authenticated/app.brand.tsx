@@ -48,25 +48,42 @@ function BrandPage() {
     },
   });
 
+  const { data: templates = [] } = useQuery<BrandTemplate[]>({
+    queryKey: ["brand-generation-templates"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("brand_generation_templates")
+        .select("brand_name, brand_voice, color_palette, font_primary, font_secondary")
+        .order("sort_order", { ascending: true });
+      return (data ?? []) as BrandTemplate[];
+    },
+  });
+
   function generate() {
     if (!desc.trim()) {
       toast.error("Describe your product or niche first.");
       return;
     }
+    if (templates.length === 0) {
+      toast.error("Templates unavailable. Try again in a moment.");
+      return;
+    }
     setPhase("generating");
     setTimeout(() => {
-      const i = seed % 3;
+      const i = seed % templates.length;
       setSeed(seed + 1);
+      const t = templates[i];
       setDraft({
-        brand_name: NAMES[i],
+        brand_name: t.brand_name,
         source_description: desc,
-        brand_voice: VOICES[i],
-        color_palette: PALETTES[i],
-        font_choices: FONTS[i],
+        brand_voice: t.brand_voice,
+        color_palette: t.color_palette,
+        font_choices: { primary: t.font_primary, secondary: t.font_secondary },
       });
       setPhase("review");
     }, 1800);
   }
+
 
   async function accept() {
     if (!draft) return;
