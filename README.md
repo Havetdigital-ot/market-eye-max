@@ -1,4 +1,4 @@
-# Market Eye Pro
+# Market Eye AI
 
 Market Eye Pro is a competitive intelligence and market research platform designed for ecommerce brands. It leverages AI and web scraping to monitor competitor catalogs, track price changes, discover trending products, and generate high-converting SEO and brand content.
 
