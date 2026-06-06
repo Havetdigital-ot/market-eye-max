@@ -23,6 +23,7 @@ import { Route as AuthenticatedAppDiscoveryRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppCompetitorsRouteImport } from './routes/_authenticated/app.competitors'
 import { Route as AuthenticatedAppBrandRouteImport } from './routes/_authenticated/app.brand'
 import { Route as AuthenticatedAppAlertsRouteImport } from './routes/_authenticated/app.alerts'
+import { Route as ApiPublicHooksDbBackupRouteImport } from './routes/api/public/hooks/db-backup'
 
 const DashRoute = DashRouteImport.update({
   id: '/dash',
@@ -95,6 +96,11 @@ const AuthenticatedAppAlertsRoute = AuthenticatedAppAlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const ApiPublicHooksDbBackupRoute = ApiPublicHooksDbBackupRouteImport.update({
+  id: '/api/public/hooks/db-backup',
+  path: '/api/public/hooks/db-backup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/app/store': typeof AuthenticatedAppStoreRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/api/public/hooks/db-backup': typeof ApiPublicHooksDbBackupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/app/store': typeof AuthenticatedAppStoreRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/api/public/hooks/db-backup': typeof ApiPublicHooksDbBackupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/_authenticated/app/store': typeof AuthenticatedAppStoreRoute
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/api/public/hooks/db-backup': typeof ApiPublicHooksDbBackupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/app/store'
     | '/app/tasks'
     | '/app/'
+    | '/api/public/hooks/db-backup'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/app/store'
     | '/app/tasks'
     | '/app'
+    | '/api/public/hooks/db-backup'
   id:
     | '__root__'
     | '/'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/store'
     | '/_authenticated/app/tasks'
     | '/_authenticated/app/'
+    | '/api/public/hooks/db-backup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -196,6 +208,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DashRoute: typeof DashRoute
   SSlugRoute: typeof SSlugRoute
+  ApiPublicHooksDbBackupRoute: typeof ApiPublicHooksDbBackupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAlertsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/public/hooks/db-backup': {
+      id: '/api/public/hooks/db-backup'
+      path: '/api/public/hooks/db-backup'
+      fullPath: '/api/public/hooks/db-backup'
+      preLoaderRoute: typeof ApiPublicHooksDbBackupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -343,6 +363,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DashRoute: DashRoute,
   SSlugRoute: SSlugRoute,
+  ApiPublicHooksDbBackupRoute: ApiPublicHooksDbBackupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
