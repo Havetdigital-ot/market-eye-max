@@ -122,11 +122,10 @@ async function runBackup() {
   // Also keep a top-level "latest.json" pointer
   await supabaseAdmin.storage
     .from(BUCKET)
-    .upload(
-      `latest.json`,
-      JSON.stringify({ folder, ...manifest }, null, 2),
-      { contentType: "application/json", upsert: true },
-    );
+    .upload(`latest.json`, JSON.stringify(manifest, null, 2), {
+      contentType: "application/json",
+      upsert: true,
+    });
 
   return manifest;
 }
