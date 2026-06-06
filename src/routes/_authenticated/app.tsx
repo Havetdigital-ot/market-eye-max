@@ -23,8 +23,6 @@ import {
   Sparkles,
   Star,
   FileText,
-  Store,
-  ListChecks,
   Bell,
   LogOut,
   Search,
