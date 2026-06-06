@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict HOuhonb280nNXgooJZHEWebkZ4UM5vPJiI4AuKpuqiP5AUnOFieGPRh0MIZKYuz
+\restrict jtGKrvczP0PJK83j4SAxFq3Y6Ep8pFdsTuhY82lDFIZNIWom7zq99KMEI8xCRqO
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.9
@@ -260,5 +260,5 @@ INSERT INTO "public"."trends" ("id", "user_id", "keyword", "platform", "product_
 -- PostgreSQL database dump complete
 --
 
-\unrestrict HOuhonb280nNXgooJZHEWebkZ4UM5vPJiI4AuKpuqiP5AUnOFieGPRh0MIZKYuz
+\unrestrict jtGKrvczP0PJK83j4SAxFq3Y6Ep8pFdsTuhY82lDFIZNIWom7zq99KMEI8xCRqO
 
