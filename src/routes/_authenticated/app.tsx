@@ -26,8 +26,7 @@ import {
   Bell,
   LogOut,
   Search,
-  
-  Compass,
+  AtSign,
 } from "lucide-react";
 import { toast } from "sonner";
 
