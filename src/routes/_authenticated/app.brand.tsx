@@ -97,6 +97,7 @@ function timeAgo(d: string) {
 
 function BrandPage() {
   const qc = useQueryClient();
+  const [nicheKey, setNicheKey] = useState<string>("");
   const [desc, setDesc] = useState("");
   const [phase, setPhase] = useState<"idle" | "generating" | "review">("idle");
   const [draft, setDraft] = useState<any | null>(null);
