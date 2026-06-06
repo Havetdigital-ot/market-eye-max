@@ -1,0 +1,4 @@
+id,sort_order,brand_name,brand_voice,color_palette,font_primary,font_secondary,created_at
+eb8ae884-c4cd-4a45-b85e-4d167d6834e4,0,Driftwood Coffee Co.,"Warm, knowledgeable, and unpretentious — like a trusted friend who happens to be a barista.","[""#1F2A24"", ""#3E7C5A"", ""#A8C3A0"", ""#E9F0E6"", ""#F6F4EE""]",Fraunces,Hanken Grotesk,2026-06-06 04:15:42.845537+00
+483d9292-6de3-403f-9db6-009936ddbc44,1,Ember & Oak,"Bold, energetic, and a little irreverent — for a brand that doesn't take itself too seriously.","[""#2A1E16"", ""#C8794A"", ""#E8DCC8"", ""#7A8B6F"", ""#F4EFE6""]",Canela,Inter,2026-06-06 04:15:42.845537+00
+3e89fd67-e924-44d4-80bf-b222878b8424,2,Slow Pour Society,"Refined and editorial, with quiet confidence — speaking to discerning, design-led buyers.","[""#16202E"", ""#3A6EA5"", ""#9FC3E8"", ""#E6EEF6"", ""#F4F7FA""]",Spectral,Söhne,2026-06-06 04:15:42.845537+00

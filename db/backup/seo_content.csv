@@ -1,0 +1,4 @@
+id,user_id,product_id,type,topic,title,body,keywords,status,created_at,published_at
+19d27a25-6749-4e55-afbd-081ee2a5dd79,2dc42356-13cb-4ce4-bf77-fd583f77d72e,,Blog Post,How to dial in espresso at home,7 Steps to Dial In the Perfect Espresso Shot at Home,,"{espresso,""home barista"",""dialing in"",""grind size""}",Published,2026-06-03 03:09:59.8784+00,2026-06-03 15:09:59.8784+00
+5e43dadc-e0a4-4156-95c9-4f0ead5b4870,2dc42356-13cb-4ce4-bf77-fd583f77d72e,,Product Description,Aria Dual-Boiler Espresso Machine,"Aria Dual-Boiler — Café-Grade Espresso, Engineered for Your Counter",,"{""dual boiler"",PID,""prosumer espresso""}",Draft,2026-06-05 03:09:59.8784+00,
+c0946288-9546-4931-b9c1-99679836357b,2dc42356-13cb-4ce4-bf77-fd583f77d72e,,FAQ,Cold brew brewing questions,"Cold Brew FAQ: Ratios, Timing & Storage",,"{""cold brew"",ratio,storage}",Draft,2026-06-05 21:09:59.8784+00,

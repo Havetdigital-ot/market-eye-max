@@ -1,0 +1,9 @@
+id,competitor_id,name,url,description,image_url,category,sku,last_updated_at
+614c2ec5-0246-4d67-a640-0954d52337a5,6b4413a4-1b9b-4e6c-97f7-c37deeb861d1,Crema Pro Semi-Auto Machine,https://example.com/cl-pro-750,58mm portafilter semi-automatic.,,Machines,CL-PRO-750,2026-06-06 03:09:59.8784+00
+5639f778-d55b-4031-a34a-8be59464ffee,6b4413a4-1b9b-4e6c-97f7-c37deeb861d1,Crema Flat Burr Grinder,https://example.com/cl-fb-329,64mm flat burr grinder.,,Grinders,CL-FB-329,2026-06-06 03:09:59.8784+00
+38f92354-d7c3-49e3-9455-ecd6d766ad00,6b4413a4-1b9b-4e6c-97f7-c37deeb861d1,Glass Carafe Pour-Over Set,https://example.com/cl-po-054,Borosilicate carafe with reusable stainless filter.,,Brewers,CL-PO-054,2026-06-06 03:09:59.8784+00
+45d0d622-217e-4e37-b03a-81f7b353885c,db432546-ce39-49cb-ac10-317d7e1b4916,Republic Single-Origin Sampler,https://example.com/rr-so-042,Rotating four-bag sampler of single-origin lots.,,Beans,RR-SO-042,2026-06-06 03:09:59.8784+00
+a064881d-6428-42fc-906b-64698063be6c,db432546-ce39-49cb-ac10-317d7e1b4916,Cold Brew Tower 1.5L,https://example.com/rr-cb-129,"Slow-drip cold brew tower, glass and walnut.",,Brewers,RR-CB-129,2026-06-06 03:09:59.8784+00
+0f70af2e-dc71-4936-be4c-886c9be95df0,db432546-ce39-49cb-ac10-317d7e1b4916,Insulated Travel Press 350ml,https://example.com/rr-tp-036,Vacuum-insulated French press travel mug.,,Accessories,RR-TP-036,2026-06-06 03:09:59.8784+00
+0075ea4d-8008-4491-9a7d-c00b8e7f395b,eb2d9813-9ada-4090-a17b-e941dc76cb2d,Smart Electric Gooseneck Kettle,https://example.com/kc-sk-099,App-connected kettle with hold-temp and pour-timer.,,Kettles,KC-SK-099,2026-06-06 03:09:59.8784+00
+3e7c530f-57b5-44c5-80ea-bdd2f221a2a4,eb2d9813-9ada-4090-a17b-e941dc76cb2d,Milk Frother Pro,https://example.com/kc-mf-059,Induction milk frother with four texture modes.,,Accessories,KC-MF-059,2026-06-06 03:09:59.8784+00
