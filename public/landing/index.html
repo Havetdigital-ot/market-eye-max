@@ -165,13 +165,45 @@
   /* ---------- Logo cloud ---------- */
   .cloud { padding: 44px 0 8px; }
   .cloud p { text-align: center; font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 22px; }
-  /* Infinite marquee — opacity-only fade-in so the wrapper never has a transform that breaks the child animation */
-  .cloud-marquee { position: relative; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); opacity: 0; animation: marquee-fade-in 0.8s ease 0.4s forwards; }
-  .cloud-track { display: flex; width: max-content; gap: 56px; animation: marquee 36s linear infinite; will-change: transform; }
+  /* Infinite marquee — opacity-only fade-in, no transform on wrapper */
+  .cloud-marquee {
+    position: relative; overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+    opacity: 0; animation: marquee-fade-in 0.6s ease 0.3s forwards;
+  }
+  .cloud-track {
+    display: flex; align-items: center;
+    width: max-content; gap: 14px;
+    padding: 12px 0;
+    animation: marquee 30s linear infinite;
+    will-change: transform;
+  }
   .cloud-marquee:hover .cloud-track { animation-play-state: paused; }
-  .cloud-track .logo-ph { flex: 0 0 auto; width: 200px; height: 56px; display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; color: var(--ink-faint); opacity: 0.7; transition: opacity .2s ease, color .2s ease, transform .2s ease; white-space: nowrap; }
-  .logo-ph:hover { opacity: 1; color: var(--ink); transform: translateY(-2px); }
-  .logo-ph .dotmark { width: 10px; height: 10px; border-radius: 50%; background: currentColor; margin-right: 10px; display: inline-block; }
+  .cloud-track .logo-ph {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 0 22px; height: 48px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: -0.01em;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    box-shadow: 0 1px 3px oklch(0.2 0.02 255 / 0.05), 0 0 0 0 transparent;
+    transition: border-color .2s, color .2s, box-shadow .2s, transform .2s;
+    user-select: none;
+  }
+  .logo-ph:hover {
+    color: var(--ink); border-color: var(--ink-faint);
+    box-shadow: 0 4px 16px oklch(0.2 0.02 255 / 0.08);
+    transform: translateY(-2px);
+  }
+  .logo-ph .dotmark {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px oklch(0.56 0.16 256 / 0.15);
+  }
   @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   @keyframes marquee-fade-in { to { opacity: 1; } }
 
