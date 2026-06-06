@@ -148,8 +148,8 @@
   .hero-cta { display: flex; gap: 14px; margin-top: 32px; flex-wrap: wrap; }
   .hero-trust { display: flex; align-items: center; gap: 10px; margin-top: 26px; font-size: 13.5px; color: var(--ink-faint); }
   .avatars { display: flex; }
-  .avatars span { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--bg); margin-left: -8px; background: repeating-linear-gradient(135deg, oklch(0.84 0.02 256) 0 5px, oklch(0.88 0.02 256) 5px 10px); }
-  .avatars span:first-child { margin-left: 0; }
+  .avatars img { display: block; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--bg); margin-left: -8px; object-fit: cover; background: var(--surface); }
+  .avatars img:first-child { margin-left: 0; }
   .hero-visual { position: relative; }
   .hero-visual .shot { aspect-ratio: 16 / 11; box-shadow: var(--shadow-soft); }
   .hero-float {
@@ -220,7 +220,7 @@
   .quote-wrap::before { content:"“"; position: absolute; top: -30px; left: 30px; font-family: var(--display); font-size: 200px; color: oklch(1 0 0 / 0.06); }
   .quote-wrap blockquote { font-family: var(--display); font-weight: 600; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.32; letter-spacing: -0.015em; }
   .quote-by { display: flex; align-items: center; gap: 14px; margin-top: 28px; }
-  .quote-by .av { width: 46px; height: 46px; border-radius: 50%; background: repeating-linear-gradient(135deg, oklch(0.4 0.02 256) 0 6px, oklch(0.45 0.02 256) 6px 12px); border: 1px solid oklch(1 0 0 / 0.15); flex: none; }
+  .quote-by .av { display: block; width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 1px solid oklch(1 0 0 / 0.15); flex: none; background: oklch(0.4 0.02 256); }
   .quote-by b { font-family: var(--display); font-size: 16px; display: block; }
   .quote-by small { font-size: 13.5px; color: var(--on-dark-soft); }
   .quote-visual .shot { aspect-ratio: 1 / 1; border-radius: var(--r); }
@@ -327,7 +327,12 @@
         <a class="btn btn-ghost" href="#spotlight">Watch 2-min demo</a>
       </div>
       <div class="hero-trust">
-        <div class="avatars"><span></span><span></span><span></span><span></span></div>
+        <div class="avatars">
+          <img src="assets/avatar-1.jpg" alt="User" />
+          <img src="assets/avatar-2.jpg" alt="User" />
+          <img src="assets/avatar-3.jpg" alt="User" />
+          <img src="assets/avatar-4.jpg" alt="User" />
+        </div>
         Trusted by 4,200+ ecommerce operators · no card required
       </div>
     </div>
@@ -513,7 +518,7 @@
       <div>
         <blockquote>We caught a competitor's flash sale within 30 seconds and repriced before lunch. Market Eye Pro paid for itself in a single afternoon.</blockquote>
         <div class="quote-by">
-          <span class="av"></span>
+          <img class="av" src="assets/jordan.jpg" alt="Jordan Reyes" />
           <div><b>Jordan Reyes</b><small>Head of Ecommerce, Northwind Goods</small></div>
         </div>
       </div>
