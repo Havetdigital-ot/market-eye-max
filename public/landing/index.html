@@ -165,14 +165,13 @@
   /* ---------- Logo cloud ---------- */
   .cloud { padding: 44px 0 8px; }
   .cloud p { text-align: center; font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 22px; }
-  /* Infinite marquee */
+  /* Infinite marquee — left to right, never stops */
   .cloud-marquee { position: relative; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-  .cloud-track { display: flex; width: max-content; gap: 64px; animation: marquee 32s linear infinite; will-change: transform; }
-  .cloud-marquee:hover .cloud-track { animation-play-state: paused; }
-  .cloud-track .logo-ph { flex: 0 0 auto; width: 160px; height: 56px; display: grid; place-items: center; }
-  .logo-ph img { max-height: 32px; max-width: 100%; object-fit: contain; mix-blend-mode: multiply; filter: grayscale(1); opacity: 0.6; transition: opacity .2s ease, transform .2s ease; }
-  .logo-ph:hover img { opacity: 0.95; transform: scale(1.05); }
-  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .cloud-track { display: flex; width: max-content; gap: 56px; animation: marquee 38s linear infinite; will-change: transform; }
+  .cloud-track .logo-ph { flex: 0 0 auto; width: 200px; height: 56px; display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; color: var(--ink-faint); opacity: 0.7; transition: opacity .2s ease, color .2s ease, transform .2s ease; white-space: nowrap; }
+  .logo-ph:hover { opacity: 1; color: var(--ink); transform: translateY(-2px); }
+  .logo-ph .dotmark { width: 10px; height: 10px; border-radius: 50%; background: currentColor; margin-right: 10px; display: inline-block; }
+  @keyframes marquee { from { transform: translate3d(-50%, 0, 0); } to { transform: translate3d(0, 0, 0); } }
 
   /* Scroll reveal */
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); will-change: opacity, transform; }
@@ -382,27 +381,23 @@
     <p class="reveal">Powering competitive teams at fast-growing brands</p>
     <div class="cloud-marquee reveal reveal-delay-1">
       <div class="cloud-track">
-        <div class="logo-ph"><img src="assets/logo-1.png" alt="SwiftCart" /></div>
-        <div class="logo-ph"><img src="assets/logo-2.png" alt="NovaShop" /></div>
-        <div class="logo-ph"><img src="assets/logo-3.png" alt="Zenith" /></div>
-        <div class="logo-ph"><img src="assets/logo-4.png" alt="Lumina" /></div>
-        <div class="logo-ph"><img src="assets/logo-5.png" alt="ApexRetail" /></div>
-        <div class="logo-ph"><img src="assets/logo-1.png" alt="SwiftCart" /></div>
-        <div class="logo-ph"><img src="assets/logo-2.png" alt="NovaShop" /></div>
-        <div class="logo-ph"><img src="assets/logo-3.png" alt="Zenith" /></div>
-        <div class="logo-ph"><img src="assets/logo-4.png" alt="Lumina" /></div>
-        <div class="logo-ph"><img src="assets/logo-5.png" alt="ApexRetail" /></div>
-        <!-- duplicate set for seamless infinite loop -->
-        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-1.png" alt="" /></div>
-        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-2.png" alt="" /></div>
-        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-3.png" alt="" /></div>
-        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-4.png" alt="" /></div>
-        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-5.png" alt="" /></div>
-        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-1.png" alt="" /></div>
-        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-2.png" alt="" /></div>
-        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-3.png" alt="" /></div>
-        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-4.png" alt="" /></div>
-        <div class="logo-ph" aria-hidden="true"><img src="assets/logo-5.png" alt="" /></div>
+        <div class="logo-ph"><span class="dotmark"></span>SwiftCart</div>
+        <div class="logo-ph">NovaShop°</div>
+        <div class="logo-ph">ZENITH</div>
+        <div class="logo-ph">Lumina&nbsp;Co.</div>
+        <div class="logo-ph">apex/retail</div>
+        <div class="logo-ph"><span class="dotmark"></span>Northwind</div>
+        <div class="logo-ph">PALETTE</div>
+        <div class="logo-ph">Kindred&nbsp;&amp;&nbsp;Co</div>
+        <!-- duplicate set for seamless loop -->
+        <div class="logo-ph" aria-hidden="true"><span class="dotmark"></span>SwiftCart</div>
+        <div class="logo-ph" aria-hidden="true">NovaShop°</div>
+        <div class="logo-ph" aria-hidden="true">ZENITH</div>
+        <div class="logo-ph" aria-hidden="true">Lumina&nbsp;Co.</div>
+        <div class="logo-ph" aria-hidden="true">apex/retail</div>
+        <div class="logo-ph" aria-hidden="true"><span class="dotmark"></span>Northwind</div>
+        <div class="logo-ph" aria-hidden="true">PALETTE</div>
+        <div class="logo-ph" aria-hidden="true">Kindred&nbsp;&amp;&nbsp;Co</div>
       </div>
     </div>
   </div>
