@@ -117,7 +117,7 @@ function SeoPage() {
       qc.invalidateQueries({ queryKey: ["seo"] });
       if (data) {
         setSelectedId(data.id);
-        setEditTitle(data.title);
+        setEditTitle(data.title ?? "");
         setEditBody(data.body ?? "");
       }
       toast.success("Draft generated");
