@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { startCompetitorCrawl } from "@/lib/api/firecrawl";
 import { Trash2, RefreshCw, Pause, Play } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";

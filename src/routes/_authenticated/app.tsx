@@ -33,7 +33,7 @@ import {
   Bell,
   LogOut,
 } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
