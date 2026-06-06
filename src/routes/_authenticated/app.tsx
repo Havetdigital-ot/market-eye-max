@@ -37,13 +37,21 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
 });
 
-const NAV = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  badgeKey?: "tasks";
+};
+
+const NAV: NavItem[] = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/app/competitors", label: "Competitor Monitor", icon: Radar },
   { to: "/app/discovery", label: "Product Discovery", icon: Sparkles },
   { to: "/app/brand", label: "Brand Builder", icon: Star },
   { to: "/app/seo", label: "SEO Content", icon: FileText },
-] as const;
+];
 
 const TITLES: Record<string, string> = {
   "/app": "Dashboard",
