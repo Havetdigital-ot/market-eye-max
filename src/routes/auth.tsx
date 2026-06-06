@@ -102,7 +102,7 @@ function AuthPage() {
 
           Demo mode — credentials are pre-filled. Just click <span className="font-medium text-foreground">Sign in</span> to explore the dashboard.
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           {mode === "signup" && (
             <div className="space-y-2">
               <Label htmlFor="name">Full name</Label>
@@ -114,7 +114,6 @@ function AuthPage() {
               />
             </div>
           )}
-        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           {/* honeypot to discourage browser autofill of saved creds */}
           <input type="text" name="username" autoComplete="username" defaultValue={DEMO_EMAIL} style={{ display: "none" }} readOnly />
           <input type="password" name="password" autoComplete="current-password" defaultValue="" style={{ display: "none" }} readOnly />
