@@ -1,16 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription,
+  DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -18,7 +14,7 @@ import { startCompetitorCrawl } from "@/lib/api/firecrawl";
 import {
   Trash2, RefreshCw, Pause, Play, Plus,
   Loader2, AlertCircle, ChevronDown, ChevronRight,
-  ExternalLink, Package,
+  ExternalLink, Package, Check, Search, Zap, Database,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -51,46 +47,126 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function CrawlStatusBadge({ task }: { task: { status: string; error_message?: string | null; details?: any } }) {
-  if (task.status === "Running") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-blue-700 bg-blue-50 dark:text-blue-300 dark:bg-blue-950/40">
-        <Loader2 className="h-3 w-3 animate-spin" />
-        Crawling…
-      </span>
-    );
-  }
+// ── Live crawl log panel ──────────────────────────────────────────────────────
+
+const STAGE_ORDER = ["mapping", "extracting", "saving", "done"] as const;
+type Stage = (typeof STAGE_ORDER)[number];
+
+const STAGE_META: Record<Stage, { icon: React.FC<any>; label: (d: any) => string }> = {
+  mapping:    { icon: Search,   label: (d) => `Discovering pages on ${d?.domain ?? "site"}…` },
+  extracting: { icon: Zap,      label: (d) => `Extracting products from ${d?.urlCount ?? "?"} pages…` },
+  saving:     { icon: Database, label: (d) => `Saving ${d?.found ?? "?"} products to database…` },
+  done:       { icon: Check,    label: (d) => `Done — ${d?.found ?? 0} products found` },
+};
+
+function CrawlLogPanel({ task }: { task: { status: string; error_message?: string | null; details: any } }) {
+  const details = task.details ?? {};
+  const currentStage = (details.stage ?? "mapping") as Stage;
+  const currentIdx = STAGE_ORDER.indexOf(currentStage);
+  const urls: string[] = details.urls ?? [];
+
   if (task.status === "Failed") {
     return (
-      <span
-        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-red-700 bg-red-50 cursor-help"
-        title={task.error_message ?? "Crawl failed"}
-      >
-        <AlertCircle className="h-3 w-3" />
-        Crawl failed
-      </span>
+      <div className="px-6 py-6 bg-red-50/50 dark:bg-red-950/20 border-t flex items-start gap-3">
+        <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-medium text-red-700 dark:text-red-300">Crawl failed</p>
+          <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5 font-mono">
+            {task.error_message ?? "Unknown error"}
+          </p>
+        </div>
+      </div>
     );
   }
-  return null;
+
+  return (
+    <div className="border-t bg-[#0d1117] dark:bg-[#0d1117]">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-5 py-3 border-b border-white/10">
+        <div className="flex gap-1.5">
+          <span className="h-3 w-3 rounded-full bg-red-500/70" />
+          <span className="h-3 w-3 rounded-full bg-yellow-500/70" />
+          <span className="h-3 w-3 rounded-full bg-green-500/70" />
+        </div>
+        <span className="text-[11px] text-white/40 font-mono ml-2">firecrawl — live scraping</span>
+        <Loader2 className="h-3 w-3 text-white/30 animate-spin ml-auto" />
+      </div>
+
+      <div className="px-5 py-4 space-y-3 font-mono text-[12px]">
+        {/* Stage steps */}
+        {STAGE_ORDER.map((stage, idx) => {
+          const meta = STAGE_META[stage];
+          const Icon = meta.icon;
+          const isDone = idx < currentIdx || (stage === "done" && task.status === "Completed");
+          const isCurrent = idx === currentIdx && task.status !== "Completed";
+          const isPending = idx > currentIdx;
+
+          return (
+            <div key={stage} className={`flex items-start gap-3 ${isPending ? "opacity-25" : ""}`}>
+              <div className="mt-0.5 shrink-0">
+                {isDone ? (
+                  <div className="h-4 w-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <Check className="h-2.5 w-2.5 text-emerald-400" />
+                  </div>
+                ) : isCurrent ? (
+                  <Loader2 className="h-4 w-4 text-blue-400 animate-spin" />
+                ) : (
+                  <Icon className="h-4 w-4 text-white/30" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className={
+                  isDone ? "text-emerald-400" :
+                  isCurrent ? "text-blue-300" :
+                  "text-white/30"
+                }>
+                  {meta.label(details)}
+                </span>
+
+                {/* Show URLs being scraped during extracting stage */}
+                {isCurrent && stage === "extracting" && urls.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {urls.map((u, i) => (
+                      <div key={i} className="flex items-center gap-2 text-[11px] text-white/50">
+                        <span className="text-blue-500/60">→</span>
+                        <span className="truncate">{u}</span>
+                      </div>
+                    ))}
+                    {(details.urlCount ?? 0) > urls.length && (
+                      <div className="text-[11px] text-white/30 pl-4">
+                        +{details.urlCount - urls.length} more pages
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Completion message */}
+        {task.status === "Completed" && (
+          <div className="pt-2 border-t border-white/10 text-emerald-400">
+            ✓ Crawl complete — scroll down to see products
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
-// ── Product grid shown when a competitor row is expanded ──────────────────────
+// ── Product grid ──────────────────────────────────────────────────────────────
 
 function ProductGrid({ competitorId }: { competitorId: string }) {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["competitor-products", competitorId],
     queryFn: async () => {
-      // Fetch products + latest price in one round-trip via a join
       const { data } = await supabase
         .from("competitor_products")
-        .select(`
-          id, name, description, image_url, category, sku, url,
-          price_history ( price, currency, timestamp )
-        `)
+        .select(`id, name, description, image_url, category, sku, url, price_history ( price, currency, timestamp )`)
         .eq("competitor_id", competitorId)
         .order("name");
       return (data ?? []).map((p) => {
-        // price_history is an array; grab the most recent
         const sorted = [...(p.price_history ?? [])].sort(
           (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         );
@@ -101,7 +177,7 @@ function ProductGrid({ competitorId }: { competitorId: string }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 px-6 py-6 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 px-6 py-6 bg-muted/20 border-t text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Loading products…
       </div>
@@ -110,7 +186,7 @@ function ProductGrid({ competitorId }: { competitorId: string }) {
 
   if (products.length === 0) {
     return (
-      <div className="px-6 py-8 flex flex-col items-center gap-2 text-sm text-muted-foreground">
+      <div className="px-6 py-10 flex flex-col items-center gap-2 bg-muted/20 border-t text-sm text-muted-foreground">
         <Package className="h-8 w-8 opacity-30" />
         <span>No products scraped yet — trigger a crawl to populate this.</span>
       </div>
@@ -120,10 +196,7 @@ function ProductGrid({ competitorId }: { competitorId: string }) {
   return (
     <div className="px-6 py-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 bg-muted/20 border-t">
       {products.map((p) => (
-        <div
-          key={p.id}
-          className="group flex flex-col rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow"
-        >
+        <div key={p.id} className="group flex flex-col rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow">
           {/* Image */}
           <div className="relative aspect-square bg-muted overflow-hidden">
             {p.image_url ? (
@@ -133,28 +206,29 @@ function ProductGrid({ competitorId }: { competitorId: string }) {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
-                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+                  const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement | null;
+                  if (fallback) fallback.style.display = "flex";
                 }}
               />
             ) : null}
-            {/* Fallback placeholder */}
-            <div className={`absolute inset-0 flex items-center justify-center text-muted-foreground/40 ${p.image_url ? "hidden" : ""}`}>
+            <div
+              className="absolute inset-0 items-center justify-center text-muted-foreground/40"
+              style={{ display: p.image_url ? "none" : "flex" }}
+            >
               <Package className="h-10 w-10" />
             </div>
-            {/* Category badge */}
             {p.category && (
               <span className="absolute top-2 left-2 text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/50 text-white backdrop-blur-sm">
                 {p.category}
               </span>
             )}
-            {/* External link */}
             {p.url && (
               <a
                 href={p.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute top-2 right-2 h-6 w-6 rounded bg-black/50 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={(e) => e.stopPropagation()}
+                className="absolute top-2 right-2 h-6 w-6 rounded bg-black/50 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <ExternalLink className="h-3 w-3 text-white" />
               </a>
@@ -195,20 +269,15 @@ function CompetitorsPage() {
   const { data: competitors = [] } = useQuery({
     queryKey: ["competitors"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("competitors")
-        .select("*")
-        .order("display_name");
+      const { data } = await supabase.from("competitors").select("*").order("display_name");
       return data ?? [];
     },
   });
 
-  const { data: products = [] } = useQuery({
+  const { data: productCounts = [] } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("competitor_products")
-        .select("id, competitor_id");
+      const { data } = await supabase.from("competitor_products").select("id, competitor_id");
       return data ?? [];
     },
   });
@@ -228,6 +297,7 @@ function CompetitorsPage() {
     },
   });
 
+  // Realtime: watch background_tasks for crawl progress updates
   useEffect(() => {
     const channel = supabase
       .channel("crawl-tasks-live")
@@ -242,8 +312,7 @@ function CompetitorsPage() {
             qc.invalidateQueries({ queryKey: ["competitors"] });
             qc.invalidateQueries({ queryKey: ["products"] });
             if (cid) qc.invalidateQueries({ queryKey: ["competitor-products", cid] });
-            const found = row?.details?.found ?? 0;
-            toast.success(`Crawl complete — ${found} product${found !== 1 ? "s" : ""} found`);
+            toast.success(`Crawl complete — ${row?.details?.found ?? 0} products found`);
           }
           if (row?.status === "Failed") {
             toast.error(`Crawl failed: ${row?.error_message ?? "unknown error"}`);
@@ -254,6 +323,7 @@ function CompetitorsPage() {
     return () => { supabase.removeChannel(channel); };
   }, [qc]);
 
+  // Latest task per competitor
   const taskByCompetitor = new Map<string, (typeof crawlTasks)[number]>();
   for (const task of crawlTasks) {
     const cid = (task.details as any)?.competitorId;
@@ -287,6 +357,8 @@ function CompetitorsPage() {
     if (error || !inserted) return toast.error(error?.message ?? "Failed");
     setName(""); setUrl(""); setOpen(false);
     qc.invalidateQueries({ queryKey: ["competitors"] });
+    // Auto-expand so user sees the live crawl panel immediately
+    setExpanded((prev) => new Set([...prev, inserted.id]));
     toast.success("Competitor added — crawl starting…");
     try {
       await startCompetitorCrawl(inserted.id);
@@ -311,6 +383,8 @@ function CompetitorsPage() {
 
   async function recrawl(id: string) {
     try {
+      // Auto-expand to show live crawl panel
+      setExpanded((prev) => new Set([...prev, id]));
       toast.info("Starting crawl…");
       await startCompetitorCrawl(id);
       qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
@@ -325,7 +399,7 @@ function CompetitorsPage() {
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight">Competitor Monitor</h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Track competitor catalogs and prices. Click a row to browse their products.
+            Click any row to browse products and see live crawl progress.
           </p>
         </div>
         <Button onClick={() => setOpen(true)} className="gap-1.5 shrink-0">
@@ -334,8 +408,8 @@ function CompetitorsPage() {
       </div>
 
       <div className="rounded-xl border bg-card overflow-hidden">
-        {/* Header */}
-        <div className="grid grid-cols-[1.6fr_1fr_0.6fr_0.9fr_0.8fr] gap-4 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
+        {/* Table header */}
+        <div className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
           <div>Competitor</div>
           <div>Status</div>
           <div>Products</div>
@@ -349,25 +423,25 @@ function CompetitorsPage() {
           </div>
         ) : (
           competitors.map((c) => {
-            const count = products.filter((p) => p.competitor_id === c.id).length;
+            const count = productCounts.filter((p) => p.competitor_id === c.id).length;
             const activeTask = taskByCompetitor.get(c.id);
             const isCrawling = activeTask?.status === "Running";
             const isExpanded = expanded.has(c.id);
 
             return (
               <div key={c.id} className="border-b last:border-b-0">
-                {/* Competitor row — click to expand */}
+                {/* Row */}
                 <div
-                  className="grid grid-cols-[1.6fr_1fr_0.6fr_0.9fr_0.8fr] gap-4 px-6 py-4 items-center hover:bg-muted/30 transition-colors cursor-pointer"
+                  className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-4 items-center hover:bg-muted/30 transition-colors cursor-pointer select-none"
                   onClick={() => toggleExpand(c.id)}
                 >
-                  {/* Name */}
+                  {/* Name + chevron */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="shrink-0 text-muted-foreground/50">
+                    <span className="shrink-0 text-muted-foreground/40">
                       {isExpanded
                         ? <ChevronDown className="h-4 w-4" />
                         : <ChevronRight className="h-4 w-4" />}
-                    </div>
+                    </span>
                     <div
                       className="h-9 w-9 rounded-[10px] flex items-center justify-center text-white text-sm font-semibold shrink-0"
                       style={{ background: avatarGradient(c.display_name) }}
@@ -381,31 +455,35 @@ function CompetitorsPage() {
                   </div>
 
                   {/* Status */}
-                  <div className="flex flex-col gap-1">
-                    {activeTask && activeTask.status !== "Completed"
-                      ? <CrawlStatusBadge task={activeTask} />
-                      : <StatusPill status={c.status} />}
+                  <div>
+                    {isCrawling ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-blue-700 bg-blue-50 dark:text-blue-300 dark:bg-blue-950/40">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Crawling…
+                      </span>
+                    ) : (
+                      <StatusPill status={c.status} />
+                    )}
                   </div>
 
-                  {/* Products count */}
+                  {/* Count */}
                   <div className="font-mono font-semibold text-sm">
-                    {isCrawling ? <span className="text-muted-foreground">…</span> : count}
+                    {isCrawling ? <span className="text-muted-foreground animate-pulse">…</span> : count}
                   </div>
 
                   {/* Last crawled */}
                   <div className="text-xs text-muted-foreground">
                     {isCrawling
-                      ? <span className="text-blue-500 animate-pulse">crawling now</span>
+                      ? <span className="text-blue-500 text-xs animate-pulse">crawling now</span>
                       : c.last_crawled_at
                         ? formatDistanceToNow(new Date(c.last_crawled_at), { addSuffix: true })
                         : "never"}
                   </div>
 
-                  {/* Actions — stop propagation so clicks don't toggle expand */}
+                  {/* Actions — stop propagation so row click doesn't interfere */}
                   <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     {c.status === "Active" && (
-                      <Button
-                        size="icon" variant="ghost" className="h-8 w-8"
+                      <Button size="icon" variant="ghost" className="h-8 w-8"
                         onClick={() => recrawl(c.id)}
                         disabled={isCrawling}
                         title={isCrawling ? "Crawl in progress" : "Recrawl"}
@@ -413,16 +491,14 @@ function CompetitorsPage() {
                         <RefreshCw className={`h-4 w-4 ${isCrawling ? "animate-spin opacity-40" : ""}`} />
                       </Button>
                     )}
-                    <Button
-                      size="icon" variant="ghost" className="h-8 w-8"
+                    <Button size="icon" variant="ghost" className="h-8 w-8"
                       onClick={() => toggleStatus(c.id, c.status)}
                       disabled={isCrawling}
                       title={c.status === "Active" ? "Pause" : "Resume"}
                     >
                       {c.status === "Active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     </Button>
-                    <Button
-                      size="icon" variant="ghost" className="h-8 w-8 hover:text-red-500"
+                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-red-500"
                       onClick={() => remove(c.id)}
                       title="Delete"
                     >
@@ -431,8 +507,30 @@ function CompetitorsPage() {
                   </div>
                 </div>
 
-                {/* Expandable product grid */}
-                {isExpanded && <ProductGrid competitorId={c.id} />}
+                {/* Expanded panel */}
+                {isExpanded && (
+                  <>
+                    {/* Show live terminal while crawling, product grid when done */}
+                    {activeTask && activeTask.status !== "Completed" ? (
+                      <CrawlLogPanel task={activeTask} />
+                    ) : null}
+
+                    {/* Product grid — always show if not currently crawling */}
+                    {(!activeTask || activeTask.status === "Completed") && (
+                      <ProductGrid competitorId={c.id} />
+                    )}
+
+                    {/* While crawling: also show product grid below terminal if there are already products */}
+                    {isCrawling && count > 0 && (
+                      <div className="border-t bg-muted/10">
+                        <div className="px-6 py-2 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
+                          Previous crawl — {count} products
+                        </div>
+                        <ProductGrid competitorId={c.id} />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             );
           })

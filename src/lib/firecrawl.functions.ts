@@ -26,6 +26,16 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       "./firecrawl.server"
     );
 
+    const setProgress = async (stage: string, extra: Record<string, any> = {}) => {
+      await supabase
+        .from("background_tasks")
+        .update({
+          details: { competitorId: data.competitorId, stage, ...extra },
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", data.taskId);
+    };
+
     const setFailed = async (msg: string) => {
       await supabase
         .from("background_tasks")
@@ -49,6 +59,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       const firecrawl = getFirecrawl();
 
       // 1) Map URLs
+      await setProgress("mapping", { target: competitor.display_name, domain: new URL(competitor.url).hostname });
       let urls: string[] = [];
       try {
         const mapRes: any = await firecrawl.map(competitor.url, {
@@ -64,6 +75,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       if (urls.length === 0) urls = [competitor.url];
 
       // 2) Extract structured products
+      await setProgress("extracting", { target: competitor.display_name, urlCount: urls.length, urls: urls.slice(0, 8) });
       const extractRes: any = await (firecrawl as any).extract({
         urls,
         prompt:
@@ -72,6 +84,8 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       });
       const payload = extractRes?.data ?? extractRes;
       const products: any[] = payload?.products ?? [];
+
+      await setProgress("saving", { target: competitor.display_name, found: products.length });
 
       let upserts = 0;
       let alertsFired = 0;
@@ -180,6 +194,8 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
         .update({
           status: "Completed",
           details: {
+            competitorId: data.competitorId,
+            stage: "done",
             target: competitor.display_name,
             found: upserts,
             alerts: alertsFired,
