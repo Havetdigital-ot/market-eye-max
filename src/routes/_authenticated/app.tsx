@@ -26,8 +26,7 @@ import {
   Bell,
   LogOut,
   Search,
-  
-  Compass,
+  AtSign,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -147,18 +146,21 @@ function AppShell() {
           {/* Brand */}
           <SidebarHeader className="px-5 pt-5 pb-4">
             <Link to="/app" className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-[9px] grid place-items-center shrink-0 shadow-md"
+              <div className="w-9 h-9 rounded-[10px] grid place-items-center shrink-0"
                 style={{
                   background:
-                    "linear-gradient(150deg, oklch(0.62 0.176 264), oklch(0.55 0.18 290))",
-                  boxShadow: "0 2px 8px oklch(0.62 0.176 264 / 0.4)",
+                    "linear-gradient(155deg, oklch(0.66 0.19 268), oklch(0.52 0.2 290))",
+                  boxShadow: "0 4px 14px oklch(0.6 0.2 275 / 0.45)",
                 }}
               >
-                <Compass className="h-[18px] w-[18px] text-white" />
+                <AtSign className="h-[20px] w-[20px] text-white" strokeWidth={2.5} />
               </div>
-              <div className="leading-tight">
-                <span className="text-white font-extrabold text-[16px] tracking-tight">
+              <div className="leading-tight flex items-baseline gap-1.5">
+                <span className="text-white font-extrabold text-[17px] tracking-tight">
                   Market Eye
+                </span>
+                <span className="text-sidebar-foreground/55 font-semibold text-[13px] tracking-tight">
+                  AI
                 </span>
               </div>
             </Link>
