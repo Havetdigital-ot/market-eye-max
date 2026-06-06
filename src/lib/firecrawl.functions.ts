@@ -119,7 +119,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
               sku: p.sku ?? null,
               last_updated_at: new Date().toISOString(),
             })
-            .eq("id", productId);
+            .eq("id", productId as string);
         }
         upserts++;
 
