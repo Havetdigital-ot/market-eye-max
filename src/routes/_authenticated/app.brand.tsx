@@ -13,22 +13,14 @@ export const Route = createFileRoute("/_authenticated/app/brand")({
   component: BrandPage,
 });
 
-const PALETTES = [
-  ["#1F2A24", "#3E7C5A", "#A8C3A0", "#E9F0E6", "#F6F4EE"],
-  ["#2A1E16", "#C8794A", "#E8DCC8", "#7A8B6F", "#F4EFE6"],
-  ["#16202E", "#3A6EA5", "#9FC3E8", "#E6EEF6", "#F4F7FA"],
-];
-const NAMES = ["Driftwood Coffee Co.", "Ember & Oak", "Slow Pour Society"];
-const VOICES = [
-  "Warm, knowledgeable, and unpretentious — like a trusted friend who happens to be a barista.",
-  "Bold, energetic, and a little irreverent — for a brand that doesn't take itself too seriously.",
-  "Refined and editorial, with quiet confidence — speaking to discerning, design-led buyers.",
-];
-const FONTS = [
-  { primary: "Fraunces", secondary: "Hanken Grotesk" },
-  { primary: "Canela", secondary: "Inter" },
-  { primary: "Spectral", secondary: "Söhne" },
-];
+type BrandTemplate = {
+  brand_name: string;
+  brand_voice: string;
+  color_palette: string[];
+  font_primary: string;
+  font_secondary: string;
+};
+
 
 function timeAgo(d: string) {
   try {
