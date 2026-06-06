@@ -26,7 +26,7 @@ import {
   Bell,
   LogOut,
   Search,
-  ChevronRight,
+  
   Compass,
 } from "lucide-react";
 import { toast } from "sonner";
