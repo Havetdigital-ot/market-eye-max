@@ -46,3 +46,27 @@ export type ExtractedProduct = {
   sku?: string;
   price?: number;
 };
+
+export const brandExtractionSchema = {
+  type: "object",
+  properties: {
+    brand_name: { type: "string" },
+    brand_voice: { type: "string" },
+    color_palette: { 
+      type: "array",
+      items: { type: "string" }
+    },
+    font_primary: { type: "string" },
+    font_secondary: { type: "string" }
+  },
+  required: ["brand_name", "brand_voice", "color_palette", "font_primary", "font_secondary"]
+} as const;
+
+export const seoExtractionSchema = {
+  type: "object",
+  properties: {
+    title: { type: "string" },
+    body: { type: "string" }
+  },
+  required: ["title", "body"]
+} as const;

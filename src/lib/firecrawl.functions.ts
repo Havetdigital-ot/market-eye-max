@@ -310,3 +310,57 @@ export const scanTrends = createServerFn({ method: "POST" })
       return { ok: false, error: msg };
     }
   });
+
+export const generateBrandIdentity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ description: z.string() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { getFirecrawl, brandExtractionSchema } = await import("./firecrawl.server");
+    const firecrawl = getFirecrawl();
+    try {
+      const searchRes: any = await firecrawl.search(data.description + " top brands", { limit: 3 });
+      const results = searchRes?.web ?? searchRes?.data?.web ?? searchRes?.data ?? searchRes?.results ?? [];
+      const urls = results.map((r: any) => r.url ?? r.link).filter(Boolean);
+      let extractUrls = urls.length > 0 ? urls : ["https://dribbble.com/search/" + encodeURIComponent(data.description)];
+      const extractRes: any = await (firecrawl as any).extract({
+        urls: extractUrls,
+        prompt: "Analyze these pages and generate a premium, unique brand identity for a company described as: " + data.description + ". Return brand_name, brand_voice, color_palette (array of 4-5 hex codes), font_primary, and font_secondary.",
+        schema: brandExtractionSchema as any,
+      });
+      const payload = extractRes?.data ?? extractRes;
+      if (!payload || !payload.brand_name) throw new Error("Extraction failed");
+      return { ok: true, data: payload };
+    } catch (err: any) {
+      return { ok: false, error: err?.message ?? String(err) };
+    }
+  });
+
+export const generateSeoContent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ 
+    topic: z.string(), 
+    type: z.string(), 
+    keywords: z.array(z.string()).optional() 
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { getFirecrawl, seoExtractionSchema } = await import("./firecrawl.server");
+    const firecrawl = getFirecrawl();
+    try {
+      const searchRes: any = await firecrawl.search(data.topic, { limit: 3 });
+      const results = searchRes?.web ?? searchRes?.data?.web ?? searchRes?.data ?? searchRes?.results ?? [];
+      const urls = results.map((r: any) => r.url ?? r.link).filter(Boolean);
+      let extractUrls = urls.length > 0 ? urls : ["https://en.wikipedia.org/wiki/Special:Search?search=" + encodeURIComponent(data.topic)];
+      const keywordsStr = data.keywords && data.keywords.length > 0 ? "Target keywords: " + data.keywords.join(", ") : "";
+      const extractRes: any = await (firecrawl as any).extract({
+        urls: extractUrls,
+        prompt: "Read these top ranking pages and write a high-quality, comprehensive " + data.type + " about " + data.topic + ". " + keywordsStr + " Output a catchy 'title' and a detailed 'body' in Markdown format.",
+        schema: seoExtractionSchema as any,
+      });
+      const payload = extractRes?.data ?? extractRes;
+      if (!payload || !payload.title || !payload.body) throw new Error("Extraction failed");
+      return { ok: true, data: payload };
+    } catch (err: any) {
+      return { ok: false, error: err?.message ?? String(err) };
+    }
+  });
+
