@@ -114,27 +114,33 @@ function AuthPage() {
               />
             </div>
           )}
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+          {/* honeypot to discourage browser autofill of saved creds */}
+          <input type="text" name="username" autoComplete="username" defaultValue={DEMO_EMAIL} style={{ display: "none" }} readOnly />
+          <input type="password" name="password" autoComplete="current-password" defaultValue="" style={{ display: "none" }} readOnly />
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="demo-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="email"
+              autoComplete="off"
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
+              name="demo-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              autoComplete="new-password"
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
