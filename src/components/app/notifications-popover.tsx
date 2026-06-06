@@ -38,9 +38,12 @@ export function NotificationsPopover({ count }: { count: number }) {
   });
 
   async function markAllRead() {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
     const { error } = await supabase
       .from("alerts")
       .update({ is_read: true })
+      .eq("user_id", u.user.id)
       .eq("is_read", false);
     if (error) {
       toast.error("Couldn't mark as read");
@@ -55,7 +58,7 @@ export function NotificationsPopover({ count }: { count: number }) {
     await supabase.from("alerts").update({ is_read: true }).eq("id", id);
     qc.invalidateQueries({ queryKey: ["alerts"] });
     qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
-    navigate({ to: "/app" });
+    navigate({ to: "/app/alerts" });
   }
 
   return (
@@ -144,10 +147,10 @@ export function NotificationsPopover({ count }: { count: number }) {
         </div>
 
         <button
-          onClick={() => navigate({ to: "/app" })}
+          onClick={() => navigate({ to: "/app/alerts" })}
           className="w-full px-4 py-2.5 text-xs font-medium text-blue-600 hover:bg-muted/50 border-t"
         >
-          View all on dashboard
+          View all alerts
         </button>
       </PopoverContent>
     </Popover>

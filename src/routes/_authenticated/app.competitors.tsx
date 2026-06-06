@@ -16,7 +16,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { startCompetitorCrawl } from "@/lib/api/firecrawl";
-import { Trash2, RefreshCw, Pause, Play, Eye, Plus } from "lucide-react";
+import { Trash2, RefreshCw, Pause, Play, Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/app/competitors")({
@@ -206,9 +206,6 @@ function CompetitorsPage() {
                     title={c.status === "Active" ? "Pause" : "Resume"}
                   >
                     {c.status === "Active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8" title="View">
-                    <Eye className="h-4 w-4" />
                   </Button>
                   <Button
                     size="icon"

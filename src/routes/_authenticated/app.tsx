@@ -27,6 +27,7 @@ import {
   Search,
   Store as StoreIcon,
   ListChecks,
+  Bell,
 } from "lucide-react";
 import marketEyeIcon from "@/assets/market-eye-icon.png.asset.json";
 import { toast } from "sonner";
@@ -42,7 +43,7 @@ type NavItem = {
   label: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
-  badgeKey?: "tasks";
+  badgeKey?: "tasks" | "alerts";
 };
 
 const NAV: NavItem[] = [
@@ -52,6 +53,7 @@ const NAV: NavItem[] = [
   { to: "/app/brand", label: "Brand Builder", icon: Star },
   { to: "/app/seo", label: "SEO Content", icon: FileText },
   { to: "/app/store", label: "Store Generator", icon: StoreIcon },
+  { to: "/app/alerts", label: "Alerts", icon: Bell, badgeKey: "alerts" },
   { to: "/app/tasks", label: "Task Log", icon: ListChecks, badgeKey: "tasks" },
 ];
 
@@ -62,6 +64,7 @@ const TITLES: Record<string, string> = {
   "/app/brand": "Brand Builder",
   "/app/seo": "SEO Content",
   "/app/store": "Store Generator",
+  "/app/alerts": "Alerts",
   "/app/tasks": "Task Log",
 };
 
@@ -190,7 +193,9 @@ function AppShell() {
                   ? pathname === item.to
                   : pathname.startsWith(item.to);
                 const badge =
-                  item.badgeKey === "tasks" ? runningTasks : 0;
+                  item.badgeKey === "tasks" ? runningTasks
+                  : item.badgeKey === "alerts" ? unreadAlerts
+                  : 0;
                 const Icon = item.icon;
                 return (
                   <Link

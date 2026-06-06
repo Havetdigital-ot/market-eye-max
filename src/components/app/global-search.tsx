@@ -217,7 +217,7 @@ export function GlobalSearch({
                 <CommandItem
                   key={a.id}
                   value={`alert-${a.id}-${a.type}`}
-                  onSelect={() => go("/app")}
+                  onSelect={() => go("/app/alerts")}
                 >
                   <Bell className="h-4 w-4 mr-2 text-muted-foreground" />
                   <span className="font-medium">{a.type}</span>

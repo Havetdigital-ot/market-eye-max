@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { FileText, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { generateSeoContent } from "@/lib/firecrawl.functions";
 
 export const Route = createFileRoute("/_authenticated/app/seo")({
   component: SeoPage,
@@ -88,30 +89,25 @@ function SeoPage() {
       .map((k) => k.trim())
       .filter(Boolean);
 
-    const sampleTitle =
-      type === "Product Description"
-        ? `${topic} — Detailed Overview`
-        : type === "FAQ"
-        ? `${topic} — Frequently Asked Questions`
-        : `Ultimate Guide to ${topic}`;
-    const sampleBody = `# ${sampleTitle}\n\nGenerated draft for "${topic}". Edit freely to make it your own.\n\n- Keyword focus: ${kws.join(", ") || "none specified"}\n- Type: ${type}\n`;
-
-    setTimeout(async () => {
+    try {
+      const res = await generateSeoContent({ data: { topic: topic.trim(), type, keywords: kws } });
+      if (!res || !res.ok || !res.data) throw new Error(res?.error ?? "Failed to generate SEO content");
+      
       const { data, error } = await supabase
         .from("seo_content")
         .insert({
           user_id: user.user!.id,
           type,
           topic: topic.trim(),
-          title: sampleTitle,
-          body: sampleBody,
+          title: res.data.title,
+          body: res.data.body,
           keywords: kws.length ? kws : null,
           status: "Draft",
         })
         .select()
         .single();
-      setGenerating(false);
-      if (error) return toast.error(error.message);
+      
+      if (error) throw error;
       setTopic("");
       setKeywords("");
       qc.invalidateQueries({ queryKey: ["seo"] });
@@ -121,7 +117,11 @@ function SeoPage() {
         setEditBody(data.body ?? "");
       }
       toast.success("Draft generated");
-    }, 1200);
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to generate content");
+    } finally {
+      setGenerating(false);
+    }
   }
 
   function openItem(item: any) {

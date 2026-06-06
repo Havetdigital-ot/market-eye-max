@@ -100,7 +100,20 @@ function DashboardPage() {
     },
   });
 
-  const lastStore: any = null;
+  const { data: lastStore = null } = useQuery({
+    queryKey: ["store", "latest"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("background_tasks")
+        .select("*")
+        .eq("task_type", "Generate Store")
+        .eq("status", "Completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data ?? null;
+    },
+  });
 
   const hour = new Date().getHours();
   const greet = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
@@ -184,7 +197,7 @@ function DashboardPage() {
         <Card className="lg:col-span-2 overflow-hidden">
           <div className="flex items-center px-5 py-4 border-b">
             <h2 className="font-semibold">Recent pricing alerts</h2>
-            <Link to="/app/competitors" className="ml-auto">
+            <Link to="/app/alerts" className="ml-auto">
               <Button variant="ghost" size="sm" className="gap-1">
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Button>
@@ -253,19 +266,21 @@ function DashboardPage() {
                 </div>
                 <div className="mt-3.5 flex items-start justify-between gap-2">
                   <div className="font-semibold text-[15px] leading-tight">
-                    {(lastStore as any).store_name}
+                    {(lastStore as any).details?.store ?? "Unnamed Store"}
                   </div>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 font-medium shrink-0">
-                    {(lastStore as any).status ?? "Ready"}
+                    Ready
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
                   <Clock className="h-3 w-3" />
                   Created {timeAgo((lastStore as any).created_at)}
                 </div>
-                <Button variant="secondary" className="w-full mt-3.5 gap-2">
-                  <Store className="h-4 w-4" /> Open Store Generator
-                </Button>
+                <Link to="/app/store">
+                  <Button variant="secondary" className="w-full mt-3.5 gap-2">
+                    <Store className="h-4 w-4" /> Open Store Generator
+                  </Button>
+                </Link>
               </div>
             ) : (
               <div className="py-8 text-center">
@@ -273,9 +288,14 @@ function DashboardPage() {
                   <Store className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="font-medium text-sm">No store yet</div>
-                <div className="text-xs text-muted-foreground mt-0.5">
+                <div className="text-xs text-muted-foreground mt-0.5 mb-4">
                   Generate your first storefront.
                 </div>
+                <Link to="/app/store">
+                  <Button variant="secondary" size="sm" className="gap-2">
+                    <Store className="h-3.5 w-3.5" /> Generate Store
+                  </Button>
+                </Link>
               </div>
             )}
           </div>

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Sparkles, Star, ChevronRight, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { generateBrandIdentity } from "@/lib/firecrawl.functions";
 
 export const Route = createFileRoute("/_authenticated/app/brand")({
   component: BrandPage,
@@ -59,20 +60,17 @@ function BrandPage() {
     },
   });
 
-  function generate() {
+  async function generate() {
     if (!desc.trim()) {
       toast.error("Describe your product or niche first.");
       return;
     }
-    if (templates.length === 0) {
-      toast.error("Templates unavailable. Try again in a moment.");
-      return;
-    }
     setPhase("generating");
-    setTimeout(() => {
-      const i = seed % templates.length;
-      setSeed(seed + 1);
-      const t = templates[i];
+    try {
+      const res = await generateBrandIdentity({ data: { description: desc } });
+      if (!res || !res.ok || !res.data) throw new Error(res?.error ?? "Failed to generate brand");
+      
+      const t = res.data;
       setDraft({
         brand_name: t.brand_name,
         source_description: desc,
@@ -81,7 +79,10 @@ function BrandPage() {
         font_choices: { primary: t.font_primary, secondary: t.font_secondary },
       });
       setPhase("review");
-    }, 1800);
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to generate");
+      setPhase("idle");
+    }
   }
 
 
