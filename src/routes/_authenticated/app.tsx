@@ -23,7 +23,6 @@ import {
   Sparkles,
   Star,
   FileText,
-  Bell,
   LogOut,
   Search,
   Store as StoreIcon,
