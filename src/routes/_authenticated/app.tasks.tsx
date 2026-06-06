@@ -17,8 +17,11 @@ import {
   TrendingUp,
   Store as StoreIcon,
   Star,
+  ChevronDown,
+  ChevronRight,
+  RefreshCw,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
   component: TasksPage,
@@ -39,8 +42,8 @@ const STATUS_STYLES: Record<string, string> = {
   Failed: "text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40",
 };
 const STATUS_DOT: Record<string, string> = {
-  Running: "bg-blue-500",
-  Pending: "bg-blue-500",
+  Running: "bg-blue-500 animate-pulse",
+  Pending: "bg-blue-500 animate-pulse",
   Completed: "bg-emerald-500",
   Failed: "bg-red-500",
 };
@@ -58,14 +61,20 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function detailText(t: any) {
+function summaryText(t: any) {
   if (t.status === "Failed" && t.error_message) return t.error_message;
   const d = t.details ?? {};
-  if (t.task_type === "Crawl Competitor")
-    return d.target ? `${d.target}${d.found ? ` · ${d.found} update(s)` : ""}` : "—";
+  if (t.task_type === "Crawl Competitor") {
+    const parts = [d.target];
+    if (typeof d.found === "number") parts.push(`${d.found} product(s)`);
+    if (typeof d.alerts === "number") parts.push(`${d.alerts} alert(s)`);
+    return parts.filter(Boolean).join(" · ") || "—";
+  }
   if (t.task_type === "Scan Trends") {
     const plats = Array.isArray(d.platforms) ? d.platforms.join(", ") : "";
-    return `${plats}${d.found ? ` · ${d.found} found` : ""}`;
+    const kws = Array.isArray(d.keywords) ? `[${d.keywords.join(", ")}]` : "";
+    const found = typeof d.found === "number" ? ` · ${d.found} found` : "";
+    return [plats, kws].filter(Boolean).join(" ") + found || "—";
   }
   if (t.task_type === "Generate Brand" || t.task_type === "Generate Store")
     return d.brand || d.store || "—";
@@ -73,12 +82,31 @@ function detailText(t: any) {
   return "—";
 }
 
+function fmtTime(s: string) {
+  try {
+    return format(new Date(s), "MMM d, yyyy · HH:mm:ss");
+  } catch {
+    return s;
+  }
+}
+
+function duration(a: string, b: string) {
+  const ms = new Date(b).getTime() - new Date(a).getTime();
+  if (isNaN(ms) || ms < 0) return "—";
+  if (ms < 1000) return `${ms}ms`;
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  return `${m}m ${s % 60}s`;
+}
+
 function TasksPage() {
   const qc = useQueryClient();
   const [type, setType] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const { data: tasks = [] } = useQuery({
+  const { data: tasks = [], isFetching, refetch } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => {
       const { data } = await supabase
@@ -88,6 +116,11 @@ function TasksPage() {
         .order("created_at", { ascending: false })
         .limit(100);
       return data ?? [];
+    },
+    refetchInterval: (q) => {
+      const data = q.state.data as any[] | undefined;
+      const hasRunning = data?.some((t) => t.status === "Running" || t.status === "Pending");
+      return hasRunning ? 3000 : false;
     },
   });
 
@@ -104,13 +137,22 @@ function TasksPage() {
     qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
   }
 
+  function toggle(id: string) {
+    setExpanded((e) => ({ ...e, [id]: !e[id] }));
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-[28px] font-semibold tracking-tight">Task Log</h1>
-        <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-          Background jobs across crawling, trend scans, and AI generation.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-[28px] font-semibold tracking-tight">Task Log</h1>
+          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+            Background jobs across crawling, trend scans, and AI generation. Click a row for full details.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
+          <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} /> Refresh
+        </Button>
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
@@ -145,12 +187,13 @@ function TasksPage() {
       </div>
 
       <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="grid grid-cols-[1.4fr_0.9fr_2fr_0.7fr_0.7fr_0.7fr] gap-4 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
+        <div className="grid grid-cols-[24px_1.4fr_0.9fr_2fr_0.8fr_0.8fr_0.7fr] gap-4 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
+          <div></div>
           <div>Task</div>
           <div>Status</div>
-          <div>Details</div>
+          <div>Summary</div>
           <div>Created</div>
-          <div>Updated</div>
+          <div>Duration</div>
           <div className="text-right"></div>
         </div>
 
@@ -160,40 +203,99 @@ function TasksPage() {
           filtered.map((t: any) => {
             const Icon = TYPE_ICON[t.task_type] ?? FileText;
             const failed = t.status === "Failed";
+            const isOpen = !!expanded[t.id];
+            const Chevron = isOpen ? ChevronDown : ChevronRight;
             return (
-              <div
-                key={t.id}
-                className="grid grid-cols-[1.4fr_0.9fr_2fr_0.7fr_0.7fr_0.7fr] gap-4 px-6 py-4 items-center border-b last:border-b-0 hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-9 w-9 rounded-[10px] grid place-items-center bg-muted text-muted-foreground shrink-0">
-                    <Icon className="h-4 w-4" />
+              <div key={t.id} className="border-b last:border-b-0">
+                <button
+                  type="button"
+                  onClick={() => toggle(t.id)}
+                  className="w-full grid grid-cols-[24px_1.4fr_0.9fr_2fr_0.8fr_0.8fr_0.7fr] gap-4 px-6 py-4 items-center text-left hover:bg-muted/30 transition-colors"
+                >
+                  <Chevron className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-9 w-9 rounded-[10px] grid place-items-center bg-muted text-muted-foreground shrink-0">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="font-medium truncate">{t.task_type}</div>
                   </div>
-                  <div className="font-medium truncate">{t.task_type}</div>
-                </div>
-                <div>
-                  <StatusPill status={t.status} />
-                </div>
-                <div className={`text-sm truncate ${failed ? "text-red-600 dark:text-red-400" : ""}`}>
-                  {detailText(t)}
-                </div>
-                <div className="text-xs text-muted-foreground font-mono">
-                  {formatDistanceToNow(new Date(t.created_at), { addSuffix: true })}
-                </div>
-                <div className="text-xs text-muted-foreground font-mono">
-                  {formatDistanceToNow(new Date(t.updated_at), { addSuffix: true })}
-                </div>
-                <div className="flex justify-end">
-                  {t.status !== "Running" && t.status !== "Pending" && (
-                    <Button variant="outline" size="sm" onClick={() => dismiss(t.id)}>
-                      Dismiss
-                    </Button>
-                  )}
-                </div>
+                  <div>
+                    <StatusPill status={t.status} />
+                  </div>
+                  <div className={`text-sm truncate ${failed ? "text-red-600 dark:text-red-400" : ""}`}>
+                    {summaryText(t)}
+                  </div>
+                  <div className="text-xs text-muted-foreground font-mono">
+                    {formatDistanceToNow(new Date(t.created_at), { addSuffix: true })}
+                  </div>
+                  <div className="text-xs text-muted-foreground font-mono">
+                    {duration(t.created_at, t.updated_at)}
+                  </div>
+                  <div
+                    className="flex justify-end"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {t.status !== "Running" && t.status !== "Pending" && (
+                      <Button variant="outline" size="sm" onClick={() => dismiss(t.id)}>
+                        Dismiss
+                      </Button>
+                    )}
+                  </div>
+                </button>
+
+                {isOpen && (
+                  <div className="px-6 pb-5 pt-1 bg-muted/20 border-t">
+                    <div className="grid md:grid-cols-2 gap-4 text-xs">
+                      <Field label="Task ID" value={t.id} mono />
+                      <Field label="Type" value={t.task_type} />
+                      <Field label="Status" value={t.status} />
+                      <Field label="Created" value={fmtTime(t.created_at)} mono />
+                      <Field label="Last update" value={fmtTime(t.updated_at)} mono />
+                      <Field
+                        label="Duration"
+                        value={duration(t.created_at, t.updated_at)}
+                        mono
+                      />
+                    </div>
+
+                    {t.error_message && (
+                      <div className="mt-4">
+                        <div className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase mb-1.5">
+                          Error
+                        </div>
+                        <pre className="text-xs bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 rounded-md p-3 whitespace-pre-wrap break-all border border-red-200/60 dark:border-red-900/40">
+                          {t.error_message}
+                        </pre>
+                      </div>
+                    )}
+
+                    <div className="mt-4">
+                      <div className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase mb-1.5">
+                        Details payload
+                      </div>
+                      <pre className="text-xs bg-background rounded-md p-3 overflow-auto max-h-[300px] border font-mono">
+                        {JSON.stringify(t.details ?? {}, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })
         )}
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div>
+      <div className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+        {label}
+      </div>
+      <div className={`mt-0.5 ${mono ? "font-mono text-[12px]" : ""} break-all`}>
+        {value}
       </div>
     </div>
   );
