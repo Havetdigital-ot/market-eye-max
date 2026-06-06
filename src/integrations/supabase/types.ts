@@ -166,6 +166,39 @@ export type Database = {
           },
         ]
       }
+      brand_generation_templates: {
+        Row: {
+          brand_name: string
+          brand_voice: string
+          color_palette: Json
+          created_at: string
+          font_primary: string
+          font_secondary: string
+          id: string
+          sort_order: number
+        }
+        Insert: {
+          brand_name: string
+          brand_voice: string
+          color_palette: Json
+          created_at?: string
+          font_primary: string
+          font_secondary: string
+          id?: string
+          sort_order: number
+        }
+        Update: {
+          brand_name?: string
+          brand_voice?: string
+          color_palette?: Json
+          created_at?: string
+          font_primary?: string
+          font_secondary?: string
+          id?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       competitor_products: {
         Row: {
           category: string | null

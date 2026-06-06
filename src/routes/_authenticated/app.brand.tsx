@@ -13,22 +13,14 @@ export const Route = createFileRoute("/_authenticated/app/brand")({
   component: BrandPage,
 });
 
-const PALETTES = [
-  ["#1F2A24", "#3E7C5A", "#A8C3A0", "#E9F0E6", "#F6F4EE"],
-  ["#2A1E16", "#C8794A", "#E8DCC8", "#7A8B6F", "#F4EFE6"],
-  ["#16202E", "#3A6EA5", "#9FC3E8", "#E6EEF6", "#F4F7FA"],
-];
-const NAMES = ["Driftwood Coffee Co.", "Ember & Oak", "Slow Pour Society"];
-const VOICES = [
-  "Warm, knowledgeable, and unpretentious — like a trusted friend who happens to be a barista.",
-  "Bold, energetic, and a little irreverent — for a brand that doesn't take itself too seriously.",
-  "Refined and editorial, with quiet confidence — speaking to discerning, design-led buyers.",
-];
-const FONTS = [
-  { primary: "Fraunces", secondary: "Hanken Grotesk" },
-  { primary: "Canela", secondary: "Inter" },
-  { primary: "Spectral", secondary: "Söhne" },
-];
+type BrandTemplate = {
+  brand_name: string;
+  brand_voice: string;
+  color_palette: string[];
+  font_primary: string;
+  font_secondary: string;
+};
+
 
 function timeAgo(d: string) {
   try {
@@ -56,25 +48,42 @@ function BrandPage() {
     },
   });
 
+  const { data: templates = [] } = useQuery<BrandTemplate[]>({
+    queryKey: ["brand-generation-templates"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("brand_generation_templates")
+        .select("brand_name, brand_voice, color_palette, font_primary, font_secondary")
+        .order("sort_order", { ascending: true });
+      return (data ?? []) as BrandTemplate[];
+    },
+  });
+
   function generate() {
     if (!desc.trim()) {
       toast.error("Describe your product or niche first.");
       return;
     }
+    if (templates.length === 0) {
+      toast.error("Templates unavailable. Try again in a moment.");
+      return;
+    }
     setPhase("generating");
     setTimeout(() => {
-      const i = seed % 3;
+      const i = seed % templates.length;
       setSeed(seed + 1);
+      const t = templates[i];
       setDraft({
-        brand_name: NAMES[i],
+        brand_name: t.brand_name,
         source_description: desc,
-        brand_voice: VOICES[i],
-        color_palette: PALETTES[i],
-        font_choices: FONTS[i],
+        brand_voice: t.brand_voice,
+        color_palette: t.color_palette,
+        font_choices: { primary: t.font_primary, secondary: t.font_secondary },
       });
       setPhase("review");
     }, 1800);
   }
+
 
   async function accept() {
     if (!draft) return;
