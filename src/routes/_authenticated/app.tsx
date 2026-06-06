@@ -182,7 +182,7 @@ function AppShell() {
                 return (
                   <Link
                     key={item.to}
-                    to={item.to}
+                    to={item.to as any}
                     className={`relative flex items-center gap-[11px] px-3 py-[9px] rounded-[9px] text-sm font-medium transition-colors
                       ${active
                         ? "bg-sidebar-accent text-white"
