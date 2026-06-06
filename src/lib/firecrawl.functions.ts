@@ -64,7 +64,8 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       if (urls.length === 0) urls = [competitor.url];
 
       // 2) Extract structured products
-      const extractRes: any = await firecrawl.extract(urls, {
+      const extractRes: any = await (firecrawl as any).extract({
+        urls,
         prompt:
           "Extract every distinct product on these pages. For each: name, absolute product url, short description, image_url, category, sku, and current price as a number.",
         schema: productExtractionSchema as any,
