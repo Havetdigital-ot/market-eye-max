@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict h2tesCC4lo3A0fdObKzYbjdq8PchfPqnRmSajb0ZStcuusLl7ABQLIiD7FGg4LJ
+\restrict zvUteDUkz3Lqk3WlAyixSNeYX7vNfjzlv019a6OnCVn5QMIg0PRzH2fIgWM6aF9
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.9
@@ -1109,5 +1109,5 @@ CREATE POLICY "trends_own" ON "public"."trends" USING (("auth"."uid"() = "user_i
 -- PostgreSQL database dump complete
 --
 
-\unrestrict h2tesCC4lo3A0fdObKzYbjdq8PchfPqnRmSajb0ZStcuusLl7ABQLIiD7FGg4LJ
+\unrestrict zvUteDUkz3Lqk3WlAyixSNeYX7vNfjzlv019a6OnCVn5QMIg0PRzH2fIgWM6aF9
 
