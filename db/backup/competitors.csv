@@ -1,7 +1,0 @@
-id,user_id,display_name,url,status,last_crawled_at,created_at
-5398ef97-b19c-4236-96fa-446305bc76f5,2dc42356-13cb-4ce4-bf77-fd583f77d72e,PourCraft,https://pourcraft.example.com,Paused,2026-05-31 03:09:59.8784+00,2026-06-06 03:09:59.8784+00
-db432546-ce39-49cb-ac10-317d7e1b4916,2dc42356-13cb-4ce4-bf77-fd583f77d72e,Roast Republic,https://roastrepublic.example.com,Active,2026-06-06 04:19:22.619+00,2026-06-06 03:09:59.8784+00
-3b4a555a-1676-4ab4-85e2-64635d43d610,2dc42356-13cb-4ce4-bf77-fd583f77d72e,razer mouse,https://www.razer.com/store/gaming-mice,Active,,2026-06-06 04:42:34.372594+00
-6b4413a4-1b9b-4e6c-97f7-c37deeb861d1,2dc42356-13cb-4ce4-bf77-fd583f77d72e,CremaLab,https://shop.cremalab.example.com,Active,2026-06-06 05:55:36.687+00,2026-06-06 03:09:59.8784+00
-eb2d9813-9ada-4090-a17b-e941dc76cb2d,2dc42356-13cb-4ce4-bf77-fd583f77d72e,Kettle & Co,https://kettleandco.example.com,Active,2026-06-06 05:55:36.899+00,2026-06-06 03:09:59.8784+00
-5be3c0a5-1d99-46e2-bee4-d4f2f4b8a02d,2dc42356-13cb-4ce4-bf77-fd583f77d72e,amazon,https://www.amazon.com/,Active,2026-06-06 05:56:20.115+00,2026-06-06 04:39:26.624993+00

@@ -1,7 +1,0 @@
-id,user_id,type,competitor_id,competitor_product_id,competitor_name,product_name,old_price,new_price,is_read,created_at
-ef986d5c-c068-4639-98f2-3dd8b290d3ae,2dc42356-13cb-4ce4-bf77-fd583f77d72e,New Product,,,CremaLab,Crema Flat Burr Grinder,,329.00,t,2026-06-04 03:09:59.8784+00
-71378228-1888-467a-ba42-215c7f0889d0,2dc42356-13cb-4ce4-bf77-fd583f77d72e,Price Change,,,Roast Republic,Insulated Travel Press 350ml,39.00,36.00,t,2026-06-03 15:09:59.8784+00
-f9f5be04-4dc0-4fde-b9f6-3a8346c037b3,2dc42356-13cb-4ce4-bf77-fd583f77d72e,New Product,,,Roast Republic,Cold Brew Tower 1.5L,,129.00,t,2026-06-06 00:09:59.8784+00
-03ccd05b-547e-4dc4-84e7-f935aa01c84c,2dc42356-13cb-4ce4-bf77-fd583f77d72e,Price Change,,,CremaLab,Crema Pro Semi-Auto Machine,799.00,749.00,t,2026-06-06 02:39:59.8784+00
-dfb841c5-b940-4347-923e-0c5ef9c16e5c,2dc42356-13cb-4ce4-bf77-fd583f77d72e,Price Change,,,BaristaBox,Aria Conical Burr Grinder,229.00,249.00,t,2026-06-05 19:09:59.8784+00
-d81da339-1cd7-4144-9fe4-c0df55fd2d7b,2dc42356-13cb-4ce4-bf77-fd583f77d72e,Price Change,,,BaristaBox,Gooseneck Pour-Over Kettle 1.0L,89.00,79.00,t,2026-06-04 23:09:59.8784+00
