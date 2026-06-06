@@ -97,7 +97,9 @@ function AuthPage() {
           <p className="text-sm text-muted-foreground mt-1">
             {mode === "signin" ? "Sign in to your dashboard" : "Create your account"}
           </p>
+        </div>
         <div className="mb-4 rounded-md border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground">
+
           Demo mode — credentials are pre-filled. Just click <span className="font-medium text-foreground">Sign in</span> to explore the dashboard.
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
