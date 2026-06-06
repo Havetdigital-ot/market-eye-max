@@ -3,27 +3,30 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "MarketForge AI" },
+      { name: "description", content: "MarketForge AI — competitor monitoring, product discovery, brand building, SEO and store generation." },
+      { property: "og:title", content: "MarketForge AI" },
+      { property: "og:description", content: "Competitor monitoring, product discovery, brand building, SEO and store generation." },
     ],
   }),
-  component: Index,
+  component: MarketForgePage,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function MarketForgePage() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <iframe
+      src="/mf/index.html"
+      title="MarketForge AI"
+      style={{
+        position: "fixed",
+        inset: 0,
+        width: "100vw",
+        height: "100vh",
+        border: 0,
+        margin: 0,
+        padding: 0,
+        display: "block",
+      }}
+    />
   );
 }
