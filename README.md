@@ -52,3 +52,26 @@ Market Eye Pro is a competitive intelligence and market research platform design
 
 ## License
 All rights reserved.
+
+---
+
+## Claude Code Setup
+
+This project uses 6 files to keep Claude Code sessions consistent and context-aware.
+
+| File | Location | Purpose |
+|------|----------|---------|
+| `CLAUDE.md` | project root | Rules Claude reads every session — tech stack, conventions, learned rules |
+| `SPEC.md` | project root | Full project blueprint — routes, data models, design system, dev phases |
+| `HANDOVER.md` | project root | Relay baton between sessions — fill before context limit, delete at session start |
+| `.claude/soul.md` | `.claude/` | Working style preferences — Claude adapts its tone and behavior to this |
+| `.claude/settings.json` + `.claude/hooks/` | `.claude/` | Auto-runs branch guard + ESLint/TypeScript check after every file edit |
+| `memory/MEMORY.md` | `memory/` | Long-term memory — tech preferences, architecture decisions, project state |
+
+### How to use
+
+1. **Every session** — Claude auto-reads `CLAUDE.md` and `soul.md`. No pasting needed.
+2. **Before hitting context limit** — Ask Claude to *"write a HANDOVER.md"*.
+3. **Starting a new session after a handover** — Say *"Read HANDOVER.md, delete it, then continue"*.
+4. **After Claude makes a mistake** — Add a Learned Rule to `CLAUDE.md`. It won't happen again.
+5. **Edit `.claude/soul.md`** — Adjust to match how you actually like to work.
