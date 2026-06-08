@@ -250,7 +250,7 @@ function StorePage() {
                 DNS setup required
               </div>
               <p className="text-amber-800/80 dark:text-amber-300/80 mt-0.5">
-                Add a wildcard <span className="font-mono">CNAME *.market-eye → market-eye.otmane.net</span>{" "}
+                Add a wildcard <span className="font-mono">CNAME *.market-eye → {STORE_DOMAIN}</span>{" "}
                 in Cloudflare and connect <span className="font-mono">*.{STORE_DOMAIN}</span> as
                 a custom domain on this project. Until then, stores publish but their subdomain
                 won't resolve.

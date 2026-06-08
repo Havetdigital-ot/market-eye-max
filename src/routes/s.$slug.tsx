@@ -1,6 +1,8 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getStoreBySlug } from "@/lib/stores.functions";
 
+const APP_URL = "https://market-eye.otmane.net";
+
 export const Route = createFileRoute("/s/$slug")({
   loader: async ({ params }) => {
     const store = await getStoreBySlug({ data: { slug: params.slug } });
@@ -89,7 +91,7 @@ function StorefrontPage() {
       >
         <div className="opacity-70">
           Powered by{" "}
-          <a href="https://market-eye.otmane.net" className="underline">
+          <a href={APP_URL} className="underline">
             Market Eye
           </a>
         </div>
