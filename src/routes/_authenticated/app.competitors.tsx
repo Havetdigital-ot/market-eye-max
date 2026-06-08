@@ -19,7 +19,7 @@ import { startCompetitorCrawl } from "@/lib/api/firecrawl";
 import {
   Trash2, RefreshCw, Pause, Play, Plus,
   Loader2, AlertCircle, ChevronDown, ChevronRight,
-  ExternalLink, Package, Check, Search, Zap, Database, Radar,
+  ExternalLink, Package, Check, Search, Zap, Database, Radar, AlertTriangle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
@@ -296,6 +296,7 @@ function CompetitorsPage() {
   const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: competitors = [], isLoading: competitorsLoading, isError: competitorsError } = useQuery({
     queryKey: ["competitors"],
@@ -383,6 +384,20 @@ function CompetitorsPage() {
     if (cid && !taskByCompetitor.has(cid)) taskByCompetitor.set(cid, task);
   }
 
+  const q = searchQuery.trim().toLowerCase();
+  const filtered = q
+    ? competitors.filter((c: any) =>
+        c.display_name.toLowerCase().includes(q) || hostOf(c.url).toLowerCase().includes(q)
+      )
+    : competitors;
+
+  const STALE_MS = 7 * 24 * 60 * 60 * 1000;
+  function isStale(c: any, count: number, isCrawling: boolean) {
+    if (isCrawling || c.status !== "Active" || count > 0) return false;
+    const ref = c.last_crawled_at ?? c.created_at;
+    return ref ? Date.now() - new Date(ref).getTime() > STALE_MS : false;
+  }
+
   function toggleExpand(id: string) {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -461,9 +476,20 @@ function CompetitorsPage() {
             Click any row to browse products and see live crawl progress.
           </p>
         </div>
-        <Button onClick={() => setOpen(true)} className="gap-1.5 shrink-0">
-          <Plus className="h-4 w-4" /> Add competitor
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search competitors…"
+              className="pl-8 h-9 w-48 text-sm"
+            />
+          </div>
+          <Button onClick={() => setOpen(true)} className="gap-1.5">
+            <Plus className="h-4 w-4" /> Add competitor
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-xl border bg-card overflow-hidden">
@@ -515,12 +541,17 @@ function CompetitorsPage() {
               <Plus className="h-3.5 w-3.5" /> Add competitor
             </Button>
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="px-6 py-12 text-center text-sm text-muted-foreground">
+            No competitors match <span className="font-medium">"{searchQuery}"</span>
+          </div>
         ) : (
-          competitors.map((c) => {
+          filtered.map((c) => {
             const count = productCounts.filter((p) => p.competitor_id === c.id).length;
             const activeTask = taskByCompetitor.get(c.id);
             const isCrawling = activeTask?.status === "Running";
             const isExpanded = expanded.has(c.id);
+            const stale = isStale(c, count, isCrawling);
 
             return (
               <div key={c.id} className="border-b last:border-b-0">
@@ -547,7 +578,15 @@ function CompetitorsPage() {
                       {c.display_name[0]?.toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-medium truncate">{c.display_name}</div>
+                      <div className="font-medium truncate flex items-center gap-1.5">
+                        {c.display_name}
+                        {stale && (
+                          <AlertTriangle
+                            className="h-3.5 w-3.5 text-amber-500 shrink-0"
+                            title="No products crawled in 7+ days"
+                          />
+                        )}
+                      </div>
                       <div className="text-xs text-muted-foreground truncate">{hostOf(c.url)}</div>
                     </div>
                   </div>
