@@ -117,6 +117,7 @@ function DiscoveryPage() {
               id="discovery-keywords"
               placeholder="Enter keywords to scan…"
               value={keywords}
+              maxLength={200}
               onChange={(e) => setKeywords(e.target.value)}
               className="h-11"
             />

@@ -644,12 +644,12 @@ function CompetitorsPage() {
             <div className="space-y-2">
               <Label htmlFor="url">Store URL</Label>
               <Input id="url" type="url" placeholder="https://competitor.com"
-                value={url} onChange={(e) => setUrl(e.target.value)} required autoFocus />
+                value={url} onChange={(e) => setUrl(e.target.value)} required autoFocus maxLength={300} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Display name</Label>
               <Input id="name" placeholder="Optional — defaults to the domain"
-                value={name} onChange={(e) => setName(e.target.value)} />
+                value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
             </div>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>

@@ -200,6 +200,7 @@ function SeoPage() {
                 id="seo-topic"
                 placeholder="e.g. How to dial in espresso"
                 value={topic}
+                maxLength={200}
                 onChange={(e) => setTopic(e.target.value)}
               />
             </div>
@@ -209,6 +210,7 @@ function SeoPage() {
                 id="seo-keywords"
                 placeholder="espresso, grind size…"
                 value={keywords}
+                maxLength={200}
                 onChange={(e) => setKeywords(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">Optional, comma-separated</p>

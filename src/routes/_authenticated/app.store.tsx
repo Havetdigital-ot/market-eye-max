@@ -171,6 +171,7 @@ function StorePage() {
                 id="store-name"
                 placeholder="e.g. Driftwood Coffee Co."
                 value={name}
+                maxLength={100}
                 onChange={(e) => {
                   setName(e.target.value);
                   if (!slugDirty) setSlug(slugify(e.target.value));
@@ -208,6 +209,7 @@ function StorePage() {
                 id="store-desc"
                 placeholder="Describe what the store sells…"
                 value={desc}
+                maxLength={500}
                 onChange={(e) => setDesc(e.target.value)}
                 className="min-h-[96px]"
               />

@@ -93,6 +93,7 @@ function BrandPage() {
   const [desc, setDesc] = useState("");
   const [phase, setPhase] = useState<"idle" | "generating" | "review">("idle");
   const [draft, setDraft] = useState<any | null>(null);
+  const [accepting, setAccepting] = useState(false);
 
   const { data: assets = [], isLoading: assetsLoading, isError: assetsError } = useQuery({
     queryKey: ["brand-assets"],
@@ -132,24 +133,29 @@ function BrandPage() {
 
 
   async function accept() {
-    if (!draft) return;
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return;
-    const { error } = await supabase.from("brand_assets").insert({
-      user_id: user.user.id,
-      brand_name: draft.brand_name,
-      source_description: draft.source_description,
-      brand_voice: draft.brand_voice,
-      color_palette: draft.color_palette,
-      font_choices: draft.font_choices,
-    });
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["brand-assets"] });
-    toast.success(`${draft.brand_name} saved to your brand library`);
-    setPhase("idle");
-    setDraft(null);
-    setDesc("");
-    setNicheKey("");
+    if (!draft || accepting) return;
+    setAccepting(true);
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+      const { error } = await supabase.from("brand_assets").insert({
+        user_id: user.user.id,
+        brand_name: draft.brand_name,
+        source_description: draft.source_description,
+        brand_voice: draft.brand_voice,
+        color_palette: draft.color_palette,
+        font_choices: draft.font_choices,
+      });
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["brand-assets"] });
+      toast.success(`${draft.brand_name} saved to your brand library`);
+      setPhase("idle");
+      setDraft(null);
+      setDesc("");
+      setNicheKey("");
+    } finally {
+      setAccepting(false);
+    }
   }
 
   return (
@@ -301,7 +307,7 @@ function BrandPage() {
           {phase === "generating" ? (
             <GenLoader />
           ) : phase === "review" && draft ? (
-            <BrandReview draft={draft} onAccept={accept} onRegen={generate} />
+            <BrandReview draft={draft} onAccept={accept} onRegen={generate} accepting={accepting} />
           ) : (
             <EmptyState />
           )}
@@ -341,10 +347,12 @@ function BrandReview({
   draft,
   onAccept,
   onRegen,
+  accepting,
 }: {
   draft: any;
   onAccept: () => void;
   onRegen: () => void;
+  accepting?: boolean;
 }) {
   return (
     <div>
@@ -404,13 +412,15 @@ function BrandReview({
         </div>
 
         <div className="flex gap-2 pt-2 border-t">
-          <Button variant="outline" onClick={onRegen} className="gap-2">
+          <Button variant="outline" onClick={onRegen} disabled={accepting} className="gap-2">
             <Sparkles className="h-4 w-4" /> Regenerate
           </Button>
           <Button
             onClick={onAccept}
+            disabled={accepting}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
           >
+            {accepting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Accept & save
           </Button>
         </div>
