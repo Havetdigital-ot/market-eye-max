@@ -299,7 +299,7 @@ function SeoPage() {
                     type="button"
                     aria-label="Delete"
                     title="Delete"
-                    className="mt-0.5 h-7 w-7 grid place-items-center rounded hover:bg-muted hover:text-red-500 text-muted-foreground/50 transition-colors shrink-0"
+                    className="mt-0.5 h-7 w-7 grid place-items-center rounded hover:bg-muted hover:text-red-500 text-muted-foreground/50 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={() => setPendingDeleteId(s.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -340,6 +340,7 @@ function SeoPage() {
                 className="text-xl font-semibold h-12"
               />
               <Textarea
+                aria-label="Content body"
                 value={editBody}
                 onChange={(e) => setEditBody(e.target.value)}
                 className="min-h-[420px] text-sm leading-relaxed"
