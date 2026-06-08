@@ -59,6 +59,7 @@ function StorefrontPage() {
         </h1>
         <p className="mt-6 text-lg opacity-80 max-w-2xl mx-auto">{store.description}</p>
         <button
+          type="button"
           className="mt-8 px-8 py-3 rounded-full font-semibold text-white"
           style={{ background: accent }}
         >
@@ -73,7 +74,7 @@ function StorefrontPage() {
             <div
               key={i}
               className="rounded-xl overflow-hidden border"
-              style={{ borderColor: `${primary}22`, background: "#fff" }}
+              style={{ borderColor: `${primary}22`, background: `${accent}11` }}
             >
               <div className="aspect-square" style={{ background: `${accent}22` }} />
               <div className="p-4">
