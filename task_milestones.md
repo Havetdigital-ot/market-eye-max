@@ -2,9 +2,12 @@
 
 ## Current Task
 
-**Issue #75** — Tasks dismiss loading state + Discovery keywords validation  
-- Files: `app.tasks.tsx`, `app.discovery.tsx`  
+**Issue #77** — Alerts per-row click-to-read + Dashboard store preview placeholder  
+- Files: `app.alerts.tsx`, `app.index.tsx`  
 - Status: Code fixed, committing
+
+### Completed this session
+- Issue #75 (PR #76 merged) — Tasks dismiss loading state + Discovery keywords validation
 
 ### Task 20 — Supabase write error handling: dismiss/toggleSave/togglePublish (Issue #55, PR #56)
 - Added missing `import { toast } from "sonner"` to app.tasks.tsx

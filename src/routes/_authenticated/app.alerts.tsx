@@ -53,6 +53,14 @@ function AlertsPage() {
     },
   });
 
+  async function markRead(id: string) {
+    const { error } = await supabase.from("alerts").update({ is_read: true }).eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["alerts"] });
+    qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+  }
+
   async function markAllRead() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
@@ -223,10 +231,11 @@ function AlertsPage() {
                 return (
                   <tr
                     key={a.id}
+                    onClick={!a.is_read ? () => markRead(a.id) : undefined}
                     className={cn(
                       "border-t transition-colors",
                       !a.is_read &&
-                        "bg-amber-50/60 dark:bg-amber-500/8 border-l-2 border-l-amber-400"
+                        "bg-amber-50/60 dark:bg-amber-500/8 border-l-2 border-l-amber-400 cursor-pointer hover:bg-amber-100/60 dark:hover:bg-amber-500/15"
                     )}
                   >
                     <td className="px-5 py-3 font-medium">{a.competitor_name}</td>
