@@ -62,6 +62,7 @@ function SeoPage() {
   const [topic, setTopic] = useState("");
   const [keywords, setKeywords] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
@@ -132,29 +133,39 @@ function SeoPage() {
   }
 
   async function saveEdits() {
-    if (!selected) return;
-    const { error } = await supabase
-      .from("seo_content")
-      .update({ title: editTitle, body: editBody })
-      .eq("id", selected.id);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["seo"] });
-    toast.success("Saved");
+    if (!selected || saving) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("seo_content")
+        .update({ title: editTitle, body: editBody })
+        .eq("id", selected.id);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["seo"] });
+      toast.success("Saved");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function togglePublish() {
-    if (!selected) return;
-    const next = selected.status === "Published" ? "Draft" : "Published";
-    const { error } = await supabase
-      .from("seo_content")
-      .update({
-        status: next,
-        published_at: next === "Published" ? new Date().toISOString() : null,
-      })
-      .eq("id", selected.id);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["seo"] });
-    toast.success(next === "Published" ? "Published" : "Moved to draft");
+    if (!selected || saving) return;
+    setSaving(true);
+    try {
+      const next = selected.status === "Published" ? "Draft" : "Published";
+      const { error } = await supabase
+        .from("seo_content")
+        .update({
+          status: next,
+          published_at: next === "Published" ? new Date().toISOString() : null,
+        })
+        .eq("id", selected.id);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["seo"] });
+      toast.success(next === "Published" ? "Published" : "Moved to draft");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -272,10 +283,11 @@ function SeoPage() {
 
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={saveEdits}>
+                  <Button variant="outline" size="sm" onClick={saveEdits} disabled={saving} className="gap-1.5">
+                    {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                     Save
                   </Button>
-                  <Button size="sm" onClick={togglePublish}>
+                  <Button size="sm" onClick={togglePublish} disabled={saving}>
                     {selected.status === "Published" ? "Unpublish" : "Publish"}
                   </Button>
                 </div>

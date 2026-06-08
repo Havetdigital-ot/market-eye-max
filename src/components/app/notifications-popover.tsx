@@ -59,7 +59,8 @@ export function NotificationsPopover({ count }: { count: number }) {
   }
 
   async function openAlert(id: string) {
-    await supabase.from("alerts").update({ is_read: true }).eq("id", id);
+    const { error } = await supabase.from("alerts").update({ is_read: true }).eq("id", id);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["alerts"] });
     qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
     navigate({ to: "/app/alerts" });
