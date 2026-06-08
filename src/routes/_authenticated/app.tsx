@@ -210,14 +210,14 @@ function AppShell() {
                     {active && (
                       <span
                         className="absolute -left-3 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r"
-                        style={{ background: "oklch(0.62 0.176 264)" }}
+                        style={{ background: "var(--sidebar-primary)" }}
                       />
                     )}
                     <Icon className="h-[18px] w-[18px] opacity-85 shrink-0" />
                     <span className="flex-1 whitespace-nowrap">{item.label}</span>
                     {badge > 0 && (
-                      <span className="ml-auto min-w-[19px] h-[19px] px-1.5 rounded-full grid place-items-center text-[11px] font-bold font-mono text-white"
-                        style={{ background: "oklch(0.62 0.176 264)" }}
+                      <span className="ml-auto min-w-[19px] h-[19px] px-1.5 rounded-full grid place-items-center text-[11px] font-bold font-mono text-sidebar-primary-foreground"
+                        style={{ background: "var(--sidebar-primary)" }}
                       >
                         {badge}
                       </span>
@@ -231,12 +231,7 @@ function AppShell() {
           {/* User chip */}
           <SidebarFooter className="border-t border-sidebar-border p-3">
             <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] hover:bg-sidebar-accent cursor-pointer group">
-              <div className="w-8 h-8 rounded-full grid place-items-center text-white font-bold text-[13px] shrink-0"
-                style={{
-                  background:
-                    "linear-gradient(150deg, oklch(0.6 0.13 200), oklch(0.55 0.15 280))",
-                }}
-              >
+              <div className="w-8 h-8 rounded-full grid place-items-center text-sidebar-primary-foreground font-bold text-[13px] shrink-0 bg-sidebar-primary">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
