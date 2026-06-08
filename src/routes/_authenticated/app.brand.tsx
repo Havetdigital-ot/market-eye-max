@@ -219,7 +219,7 @@ function BrandPage() {
             <Button
               onClick={generate}
               disabled={phase === "generating" || !nicheKey || !desc.trim()}
-              className="w-full mt-3.5 h-11 gap-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full mt-3.5 h-11 gap-2 text-sm font-semibold"
             >
               {phase === "generating" ? (
                 <>
@@ -334,7 +334,7 @@ function EmptyState() {
 function GenLoader() {
   return (
     <div className="h-full min-h-[460px] flex flex-col items-center justify-center text-center p-8">
-      <div className="w-14 h-14 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mb-4" />
+      <div className="w-14 h-14 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-4" />
       <h3 className="text-lg font-bold">Designing your brand…</h3>
       <p className="text-sm text-muted-foreground mt-1">
         Synthesizing name, persona, voice and palette
@@ -358,7 +358,7 @@ function BrandReview({
     <div>
       <div className="flex items-center px-5 py-4 border-b">
         <h3 className="font-semibold text-[15px]">Review generated brand</h3>
-        <span className="ml-auto inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold">
+        <span className="ml-auto inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
           <Sparkles className="h-3 w-3" /> AI draft
         </span>
       </div>
@@ -418,7 +418,7 @@ function BrandReview({
           <Button
             onClick={onAccept}
             disabled={accepting}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
+            className="flex-1 gap-2"
           >
             {accepting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Accept & save

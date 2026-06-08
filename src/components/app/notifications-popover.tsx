@@ -94,7 +94,7 @@ export function NotificationsPopover({ count }: { count: number }) {
             <button
               type="button"
               onClick={markAllRead}
-              className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1"
             >
               <Check className="h-3.5 w-3.5" />
               Mark all read
@@ -142,7 +142,7 @@ export function NotificationsPopover({ count }: { count: number }) {
                   type="button"
                   onClick={() => openAlert(a.id)}
                   className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-muted/50 transition-colors flex gap-3 ${
-                    !a.is_read ? "bg-blue-50/40" : ""
+                    !a.is_read ? "bg-primary/5" : ""
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-full grid place-items-center shrink-0 ${iconColor}`}>
@@ -163,7 +163,7 @@ export function NotificationsPopover({ count }: { count: number }) {
                     </div>
                   </div>
                   {!a.is_read && (
-                    <span className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                    <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                   )}
                 </button>
               );
@@ -174,7 +174,7 @@ export function NotificationsPopover({ count }: { count: number }) {
         <button
           type="button"
           onClick={() => navigate({ to: "/app/alerts" })}
-          className="w-full px-4 py-2.5 text-xs font-medium text-blue-600 hover:bg-muted/50 border-t"
+          className="w-full px-4 py-2.5 text-xs font-medium text-primary hover:bg-muted/50 border-t"
         >
           View all alerts
         </button>
