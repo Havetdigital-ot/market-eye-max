@@ -321,7 +321,7 @@ function SeoPage() {
 
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={saveEdits} disabled={saving} className="gap-1.5">
+                  <Button variant="outline" size="sm" onClick={saveEdits} disabled={saving || !isDirty} className="gap-1.5">
                     {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                     Save
                   </Button>
