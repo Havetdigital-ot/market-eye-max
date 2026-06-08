@@ -166,7 +166,7 @@ function BrandPage() {
         {/* LEFT: input + library */}
         <div className="space-y-5">
           <Card className="p-5">
-            <label className="text-[13px] font-semibold text-foreground">
+            <label htmlFor="brand-niche" className="text-[13px] font-semibold text-foreground">
               Product / niche
             </label>
             <Select
@@ -181,7 +181,7 @@ function BrandPage() {
                 }
               }}
             >
-              <SelectTrigger className="mt-2 h-11">
+              <SelectTrigger id="brand-niche" className="mt-2 h-11">
                 <SelectValue placeholder="Choose a niche…" />
               </SelectTrigger>
               <SelectContent>
@@ -195,10 +195,11 @@ function BrandPage() {
             </Select>
             {nicheKey && (
               <>
-                <label className="text-[13px] font-semibold text-foreground mt-4 block">
+                <label htmlFor="brand-desc" className="text-[13px] font-semibold text-foreground mt-4 block">
                   {nicheKey === "other" ? "Describe your product or niche" : "Description (edit if needed)"}
                 </label>
                 <Textarea
+                  id="brand-desc"
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
                   placeholder="e.g. Premium home espresso gear for design-conscious enthusiasts who care about ritual and craft…"

@@ -170,9 +170,9 @@ function SeoPage() {
         <div className="space-y-5">
           <form onSubmit={generate} className="rounded-xl border bg-card p-5 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Content type</label>
+              <label htmlFor="seo-type" className="text-sm font-semibold">Content type</label>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger>
+                <SelectTrigger id="seo-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -183,16 +183,18 @@ function SeoPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Topic or product name</label>
+              <label htmlFor="seo-topic" className="text-sm font-semibold">Topic or product name</label>
               <Input
+                id="seo-topic"
                 placeholder="e.g. How to dial in espresso"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Target keywords</label>
+              <label htmlFor="seo-keywords" className="text-sm font-semibold">Target keywords</label>
               <Input
+                id="seo-keywords"
                 placeholder="espresso, grind size…"
                 value={keywords}
                 onChange={(e) => setKeywords(e.target.value)}
