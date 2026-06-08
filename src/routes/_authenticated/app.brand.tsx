@@ -333,7 +333,7 @@ function BrandPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm truncate">{b.brand_name}</div>
+                      <div className="font-semibold text-sm truncate" title={b.brand_name}>{b.brand_name}</div>
                       <div className="text-xs text-muted-foreground">
                         {timeAgo(b.generated_at)}
                       </div>

@@ -317,8 +317,8 @@ function StorePage() {
                     className="flex items-center justify-between gap-3 px-4 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium truncate">{s.name}</div>
-                      <div className="text-xs text-muted-foreground font-mono truncate">
+                      <div className="font-medium truncate" title={s.name}>{s.name}</div>
+                      <div className="text-xs text-muted-foreground font-mono truncate" title={`${s.slug}.${STORE_DOMAIN}`}>
                         {s.slug}.{STORE_DOMAIN}
                       </div>
                       <div className="text-[11px] text-muted-foreground/70 mt-0.5">
@@ -384,7 +384,7 @@ function StorePage() {
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Live URL
                   </div>
-                  <div className="font-mono text-sm truncate">{preview.url}</div>
+                  <div className="font-mono text-sm truncate" title={preview.url}>{preview.url}</div>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <Button size="sm" variant="outline" onClick={() => copyUrl(preview.url)}>

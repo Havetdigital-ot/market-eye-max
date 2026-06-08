@@ -242,7 +242,7 @@ function AlertsPage() {
                     )}
                   >
                     <td className="px-5 py-3 font-medium">{a.competitor_name}</td>
-                    <td className="px-3 py-3 text-muted-foreground max-w-[260px] truncate">
+                    <td className="px-3 py-3 text-muted-foreground max-w-[260px] truncate" title={a.product_name}>
                       {a.product_name}
                     </td>
                     <td className="px-3 py-3 font-mono text-[13px]">

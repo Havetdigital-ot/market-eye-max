@@ -148,7 +148,7 @@ function CrawlLogPanel({
                     {urls.map((u, i) => (
                       <div key={i} className="flex items-center gap-2 text-[11px] text-white/50">
                         <span className="text-blue-500/60">→</span>
-                        <span className="truncate">{u}</span>
+                        <span className="truncate" title={u}>{u}</span>
                       </div>
                     ))}
                     {(details.urlCount ?? 0) > urls.length && (
@@ -588,7 +588,7 @@ function CompetitorsPage() {
                       {c.display_name[0]?.toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-medium truncate flex items-center gap-1.5">
+                      <div className="font-medium truncate flex items-center gap-1.5" title={c.display_name}>
                         {c.display_name}
                         {stale && (
                           <AlertTriangle
@@ -597,7 +597,7 @@ function CompetitorsPage() {
                           />
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground truncate">{hostOf(c.url)}</div>
+                      <div className="text-xs text-muted-foreground truncate" title={c.url}>{hostOf(c.url)}</div>
                     </div>
                   </div>
 
