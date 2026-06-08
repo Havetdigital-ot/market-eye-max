@@ -2,10 +2,13 @@
 
 ## Current Task
 
-**Issue #121** — Global search: false "No results" shown while queries are in-flight  
-Branch: `fix/global-search-loading-states`  
-Plan: Add `isLoading`/`isError` to all four `useQuery` calls; render skeleton rows when `anyLoading`; render error notice when all queries error.  
+**Issue #123** — Alerts page: query fetches all rows with no server-side limit  
+Branch: `fix/alerts-query-limit`  
+Plan: Add `.limit(250)` to the alerts query; fix query key from `["alerts","all"]` → `["alerts"]` so invalidations hit the same cache entry.  
 Status: Implementing
+
+### Completed this session
+- Issue #121 (PR #122 merged) — Global search: skeleton rows + error notice suppress false "No results" during in-flight queries
 
 ### Completed this session
 - Issue #116 (PR #117 merged) — Add throw to 9 queryFns so isError UI branches are reachable
