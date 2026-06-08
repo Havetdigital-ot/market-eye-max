@@ -2,11 +2,10 @@
 
 ## Current Task
 
-**Issue #81** — Discovery scan button pre-disabled + type="button" sweep  
-- Files: `app.discovery.tsx`, `app.competitors.tsx`, `app.store.tsx`, `app.tasks.tsx`, `app.seo.tsx`, `app.brand.tsx`
-- Status: In progress
+**No active task — ready for next discovery**
 
 ### Completed this session
+- Issue #81 (committed c6f82e2) — Discovery scan button pre-disabled + type="button" sweep
 - Issue #79 (committed 2ef9814) — Competitors add-form double-submit + Brand Builder generate disabled state
 - Issue #75 (PR #76 merged) — Tasks dismiss loading state + Discovery keywords validation
 - Issue #77 (PR #78 merged) — Alerts per-row click-to-read + Dashboard store preview placeholder
