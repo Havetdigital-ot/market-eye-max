@@ -94,7 +94,8 @@ function DiscoveryPage() {
   }
 
   async function toggleSave(id: string, saved: boolean) {
-    await supabase.from("trends").update({ saved: !saved }).eq("id", id);
+    const { error } = await supabase.from("trends").update({ saved: !saved }).eq("id", id);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["trends"] });
   }
 

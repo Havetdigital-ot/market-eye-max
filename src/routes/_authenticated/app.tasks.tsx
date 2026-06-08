@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
@@ -69,8 +70,8 @@ function summaryText(t: any) {
   const d = t.details ?? {};
   if (t.task_type === "Crawl Competitor") {
     const parts = [d.target];
-    if (typeof d.found === "number") parts.push(`${d.found} product(s)`);
-    if (typeof d.alerts === "number") parts.push(`${d.alerts} alert(s)`);
+    if (typeof d.found === "number") parts.push(`${d.found} product${d.found === 1 ? "" : "s"}`);
+    if (typeof d.alerts === "number") parts.push(`${d.alerts} alert${d.alerts === 1 ? "" : "s"}`);
     return parts.filter(Boolean).join(" · ") || "—";
   }
   if (t.task_type === "Scan Trends") {
@@ -151,7 +152,8 @@ function TasksPage() {
   });
 
   async function dismiss(id: string) {
-    await supabase.from("background_tasks").update({ dismissed: true }).eq("id", id);
+    const { error } = await supabase.from("background_tasks").update({ dismissed: true }).eq("id", id);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["tasks"] });
     qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
   }

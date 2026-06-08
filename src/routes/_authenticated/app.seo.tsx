@@ -145,13 +145,14 @@ function SeoPage() {
   async function togglePublish() {
     if (!selected) return;
     const next = selected.status === "Published" ? "Draft" : "Published";
-    await supabase
+    const { error } = await supabase
       .from("seo_content")
       .update({
         status: next,
         published_at: next === "Published" ? new Date().toISOString() : null,
       })
       .eq("id", selected.id);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["seo"] });
     toast.success(next === "Published" ? "Published" : "Moved to draft");
   }
