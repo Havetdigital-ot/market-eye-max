@@ -62,6 +62,7 @@ function StorefrontPage() {
           type="button"
           className="mt-8 px-8 py-3 rounded-full font-semibold text-white"
           style={{ background: accent }}
+          onClick={() => document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" })}
         >
           Shop now
         </button>

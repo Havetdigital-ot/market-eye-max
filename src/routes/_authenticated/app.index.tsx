@@ -247,8 +247,8 @@ function DashboardPage() {
                     Number(a.new_price) < Number(a.old_price);
                   return (
                     <tr key={a.id} className="border-t">
-                      <td className="px-5 py-3 font-medium">{a.competitor_name}</td>
-                      <td className="px-3 py-3 text-muted-foreground">{a.product_name}</td>
+                      <td className="px-5 py-3 font-medium max-w-[160px] truncate">{a.competitor_name}</td>
+                      <td className="px-3 py-3 text-muted-foreground max-w-[200px] truncate">{a.product_name}</td>
                       <td className="px-3 py-3 font-mono text-[13px]">
                         {a.type === "New Product" ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-xs font-medium">
@@ -391,7 +391,7 @@ function DashboardPage() {
               <tbody>
                 {topTrends.map((t: any) => (
                   <tr key={t.id} className="border-t">
-                    <td className="px-5 py-3 font-medium">{t.product_name}</td>
+                    <td className="px-5 py-3 font-medium max-w-[220px] truncate">{t.product_name}</td>
                     <td className="px-3 py-3">
                       <span className="inline-flex items-center px-2 py-0.5 rounded bg-muted text-xs font-medium">
                         {t.platform}
