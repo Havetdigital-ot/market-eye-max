@@ -59,7 +59,13 @@ const STAGE_META: Record<Stage, { icon: React.FC<any>; label: (d: any) => string
   done:       { icon: Check,    label: (d) => `Done — ${d?.found ?? 0} products found` },
 };
 
-function CrawlLogPanel({ task }: { task: { status: string; error_message?: string | null; details: any } }) {
+function CrawlLogPanel({
+  task,
+  onRetry,
+}: {
+  task: { status: string; error_message?: string | null; details: any };
+  onRetry?: () => void;
+}) {
   const details = task.details ?? {};
   const currentStage = (details.stage ?? "mapping") as Stage;
   const currentIdx = STAGE_ORDER.indexOf(currentStage);
@@ -69,12 +75,17 @@ function CrawlLogPanel({ task }: { task: { status: string; error_message?: strin
     return (
       <div className="px-6 py-6 bg-red-50/50 dark:bg-red-950/20 border-t flex items-start gap-3">
         <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-        <div>
+        <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-red-700 dark:text-red-300">Crawl failed</p>
-          <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5 font-mono">
+          <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5 font-mono break-all">
             {task.error_message ?? "Unknown error"}
           </p>
         </div>
+        {onRetry && (
+          <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={onRetry}>
+            <RefreshCw className="h-3.5 w-3.5" /> Retry crawl
+          </Button>
+        )}
       </div>
     );
   }
@@ -434,7 +445,7 @@ function CompetitorsPage() {
 
       <div className="rounded-xl border bg-card overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
+        <div className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground border-b bg-muted/30">
           <div>Competitor</div>
           <div>Status</div>
           <div>Products</div>
@@ -443,8 +454,17 @@ function CompetitorsPage() {
         </div>
 
         {competitors.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-muted-foreground">
-            No competitors yet — add one to get started.
+          <div className="px-6 py-14 text-center">
+            <div className="w-12 h-12 rounded-full bg-muted grid place-items-center mx-auto mb-3">
+              <Radar className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="font-medium text-sm">No competitors yet</div>
+            <div className="text-xs text-muted-foreground mt-0.5 mb-4">
+              Add a competitor URL to start tracking products and prices.
+            </div>
+            <Button size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
+              <Plus className="h-3.5 w-3.5" /> Add competitor
+            </Button>
           </div>
         ) : (
           competitors.map((c) => {
@@ -537,7 +557,10 @@ function CompetitorsPage() {
                   <>
                     {/* Show live terminal while crawling, product grid when done */}
                     {activeTask && activeTask.status !== "Completed" ? (
-                      <CrawlLogPanel task={activeTask} />
+                      <CrawlLogPanel
+                        task={activeTask}
+                        onRetry={activeTask.status === "Failed" ? () => recrawl(c.id) : undefined}
+                      />
                     ) : null}
 
                     {/* Product grid — always show if not currently crawling */}
