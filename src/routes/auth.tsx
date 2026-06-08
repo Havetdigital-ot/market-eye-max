@@ -93,7 +93,7 @@ function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md p-8">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold">Market Eye</h1>
+          <h1 className="text-2xl font-semibold">Market Eye Pro</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {mode === "signin" ? "Sign in to your dashboard" : "Create your account"}
           </p>

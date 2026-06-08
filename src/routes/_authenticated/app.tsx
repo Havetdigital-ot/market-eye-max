@@ -161,7 +161,7 @@ function AppShell() {
     .join("")
     .toUpperCase();
 
-  const title = TITLES[pathname] ?? "Market Eye";
+  const title = TITLES[pathname] ?? "Market Eye Pro";
 
   return (
     <SidebarProvider>
