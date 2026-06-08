@@ -276,6 +276,8 @@ function AppShell() {
   );
 }
 
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
 function SearchBox({ onOpen }: { onOpen: () => void }) {
   return (
     <button
@@ -288,7 +290,7 @@ function SearchBox({ onOpen }: { onOpen: () => void }) {
         Search competitors, products, trends…
       </span>
       <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-muted-foreground bg-muted">
-        ⌘K
+        {isMac ? "⌘K" : "Ctrl+K"}
       </kbd>
     </button>
   );
