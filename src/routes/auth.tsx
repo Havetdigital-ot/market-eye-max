@@ -150,14 +150,14 @@ function AuthPage() {
           {mode === "signin" ? (
             <>
               No account?{" "}
-              <button className="text-primary underline" onClick={() => setMode("signup")}>
+              <button type="button" className="text-primary underline" onClick={() => setMode("signup")}>
                 Sign up
               </button>
             </>
           ) : (
             <>
               Have an account?{" "}
-              <button className="text-primary underline" onClick={() => setMode("signin")}>
+              <button type="button" className="text-primary underline" onClick={() => setMode("signin")}>
                 Sign in
               </button>
             </>

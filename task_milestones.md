@@ -5,6 +5,7 @@
 Discovering next issue…
 
 ### Completed this session
+- Issue #110 (PR #111 merged) — SEO body textarea aria-label; focus rings on delete buttons
 - Issue #108 (PR #109 merged) — Competitors toggleStatus togglingId guard against double-click
 - Issue #106 (PR #107 merged) — Store generate() try/finally fix + re-entrancy guard
 - Issue #104 (PR #105 merged) — Alerts unread rows: tabIndex + onKeyDown + aria-label for keyboard a11y
