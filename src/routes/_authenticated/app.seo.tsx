@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { FileText, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { generateSeoContent } from "@/lib/firecrawl.functions";
 
@@ -65,7 +66,7 @@ function SeoPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
 
-  const { data: items = [] } = useQuery({
+  const { data: items = [], isLoading: itemsLoading } = useQuery({
     queryKey: ["seo"],
     queryFn: async () => {
       const { data } = await supabase
@@ -207,9 +208,24 @@ function SeoPage() {
           <div className="rounded-xl border bg-card overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="text-sm font-semibold">Your content</div>
-              <span className="text-xs font-mono text-muted-foreground">{items.length}</span>
+              <span className="text-xs font-mono text-muted-foreground">
+                {itemsLoading ? "…" : items.length}
+              </span>
             </div>
-            {items.length === 0 ? (
+            {itemsLoading ? (
+              <div className="divide-y">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="px-4 py-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <Skeleton className="h-5 w-24 rounded-full" />
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                    </div>
+                    <Skeleton className="h-4 w-3/4 rounded" />
+                    <Skeleton className="h-3 w-20 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : items.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                 No content yet.
               </div>
