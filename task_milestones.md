@@ -2,11 +2,10 @@
 
 ## Current Task
 
-**Issue #100** — Delete buttons for published stores + saved brand assets  
-- Files: `app.store.tsx`, `app.brand.tsx`  
-- Status: In progress
+_None — scanning for next issue_
 
 ### Completed this session
+- Issue #100 (PR #101 merged) — Delete buttons for published stores and saved brand assets
 - Issue #73 closed (already fixed in commit 98efd88 / PR #24)
 - Issue #79 (PR merged) — Competitors add-form double-submit + Brand Builder generate disabled state
 - Issue #81 (PR merged) — Storefront hero button type + palette-aware product card background
