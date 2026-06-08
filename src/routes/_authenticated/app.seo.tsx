@@ -12,8 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { FileText, Loader2, AlertCircle } from "lucide-react";
+import { FileText, Loader2, AlertCircle, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { generateSeoContent } from "@/lib/firecrawl.functions";
@@ -66,6 +71,7 @@ function SeoPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const { data: items = [], isLoading: itemsLoading, isError: itemsError } = useQuery({
     queryKey: ["seo"],
@@ -168,6 +174,14 @@ function SeoPage() {
     }
   }
 
+  async function deleteItem(id: string) {
+    const { error } = await supabase.from("seo_content").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    if (selectedId === id) { setSelectedId(null); setEditTitle(""); setEditBody(""); }
+    qc.invalidateQueries({ queryKey: ["seo"] });
+    toast.success("Deleted");
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -252,23 +266,38 @@ function SeoPage() {
               </div>
             ) : (
               items.map((s: any) => (
-                <button
+                <div
                   key={s.id}
-                  type="button"
-                  onClick={() => openItem(s)}
-                  className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-muted/40 transition-colors ${
+                  className={`flex items-start gap-2 px-4 py-3 border-b last:border-b-0 hover:bg-muted/40 transition-colors ${
                     selectedId === s.id ? "bg-muted/60" : ""
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <TypePill type={s.type} />
-                    <StatusPill status={s.status} />
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className="flex-1 text-left min-w-0 cursor-pointer"
+                    onClick={() => openItem(s)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openItem(s); } }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <TypePill type={s.type} />
+                      <StatusPill status={s.status} />
+                    </div>
+                    <div className="font-semibold mt-2 text-sm leading-snug">{s.title}</div>
+                    <div className="text-xs text-muted-foreground font-mono mt-1">
+                      {formatDistanceToNow(new Date(s.created_at), { addSuffix: true })}
+                    </div>
                   </div>
-                  <div className="font-semibold mt-2 text-sm leading-snug">{s.title}</div>
-                  <div className="text-xs text-muted-foreground font-mono mt-1">
-                    {formatDistanceToNow(new Date(s.created_at), { addSuffix: true })}
-                  </div>
-                </button>
+                  <button
+                    type="button"
+                    aria-label="Delete"
+                    title="Delete"
+                    className="mt-0.5 h-7 w-7 grid place-items-center rounded hover:bg-muted hover:text-red-500 text-muted-foreground/50 transition-colors shrink-0"
+                    onClick={() => setPendingDeleteId(s.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               ))
             )}
           </div>
@@ -296,7 +325,10 @@ function SeoPage() {
                 </div>
               </div>
               <Input
+                id="seo-edit-title"
+                aria-label="Content title"
                 value={editTitle ?? ""}
+                maxLength={200}
                 onChange={(e) => setEditTitle(e.target.value)}
                 className="text-xl font-semibold h-12"
               />
@@ -324,6 +356,26 @@ function SeoPage() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!pendingDeleteId} onOpenChange={(o) => { if (!o) setPendingDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this content?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the item from your library. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (pendingDeleteId) { deleteItem(pendingDeleteId); setPendingDeleteId(null); } }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
