@@ -233,10 +233,10 @@ function DashboardPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-muted-foreground">
-                  <th className="text-left font-medium px-5 py-2.5">Competitor</th>
-                  <th className="text-left font-medium px-3 py-2.5">Product</th>
-                  <th className="text-left font-medium px-3 py-2.5">Change</th>
-                  <th className="text-left font-medium px-5 py-2.5">When</th>
+                  <th scope="col" className="text-left font-medium px-5 py-2.5">Competitor</th>
+                  <th scope="col" className="text-left font-medium px-3 py-2.5">Product</th>
+                  <th scope="col" className="text-left font-medium px-3 py-2.5">Change</th>
+                  <th scope="col" className="text-left font-medium px-5 py-2.5">When</th>
                 </tr>
               </thead>
               <tbody>
@@ -370,9 +370,9 @@ function DashboardPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-muted-foreground">
-                  <th className="text-left font-medium px-5 py-2.5">Product</th>
-                  <th className="text-left font-medium px-3 py-2.5">Platform</th>
-                  <th className="text-left font-medium px-5 py-2.5">Trend score</th>
+                  <th scope="col" className="text-left font-medium px-5 py-2.5">Product</th>
+                  <th scope="col" className="text-left font-medium px-3 py-2.5">Platform</th>
+                  <th scope="col" className="text-left font-medium px-5 py-2.5">Trend score</th>
                 </tr>
               </thead>
               <tbody>

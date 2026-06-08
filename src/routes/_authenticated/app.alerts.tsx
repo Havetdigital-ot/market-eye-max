@@ -205,11 +205,11 @@ function AlertsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-muted-foreground bg-muted/30">
-                <th className="text-left font-medium px-5 py-3">Competitor</th>
-                <th className="text-left font-medium px-3 py-3">Product</th>
-                <th className="text-left font-medium px-3 py-3">Change</th>
-                <th className="text-left font-medium px-3 py-3">Type</th>
-                <th className="text-left font-medium px-5 py-3">When</th>
+                <th scope="col" className="text-left font-medium px-5 py-3">Competitor</th>
+                <th scope="col" className="text-left font-medium px-3 py-3">Product</th>
+                <th scope="col" className="text-left font-medium px-3 py-3">Change</th>
+                <th scope="col" className="text-left font-medium px-3 py-3">Type</th>
+                <th scope="col" className="text-left font-medium px-5 py-3">When</th>
               </tr>
             </thead>
             <tbody>
