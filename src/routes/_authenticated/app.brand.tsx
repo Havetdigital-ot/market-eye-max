@@ -78,15 +78,6 @@ export const Route = createFileRoute("/_authenticated/app/brand")({
   component: BrandPage,
 });
 
-type BrandTemplate = {
-  brand_name: string;
-  brand_voice: string;
-  color_palette: string[];
-  font_primary: string;
-  font_secondary: string;
-};
-
-
 function timeAgo(d: string) {
   try {
     return formatDistanceToNow(new Date(d), { addSuffix: true });
@@ -101,7 +92,6 @@ function BrandPage() {
   const [desc, setDesc] = useState("");
   const [phase, setPhase] = useState<"idle" | "generating" | "review">("idle");
   const [draft, setDraft] = useState<any | null>(null);
-  const [seed, setSeed] = useState(0);
 
   const { data: assets = [] } = useQuery({
     queryKey: ["brand-assets"],
@@ -111,17 +101,6 @@ function BrandPage() {
         .select("*")
         .order("generated_at", { ascending: false });
       return data ?? [];
-    },
-  });
-
-  const { data: templates = [] } = useQuery<BrandTemplate[]>({
-    queryKey: ["brand-generation-templates"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("brand_generation_templates")
-        .select("brand_name, brand_voice, color_palette, font_primary, font_secondary")
-        .order("sort_order", { ascending: true });
-      return (data ?? []) as BrandTemplate[];
     },
   });
 
@@ -271,7 +250,7 @@ function BrandPage() {
                       (c: string, i: number) => (
                         <div
                           key={i}
-                          className="w-[18px] h-[18px] rounded-[5px] border-[1.5px] border-white"
+                          className="w-[18px] h-[18px] rounded-[5px] border-[1.5px] border-background"
                           style={{ background: c, marginLeft: i ? -5 : 0 }}
                         />
                       ),
