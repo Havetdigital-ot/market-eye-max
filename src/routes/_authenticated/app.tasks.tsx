@@ -177,7 +177,7 @@ function TasksPage() {
             Background jobs across crawling, trend scans, and AI generation. Click a row for full details.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-1.5">
           <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} /> Refresh
         </Button>
       </div>

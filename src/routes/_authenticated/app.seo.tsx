@@ -72,6 +72,7 @@ function SeoPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingSwitchItem, setPendingSwitchItem] = useState<any>(null);
 
   const { data: items = [], isLoading: itemsLoading, isError: itemsError } = useQuery({
     queryKey: ["seo"],
@@ -85,6 +86,7 @@ function SeoPage() {
   });
 
   const selected = items.find((i: any) => i.id === selectedId);
+  const isDirty = !!(selected && (editTitle !== (selected.title ?? "") || editBody !== (selected.body ?? "")));
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
@@ -132,7 +134,12 @@ function SeoPage() {
     }
   }
 
-  function openItem(item: any) {
+  function openItem(item: any, force = false) {
+    if (!force && isDirty) {
+      setPendingSwitchItem(item);
+      return;
+    }
+    setPendingSwitchItem(null);
     setSelectedId(item.id);
     setEditTitle(item.title ?? "");
     setEditBody(item.body ?? "");
@@ -356,6 +363,26 @@ function SeoPage() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!pendingSwitchItem} onOpenChange={(o) => { if (!o) setPendingSwitchItem(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes to this item. Discard them and open the selected item?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (pendingSwitchItem) openItem(pendingSwitchItem, true); }}
+            >
+              Discard changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!pendingDeleteId} onOpenChange={(o) => { if (!o) setPendingDeleteId(null); }}>
         <AlertDialogContent>
