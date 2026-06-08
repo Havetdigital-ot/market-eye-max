@@ -231,10 +231,13 @@ function AlertsPage() {
                   <tr
                     key={a.id}
                     onClick={!a.is_read ? () => markRead(a.id) : undefined}
+                    tabIndex={!a.is_read ? 0 : undefined}
+                    aria-label={!a.is_read ? "Mark as read" : undefined}
+                    onKeyDown={!a.is_read ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); markRead(a.id); } } : undefined}
                     className={cn(
                       "border-t transition-colors",
                       !a.is_read &&
-                        "bg-amber-50/60 dark:bg-amber-500/8 border-l-2 border-l-amber-400 cursor-pointer hover:bg-amber-100/60 dark:hover:bg-amber-500/15"
+                        "bg-amber-50/60 dark:bg-amber-500/8 border-l-2 border-l-amber-400 cursor-pointer hover:bg-amber-100/60 dark:hover:bg-amber-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                     )}
                   >
                     <td className="px-5 py-3 font-medium">{a.competitor_name}</td>
