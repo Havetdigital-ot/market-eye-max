@@ -2,12 +2,10 @@
 
 ## Current Task
 
-**Issue #123** — Alerts page: query fetches all rows with no server-side limit  
-Branch: `fix/alerts-query-limit`  
-Plan: Add `.limit(250)` to the alerts query; fix query key from `["alerts","all"]` → `["alerts"]` so invalidations hit the same cache entry.  
-Status: Implementing
+Discovering next issue…
 
 ### Completed this session
+- Issue #123 (PR #124 merged) — Alerts query: .limit(250) + cache key fix ["alerts","all"] → ["alerts"]
 - Issue #121 (PR #122 merged) — Global search: skeleton rows + error notice suppress false "No results" during in-flight queries
 
 ### Completed this session
