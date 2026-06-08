@@ -129,6 +129,7 @@ function AlertsPage() {
           {(["All", "Price Change", "New Product"] as AlertType[]).map((t) => (
             <button
               key={t}
+              type="button"
               onClick={() => handleFilterChange(t)}
               className={cn(
                 "px-3 py-1 rounded-md text-xs font-medium transition-colors",
@@ -145,6 +146,7 @@ function AlertsPage() {
           {(["All", "Unread"] as ReadFilter[]).map((r) => (
             <button
               key={r}
+              type="button"
               onClick={() => handleFilterChange(undefined, r)}
               className={cn(
                 "px-3 py-1 rounded-md text-xs font-medium transition-colors",

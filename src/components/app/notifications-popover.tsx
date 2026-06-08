@@ -69,6 +69,7 @@ export function NotificationsPopover({ count }: { count: number }) {
     <Popover>
       <PopoverTrigger asChild>
         <button
+          type="button"
           className="relative w-10 h-10 rounded-full bg-background border grid place-items-center hover:bg-muted transition-colors"
           aria-label="Notifications"
         >
@@ -90,6 +91,7 @@ export function NotificationsPopover({ count }: { count: number }) {
           </div>
           {count > 0 && (
             <button
+              type="button"
               onClick={markAllRead}
               className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
             >
@@ -136,6 +138,7 @@ export function NotificationsPopover({ count }: { count: number }) {
               return (
                 <button
                   key={a.id}
+                  type="button"
                   onClick={() => openAlert(a.id)}
                   className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-muted/50 transition-colors flex gap-3 ${
                     !a.is_read ? "bg-blue-50/40" : ""
@@ -168,6 +171,7 @@ export function NotificationsPopover({ count }: { count: number }) {
         </div>
 
         <button
+          type="button"
           onClick={() => navigate({ to: "/app/alerts" })}
           className="w-full px-4 py-2.5 text-xs font-medium text-blue-600 hover:bg-muted/50 border-t"
         >
