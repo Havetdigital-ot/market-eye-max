@@ -13,6 +13,28 @@ _(scanning for next issue)_
 - markAllRead() in app.alerts.tsx: destructure { error }, toast on failure
 - toggleStatus() + remove() in app.competitors.tsx: same pattern
 
+### Task 22 — Accessibility: aria-label on icon-only buttons (Issue #59, PR #60)
+- app.tsx: sign-out button
+- app.competitors.tsx: Recrawl, Pause/Resume, Delete buttons
+- app.store.tsx: Copy URL button + Open link; also added type="button"
+
+### Task 23 — Dark mode: hardcoded oklch values in app.tsx (Issue #61, PR #62)
+- Nav active indicator + badge bg: oklch literal → var(--sidebar-primary)
+- Badge fg: text-white → text-sidebar-primary-foreground
+- Avatar: dropped gradient inline style → bg-sidebar-primary
+
+### Task 24 — HTML: missing type="button" on filter/nav buttons (Issue #63, PR #64)
+- app.alerts.tsx: type-filter (×3) + read-filter (×2) buttons
+- notifications-popover.tsx: bell trigger, mark-all-read, alert rows, "View all alerts"
+
+### Task 25 — openAlert error handling + SEO saving guard (Issues #65 #66, PR #67)
+- notifications-popover.tsx: openAlert() now checks { error }, skips navigation on failure
+- app.seo.tsx: saving state + try/finally on saveEdits/togglePublish; buttons disabled during save
+
+### Task 26 — Hardcoded domain string cleanup (Issue #68, PR #69)
+- app.store.tsx: CNAME instruction uses {STORE_DOMAIN} not hardcoded literal
+- s.$slug.tsx: "Powered by" footer href extracted to APP_URL constant
+
 ---
 
 ## Completed Tasks
