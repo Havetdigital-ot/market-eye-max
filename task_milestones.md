@@ -2,11 +2,12 @@
 
 ## Current Task
 
-**Issue #102** — Tasks refresh concurrent requests + SEO unsaved changes guard  
-- Files: `app.tasks.tsx`, `app.seo.tsx`  
-- Status: In progress
+Discovering next issue…
 
 ### Completed this session
+- Issue #106 (PR #107 merged) — Store generate() try/finally fix + re-entrancy guard
+- Issue #104 (PR #105 merged) — Alerts unread rows: tabIndex + onKeyDown + aria-label for keyboard a11y
+- Issue #102 (PR #103 merged) — Tasks refresh disabled during fetch; SEO unsaved changes AlertDialog guard
 - Issue #100 (PR #101 merged) — Delete buttons for published stores and saved brand assets
 - Issue #73 closed (already fixed in commit 98efd88 / PR #24)
 - Issue #79 (PR merged) — Competitors add-form double-submit + Brand Builder generate disabled state

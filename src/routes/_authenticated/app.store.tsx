@@ -94,57 +94,59 @@ function StorePage() {
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
+    if (generating) return;
     if (!name.trim() || !desc.trim()) return toast.error("Fill in name and description");
     if (!effectiveSlug) return toast.error("Slug is required");
 
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
 
-    setGenerating(true);
-
     const brand = brands.find((b: any) => b.id === brandId);
     const palette =
       (brand?.color_palette as string[]) ?? ["#1F2A24", "#3E7C5A", "#A8C3A0", "#E9F0E6"];
 
-    const { data: inserted, error } = await supabase
-      .from("generated_stores")
-      .insert({
-        user_id: user.user.id,
-        slug: effectiveSlug,
-        name: name.trim(),
-        description: desc.trim(),
-        brand_asset_id: brand?.id ?? null,
-        palette,
-        content: {},
-        published: true,
-      })
-      .select()
-      .single();
+    setGenerating(true);
+    try {
+      const { data: inserted, error } = await supabase
+        .from("generated_stores")
+        .insert({
+          user_id: user.user.id,
+          slug: effectiveSlug,
+          name: name.trim(),
+          description: desc.trim(),
+          brand_asset_id: brand?.id ?? null,
+          palette,
+          content: {},
+          published: true,
+        })
+        .select()
+        .single();
 
-    setGenerating(false);
-
-    if (error) {
-      if (error.code === "23505") {
-        toast.error(`Slug "${effectiveSlug}" is already taken — pick another.`);
-      } else {
-        toast.error(error.message);
+      if (error) {
+        if (error.code === "23505") {
+          toast.error(`Slug "${effectiveSlug}" is already taken — pick another.`);
+        } else {
+          toast.error(error.message);
+        }
+        return;
       }
-      return;
+
+      // Also log a task entry for the task log page.
+      await supabase.from("background_tasks").insert({
+        user_id: user.user.id,
+        task_type: "Generate Store",
+        status: "Completed",
+        details: { store: name.trim(), slug: effectiveSlug, url: storeUrl(effectiveSlug) },
+      });
+
+      const url = storeUrl(inserted.slug);
+      setLastUrl(url);
+      qc.invalidateQueries({ queryKey: ["generated_stores"] });
+      qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
+      toast.success("Store published", { description: url });
+    } finally {
+      setGenerating(false);
     }
-
-    // Also log a task entry for the task log page.
-    await supabase.from("background_tasks").insert({
-      user_id: user.user.id,
-      task_type: "Generate Store",
-      status: "Completed",
-      details: { store: name.trim(), slug: effectiveSlug, url: storeUrl(effectiveSlug) },
-    });
-
-    const url = storeUrl(inserted.slug);
-    setLastUrl(url);
-    qc.invalidateQueries({ queryKey: ["generated_stores"] });
-    qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
-    toast.success("Store published", { description: url });
   }
 
   async function copyUrl(url: string) {
