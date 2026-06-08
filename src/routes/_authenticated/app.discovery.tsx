@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { startTrendScan } from "@/lib/api/firecrawl";
-import { Check, ExternalLink, Search, RefreshCw, Plus, AlertCircle } from "lucide-react";
+import { Check, ExternalLink, Search, RefreshCw, Plus, AlertCircle, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
@@ -62,6 +62,7 @@ function DiscoveryPage() {
   });
   const [running, setRunning] = useState(false);
   const [savedOnly, setSavedOnly] = useState(false);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const { data: trends = [], isLoading, isError: trendsError } = useQuery({
     queryKey: ["trends"],
@@ -95,9 +96,14 @@ function DiscoveryPage() {
   }
 
   async function toggleSave(id: string, saved: boolean) {
-    const { error } = await supabase.from("trends").update({ saved: !saved }).eq("id", id);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["trends"] });
+    setSavingId(id);
+    try {
+      const { error } = await supabase.from("trends").update({ saved: !saved }).eq("id", id);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["trends"] });
+    } finally {
+      setSavingId(null);
+    }
   }
 
   return (
@@ -249,13 +255,22 @@ function DiscoveryPage() {
                 <button
                   type="button"
                   onClick={() => toggleSave(t.id, t.saved)}
+                  disabled={savingId === t.id}
                   className={`inline-flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium border transition-colors ${
-                    t.saved
+                    savingId === t.id
+                      ? "opacity-50 cursor-not-allowed border-border"
+                      : t.saved
                       ? "bg-primary/10 border-primary/20 text-primary"
                       : "bg-background border-border hover:bg-muted"
                   }`}
                 >
-                  {t.saved ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                  {savingId === t.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : t.saved ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5" />
+                  )}
                   {t.saved ? "Saved" : "Save"}
                 </button>
               </div>
