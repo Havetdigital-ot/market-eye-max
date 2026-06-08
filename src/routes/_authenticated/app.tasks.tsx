@@ -22,6 +22,7 @@ import {
   ChevronRight,
   RefreshCw,
   ClipboardList,
+  AlertCircle,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -119,7 +120,7 @@ function TasksPage() {
   const [status, setStatus] = useState<string>("all");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const { data: tasks = [], isFetching, isLoading, refetch } = useQuery({
+  const { data: tasks = [], isFetching, isLoading, isError, refetch } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => {
       const { data } = await supabase
@@ -215,7 +216,18 @@ function TasksPage() {
           <div className="text-right"></div>
         </div>
 
-        {isLoading ? (
+        {isError ? (
+          <div className="py-14 flex flex-col items-center gap-3 text-center">
+            <AlertCircle className="h-6 w-6 text-destructive" />
+            <div>
+              <div className="font-medium text-sm">Failed to load tasks</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Check your connection and try again.</div>
+            </div>
+            <Button size="sm" variant="outline" className="gap-1.5 mt-1" onClick={() => refetch()}>
+              <RefreshCw className="h-3.5 w-3.5" /> Try again
+            </Button>
+          </div>
+        ) : isLoading ? (
           Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
