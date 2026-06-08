@@ -31,8 +31,7 @@ type AlertType = "All" | "Price Change" | "New Product";
 type ReadFilter = "All" | "Unread";
 
 function money0(n: number | string | null | undefined) {
-  const v = Number(n ?? 0);
-  return "$" + Math.round(v).toLocaleString();
+  return "$" + Number(n ?? 0).toFixed(2);
 }
 
 function AlertsPage() {
