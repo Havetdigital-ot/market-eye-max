@@ -2,11 +2,12 @@
 
 ## Current Task
 
-**Issue #79** — Competitors add-form double-submit + Brand Builder generate disabled state  
-- Files: `app.competitors.tsx`, `app.brand.tsx`  
-- Status: Code fixed, committing
+_None — ready for next loop_
 
 ### Completed this session
+- Issue #79 (PR merged) — Competitors add-form double-submit + Brand Builder generate disabled state
+- Issue #81 (PR #82 merged) — Storefront: type="button" on hero CTA + palette-aware product card bg
+- Issue #83 (PR #85 merged) — Discovery: toggleSave per-row loading/disabled guard
 - Issue #75 (PR #76 merged) — Tasks dismiss loading state + Discovery keywords validation
 - Issue #77 (PR #78 merged) — Alerts per-row click-to-read + Dashboard store preview placeholder
 
