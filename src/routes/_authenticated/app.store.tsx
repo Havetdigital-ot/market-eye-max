@@ -239,7 +239,7 @@ function StorePage() {
               ) : (
                 <StoreIcon className="h-4 w-4" />
               )}
-              {generating ? "Publishing…" : "Generate &amp; publish store"}
+              {generating ? "Publishing…" : "Generate & publish store"}
             </Button>
           </form>
 
