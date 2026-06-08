@@ -24,6 +24,7 @@ import {
   RefreshCw,
   ClipboardList,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -312,8 +313,10 @@ function TasksPage() {
                         size="sm"
                         disabled={dismissingId === t.id}
                         onClick={() => dismiss(t.id)}
+                        className="gap-1.5"
                       >
-                        Dismiss
+                        {dismissingId === t.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        {dismissingId === t.id ? "Dismissing…" : "Dismiss"}
                       </Button>
                     )}
                   </div>
