@@ -2,13 +2,17 @@
 
 ## Current Task
 
-_None — scanning for next issue_
+**Issue #100** — Delete buttons for published stores + saved brand assets  
+- Files: `app.store.tsx`, `app.brand.tsx`  
+- Status: In progress
 
 ### Completed this session
 - Issue #73 closed (already fixed in commit 98efd88 / PR #24)
 - Issue #79 (PR merged) — Competitors add-form double-submit + Brand Builder generate disabled state
 - Issue #81 (PR merged) — Storefront hero button type + palette-aware product card background
 - Issue #83 (PR merged) — Discovery toggleSave per-row loading/disabled guard
+- Issue #98 (PR #99 merged) — SEO content delete + title editor maxLength & aria-label
+- Issue #96 (PR #97 merged) — Brand library items clickable — load into review panel
 - Issue #94 (PR #95 merged) — money0() toFixed(2) fix in alerts + dashboard
 - Issue #92 (PR #93 merged) — Competitor search filter + stale row indicator
 - Issue #90 (PR #91 merged) — Dashboard table cell truncation + storefront Shop Now scroll
