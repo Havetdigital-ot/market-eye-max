@@ -16,200 +16,224 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       .object({
         competitorId: z.string().uuid(),
         taskId: z.string().uuid(),
-        limit: z.number().min(1).max(50).optional().default(15),
+        limit: z.number().min(1).max(20).optional().default(5),
       })
       .parse(input),
   )
-  .handler(async ({ data, context }) => {
+  .handler(({ data, context }) => {
     const { supabase, userId } = context;
-    const { getFirecrawl, productExtractionSchema } = await import(
-      "./firecrawl.server"
-    );
 
-    const setProgress = async (stage: string, extra: Record<string, any> = {}) => {
-      await supabase
-        .from("background_tasks")
-        .update({
-          details: { competitorId: data.competitorId, stage, ...extra },
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", data.taskId);
-    };
+    // Return immediately so the HTTP connection closes before the proxy times out.
+    // The actual crawl runs detached on the server event loop via setImmediate.
+    setImmediate(async () => {
+      const { getFirecrawl, productExtractionSchema } = await import("./firecrawl.server");
 
-    const setFailed = async (msg: string) => {
-      await supabase
-        .from("background_tasks")
-        .update({
-          status: "Failed",
-          error_message: msg.slice(0, 1000),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", data.taskId);
-    };
+      const setProgress = async (stage: string, extra: Record<string, any> = {}) => {
+        await supabase
+          .from("background_tasks")
+          .update({
+            details: { competitorId: data.competitorId, stage, ...extra },
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", data.taskId);
+      };
 
-    try {
-      const { data: competitor, error: cErr } = await supabase
-        .from("competitors")
-        .select("id, display_name, url, user_id")
-        .eq("id", data.competitorId)
-        .eq("user_id", userId)
-        .single();
-      if (cErr || !competitor) throw new Error("Competitor not found");
+      const setFailed = async (msg: string) => {
+        await supabase
+          .from("background_tasks")
+          .update({
+            status: "Failed",
+            error_message: msg.slice(0, 1000),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", data.taskId);
+      };
 
-      const firecrawl = getFirecrawl();
-
-      // 1) Map URLs
-      await setProgress("mapping", { target: competitor.display_name, domain: new URL(competitor.url).hostname });
-      let urls: string[] = [];
       try {
-        const mapRes: any = await firecrawl.map(competitor.url, {
-          limit: data.limit,
-        });
-        urls = (mapRes?.links ?? mapRes?.data?.links ?? []).slice(
-          0,
-          data.limit,
-        );
-      } catch {
-        urls = [competitor.url];
-      }
-      if (urls.length === 0) urls = [competitor.url];
+        const { data: competitor, error: cErr } = await supabase
+          .from("competitors")
+          .select("id, display_name, url, user_id")
+          .eq("id", data.competitorId)
+          .eq("user_id", userId)
+          .single();
+        if (cErr || !competitor) throw new Error("Competitor not found");
 
-      // 2) Extract structured products
-      await setProgress("extracting", { target: competitor.display_name, urlCount: urls.length, urls: urls.slice(0, 8) });
-      const extractRes: any = await (firecrawl as any).extract({
-        urls,
-        prompt:
-          "Extract every distinct product on these pages. For each: name, absolute product url, short description, image_url, category, sku, and current price as a number.",
-        schema: productExtractionSchema as any,
-      });
-      const payload = extractRes?.data ?? extractRes;
-      const products: any[] = payload?.products ?? [];
+        const firecrawl = getFirecrawl();
 
-      await setProgress("saving", { target: competitor.display_name, found: products.length });
+        // 1) Map URLs — over-fetch then filter down to product-likely pages
+        await setProgress("mapping", { target: competitor.display_name, domain: new URL(competitor.url).hostname });
+        let urls: string[] = [];
+        try {
+          const mapRes: any = await firecrawl.map(competitor.url, { limit: data.limit * 4 });
+          // SDK v4 returns { links: SearchResultWeb[] } — extract the url string from each entry.
+          // Older builds returned { links: string[] } — handle both.
+          const rawLinks: any[] = mapRes?.links ?? mapRes?.data?.links ?? [];
+          const allLinks: string[] = rawLinks.map((l: any) =>
+            typeof l === "string" ? l : (l?.url ?? "")
+          ).filter(Boolean);
 
-      let upserts = 0;
-      let alertsFired = 0;
+          const productPat = /\/(products?|shop|store|catalog|collections?|items?|buy|categor)\b/i;
+          const skipPat = /\/(about|faq|contact|help|blog|news|press|career|legal|terms|privacy|account|cart|checkout|search|wishlist)\b/i;
 
-      for (const p of products) {
-        if (!p?.name) continue;
-        // Look up existing by (competitor_id, sku) or name
-        const { data: existing } = await supabase
-          .from("competitor_products")
-          .select("id")
-          .eq("competitor_id", competitor.id)
-          .or(
-            `sku.eq.${p.sku ?? "__none__"},name.eq.${(p.name as string).replace(/,/g, "")}`,
-          )
-          .maybeSingle();
-
-        let productId = existing?.id as string | undefined;
-        const isNew = !productId;
-
-        if (isNew) {
-          const { data: ins, error: insErr } = await supabase
-            .from("competitor_products")
-            .insert({
-              competitor_id: competitor.id,
-              name: p.name,
-              url: p.url ?? null,
-              description: p.description ?? null,
-              image_url: p.image_url ?? null,
-              category: p.category ?? null,
-              sku: p.sku ?? null,
-              last_updated_at: new Date().toISOString(),
-            })
-            .select("id")
-            .single();
-          if (insErr || !ins) continue;
-          productId = ins.id;
-        } else {
-          await supabase
-            .from("competitor_products")
-            .update({
-              url: p.url ?? null,
-              description: p.description ?? null,
-              image_url: p.image_url ?? null,
-              category: p.category ?? null,
-              sku: p.sku ?? null,
-              last_updated_at: new Date().toISOString(),
-            })
-            .eq("id", productId as string);
+          const productLinks = allLinks.filter(u => productPat.test(u) && !skipPat.test(u));
+          const otherLinks   = allLinks.filter(u => !productPat.test(u) && !skipPat.test(u));
+          urls = [...productLinks, ...otherLinks].slice(0, data.limit);
+          console.log("[crawlCompetitor] mapped", allLinks.length, "→ using", urls.length, "urls");
+        } catch (mapErr: any) {
+          console.error("[crawlCompetitor] map failed:", mapErr?.message ?? mapErr);
+          urls = [competitor.url];
         }
-        upserts++;
+        if (urls.length === 0) urls = [competitor.url];
 
-        if (typeof p.price === "number" && productId) {
-          // Get last known price
-          const { data: last } = await supabase
-            .from("price_history")
-            .select("price")
-            .eq("competitor_product_id", productId)
-            .order("timestamp", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        // 2) Scrape each URL with formats:[{type:"json"}] — the v4 SDK way to do LLM extraction.
+        await setProgress("extracting", { target: competitor.display_name, urlCount: urls.length, urls: urls.slice(0, 8) });
 
-          await supabase.from("price_history").insert({
-            competitor_product_id: productId,
-            price: p.price,
-            currency: "USD",
-            timestamp: new Date().toISOString(),
-          });
+        const BATCH = 2;
+        const TIMEOUT = 60_000;
+        const products: any[] = [];
 
-          const oldPrice = last?.price ?? null;
-          if (isNew) {
-            await supabase.from("alerts").insert({
-              user_id: userId,
-              type: "New Product",
-              competitor_name: competitor.display_name,
-              product_name: p.name,
-              old_price: null,
-              new_price: p.price,
-              is_read: false,
-            });
-            alertsFired++;
-          } else if (oldPrice != null && Number(oldPrice) !== p.price) {
-            await supabase.from("alerts").insert({
-              user_id: userId,
-              type: "Price Change",
-              competitor_name: competitor.display_name,
-              product_name: p.name,
-              old_price: oldPrice,
-              new_price: p.price,
-              is_read: false,
-            });
-            alertsFired++;
+        for (let i = 0; i < urls.length; i += BATCH) {
+          const batch = urls.slice(i, i + BATCH);
+          const results = await Promise.allSettled(
+            batch.map((u) =>
+              Promise.race([
+                firecrawl.scrape(u, {
+                  formats: [
+                    {
+                      type: "json",
+                      prompt:
+                        "Extract every distinct product visible on this page. For each product return: name (string), url (absolute product URL string), description (short string), image_url (string), category (string), sku (string), price (number).",
+                      schema: productExtractionSchema,
+                    } as any,
+                  ],
+                }),
+                new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), TIMEOUT)),
+              ]),
+            ),
+          );
+          for (const r of results) {
+            if (r.status === "fulfilled") {
+              const doc: any = r.value;
+              const raw = doc?.json ?? doc?.extract;
+              const list: any[] = Array.isArray(raw)
+                ? raw
+                : raw?.products ?? [];
+              products.push(...list);
+            } else {
+              console.error("[crawlCompetitor] scrape rejected:", r.reason?.message ?? r.reason);
+            }
           }
         }
-      }
 
-      await supabase
-        .from("competitors")
-        .update({
-          last_crawled_at: new Date().toISOString(),
-          status: "Active",
-        })
-        .eq("id", competitor.id);
+        // 3) Save products to DB
+        await setProgress("saving", { target: competitor.display_name, found: products.length });
 
-      await supabase
-        .from("background_tasks")
-        .update({
+        let upserts = 0;
+        let alertsFired = 0;
+
+        for (const p of products) {
+          if (!p?.name) continue;
+          const { data: existing } = await supabase
+            .from("competitor_products")
+            .select("id")
+            .eq("competitor_id", competitor.id)
+            .or(`sku.eq.${p.sku ?? "__none__"},name.eq.${(p.name as string).replace(/,/g, "")}`)
+            .maybeSingle();
+
+          let productId = existing?.id as string | undefined;
+          const isNew = !productId;
+
+          if (isNew) {
+            const { data: ins, error: insErr } = await supabase
+              .from("competitor_products")
+              .insert({
+                competitor_id: competitor.id,
+                name: p.name,
+                url: p.url ?? null,
+                description: p.description ?? null,
+                image_url: p.image_url ?? null,
+                category: p.category ?? null,
+                sku: p.sku ?? null,
+                last_updated_at: new Date().toISOString(),
+              })
+              .select("id")
+              .single();
+            if (insErr || !ins) continue;
+            productId = ins.id;
+          } else {
+            await supabase
+              .from("competitor_products")
+              .update({
+                url: p.url ?? null,
+                description: p.description ?? null,
+                image_url: p.image_url ?? null,
+                category: p.category ?? null,
+                sku: p.sku ?? null,
+                last_updated_at: new Date().toISOString(),
+              })
+              .eq("id", productId as string);
+          }
+          upserts++;
+
+          if (typeof p.price === "number" && productId) {
+            const { data: last } = await supabase
+              .from("price_history")
+              .select("price")
+              .eq("competitor_product_id", productId)
+              .order("timestamp", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            await supabase.from("price_history").insert({
+              competitor_product_id: productId,
+              price: p.price,
+              currency: "USD",
+              timestamp: new Date().toISOString(),
+            });
+
+            const oldPrice = last?.price ?? null;
+            if (isNew) {
+              await supabase.from("alerts").insert({
+                user_id: userId, type: "New Product",
+                competitor_name: competitor.display_name,
+                product_name: p.name, old_price: null, new_price: p.price, is_read: false,
+              });
+              alertsFired++;
+            } else if (oldPrice != null && Number(oldPrice) !== p.price) {
+              await supabase.from("alerts").insert({
+                user_id: userId, type: "Price Change",
+                competitor_name: competitor.display_name,
+                product_name: p.name, old_price: oldPrice, new_price: p.price, is_read: false,
+              });
+              alertsFired++;
+            }
+          }
+        }
+
+        await supabase.from("competitors").update({
+          last_crawled_at: new Date().toISOString(), status: "Active",
+        }).eq("id", competitor.id);
+
+        await supabase.from("background_tasks").update({
           status: "Completed",
           details: {
-            competitorId: data.competitorId,
-            stage: "done",
-            target: competitor.display_name,
-            found: upserts,
-            alerts: alertsFired,
+            competitorId: data.competitorId, stage: "done",
+            target: competitor.display_name, found: upserts, alerts: alertsFired,
           },
           updated_at: new Date().toISOString(),
-        })
-        .eq("id", data.taskId);
+        }).eq("id", data.taskId);
 
-      return { ok: true, found: upserts, alerts: alertsFired };
-    } catch (err: any) {
-      const msg = err?.message ?? String(err);
-      await setFailed(msg);
-      return { ok: false, error: msg };
-    }
+      } catch (err: any) {
+        await supabase.from("background_tasks").update({
+          status: "Failed",
+          error_message: (err?.message ?? String(err)).slice(0, 1000),
+          updated_at: new Date().toISOString(),
+        }).eq("id", data.taskId);
+      }
+    });
+
+    // Return immediately — crawl runs in background via setImmediate above
+    return { ok: true, started: true };
   });
 
 /**
