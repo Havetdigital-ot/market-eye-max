@@ -5,6 +5,8 @@
 _Scanning for next issue…_
 
 ### Completed this session
+- Issue #129 (PR #130 merged) — brand_assets query key mismatch: Store page brand selector never refreshed
+- Issue #127 (PR #128 merged) — title attributes on truncated text cells across 6 pages
 - Issue #125 (PR #126 merged) — Loading spinners on Tasks Dismiss + Notifications Mark-all-read
 - Issue #123 (merged to main) — Alerts query: `.limit(250)` + cache key `["alerts"]`
 - Issue #121 (PR #122 merged) — Global search: skeleton rows + error notice suppress false "No results" during in-flight queries

@@ -142,6 +142,11 @@ function StorePage() {
 
       const url = storeUrl(inserted.slug);
       setLastUrl(url);
+      setName("");
+      setDesc("");
+      setSlug("");
+      setSlugDirty(false);
+      setBrandId("none");
       qc.invalidateQueries({ queryKey: ["generated_stores"] });
       qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
       toast.success("Store published", { description: url });
