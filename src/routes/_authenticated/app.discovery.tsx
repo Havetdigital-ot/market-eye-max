@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { startTrendScan } from "@/lib/api/firecrawl";
-import { Check, ExternalLink, Search, RefreshCw, Plus } from "lucide-react";
+import { Check, ExternalLink, Search, RefreshCw, Plus, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
@@ -63,7 +63,7 @@ function DiscoveryPage() {
   const [running, setRunning] = useState(false);
   const [savedOnly, setSavedOnly] = useState(false);
 
-  const { data: trends = [], isLoading } = useQuery({
+  const { data: trends = [], isLoading, isError: trendsError } = useQuery({
     queryKey: ["trends"],
     queryFn: async () => {
       const { data } = await supabase
@@ -181,7 +181,12 @@ function DiscoveryPage() {
           <div className="text-right"></div>
         </div>
 
-        {isLoading ? (
+        {trendsError ? (
+          <div className="px-6 py-12 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <span>Failed to load trends — check your connection.</span>
+          </div>
+        ) : isLoading ? (
           Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}

@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Store as StoreIcon, Loader2, Copy, ExternalLink } from "lucide-react";
+import { Store as StoreIcon, Loader2, Copy, ExternalLink, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
@@ -61,7 +61,7 @@ function StorePage() {
     },
   });
 
-  const { data: previousStores = [], isLoading: storesLoading } = useQuery({
+  const { data: previousStores = [], isLoading: storesLoading, isError: storesError } = useQuery({
     queryKey: ["generated_stores"],
     queryFn: async () => {
       const { data } = await supabase
@@ -258,7 +258,12 @@ function StorePage() {
                 {storesLoading ? "…" : previousStores.length}
               </span>
             </div>
-            {storesLoading ? (
+            {storesError ? (
+              <div className="px-4 py-8 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                <span>Failed to load stores — check your connection.</span>
+              </div>
+            ) : storesLoading ? (
               <div className="divide-y">
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="flex items-center gap-3 px-4 py-3">

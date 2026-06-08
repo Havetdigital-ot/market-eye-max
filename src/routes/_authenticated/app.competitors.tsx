@@ -281,7 +281,7 @@ function CompetitorsPage() {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const { data: competitors = [], isLoading: competitorsLoading } = useQuery({
+  const { data: competitors = [], isLoading: competitorsLoading, isError: competitorsError } = useQuery({
     queryKey: ["competitors"],
     queryFn: async () => {
       const { data } = await supabase.from("competitors").select("*").order("display_name");
@@ -454,7 +454,12 @@ function CompetitorsPage() {
           <div className="text-right">Actions</div>
         </div>
 
-        {competitorsLoading ? (
+        {competitorsError ? (
+          <div className="px-6 py-12 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <span>Failed to load competitors — check your connection.</span>
+          </div>
+        ) : competitorsLoading ? (
           <div className="divide-y">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-4 items-center">

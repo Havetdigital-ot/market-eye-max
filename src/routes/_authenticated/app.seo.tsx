@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { generateSeoContent } from "@/lib/firecrawl.functions";
@@ -66,7 +66,7 @@ function SeoPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
 
-  const { data: items = [], isLoading: itemsLoading } = useQuery({
+  const { data: items = [], isLoading: itemsLoading, isError: itemsError } = useQuery({
     queryKey: ["seo"],
     queryFn: async () => {
       const { data } = await supabase
@@ -212,7 +212,12 @@ function SeoPage() {
                 {itemsLoading ? "…" : items.length}
               </span>
             </div>
-            {itemsLoading ? (
+            {itemsError ? (
+              <div className="px-4 py-8 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                <span>Failed to load content — check your connection.</span>
+              </div>
+            ) : itemsLoading ? (
               <div className="divide-y">
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="px-4 py-3 space-y-2">
