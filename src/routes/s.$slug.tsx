@@ -48,8 +48,6 @@ function StorefrontPage() {
         <div className="text-xl font-bold tracking-tight">{store.name}</div>
         <nav className="flex gap-6 text-sm font-medium opacity-80">
           <a href="#shop">Shop</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
         </nav>
       </header>
 
