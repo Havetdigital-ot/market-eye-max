@@ -186,7 +186,7 @@ function AppShell() {
           {/* Nav */}
           <SidebarContent className="px-3 gap-0">
             <div className="text-[11px] font-bold tracking-[0.08em] uppercase text-sidebar-foreground/60 px-3 pt-4 pb-1.5">
-              Workspace
+              {company}
             </div>
             <nav className="flex flex-col gap-0.5">
               {NAV.map((item) => {
@@ -262,10 +262,7 @@ function AppShell() {
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Topbar */}
-          <header
-            className="h-16 px-6 flex items-center gap-4 border-b bg-background/60 backdrop-blur sticky top-0 z-30"
-            style={{ borderColor: "oklch(0.922 0.005 256)" }}
-          >
+          <header className="h-16 px-6 flex items-center gap-4 border-b bg-background/60 backdrop-blur sticky top-0 z-30">
             <SidebarTrigger className="md:hidden" />
             <h1 className="text-xl font-bold tracking-tight">{title}</h1>
             <div className="flex-1" />
@@ -288,8 +285,7 @@ function SearchBox({ onOpen }: { onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="hidden md:flex items-center gap-2 px-3.5 h-10 rounded-full bg-white border w-[360px] hover:bg-muted/40 transition-colors text-left"
-      style={{ borderColor: "oklch(0.922 0.005 256)" }}
+      className="hidden md:flex items-center gap-2 px-3.5 h-10 rounded-full bg-background border w-[360px] hover:bg-muted/40 transition-colors text-left"
     >
       <Search className="h-4 w-4 text-muted-foreground" />
       <span className="flex-1 text-sm text-muted-foreground">
