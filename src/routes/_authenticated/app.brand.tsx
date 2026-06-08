@@ -94,6 +94,25 @@ function BrandPage() {
   const [phase, setPhase] = useState<"idle" | "generating" | "review">("idle");
   const [draft, setDraft] = useState<any | null>(null);
   const [accepting, setAccepting] = useState(false);
+  const [viewingLibraryId, setViewingLibraryId] = useState<string | null>(null);
+
+  function loadFromLibrary(b: any) {
+    setDraft({
+      brand_name: b.brand_name,
+      source_description: b.source_description,
+      brand_voice: b.brand_voice,
+      color_palette: b.color_palette,
+      font_choices: b.font_choices,
+    });
+    setViewingLibraryId(b.id);
+    setPhase("review");
+  }
+
+  function closeLibraryView() {
+    setPhase("idle");
+    setDraft(null);
+    setViewingLibraryId(null);
+  }
 
   const { data: assets = [], isLoading: assetsLoading, isError: assetsError } = useQuery({
     queryKey: ["brand-assets"],
@@ -278,7 +297,11 @@ function BrandPage() {
               assets.map((b: any) => (
                 <div
                   key={b.id}
-                  className="flex items-center gap-3 px-5 py-3.5 border-b last:border-0 hover:bg-muted/40 cursor-pointer"
+                  role="button"
+                  tabIndex={0}
+                  className={`flex items-center gap-3 px-5 py-3.5 border-b last:border-0 hover:bg-muted/40 cursor-pointer transition-colors ${viewingLibraryId === b.id ? "bg-muted/40" : ""}`}
+                  onClick={() => loadFromLibrary(b)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); loadFromLibrary(b); } }}
                 >
                   <div className="flex">
                     {(Array.isArray(b.color_palette) ? b.color_palette.slice(0, 4) : []).map(
@@ -309,7 +332,13 @@ function BrandPage() {
           {phase === "generating" ? (
             <GenLoader />
           ) : phase === "review" && draft ? (
-            <BrandReview draft={draft} onAccept={accept} onRegen={generate} accepting={accepting} />
+            <BrandReview
+              draft={draft}
+              onAccept={viewingLibraryId ? closeLibraryView : accept}
+              onRegen={generate}
+              accepting={accepting}
+              readOnly={!!viewingLibraryId}
+            />
           ) : (
             <EmptyState />
           )}
@@ -350,11 +379,13 @@ function BrandReview({
   onAccept,
   onRegen,
   accepting,
+  readOnly,
 }: {
   draft: any;
   onAccept: () => void;
   onRegen: () => void;
   accepting?: boolean;
+  readOnly?: boolean;
 }) {
   return (
     <div>
@@ -414,17 +445,25 @@ function BrandReview({
         </div>
 
         <div className="flex gap-2 pt-2 border-t">
-          <Button variant="outline" onClick={onRegen} disabled={accepting} className="gap-2">
-            <Sparkles className="h-4 w-4" /> Regenerate
-          </Button>
-          <Button
-            onClick={onAccept}
-            disabled={accepting}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
-          >
-            {accepting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Accept & save
-          </Button>
+          {readOnly ? (
+            <Button variant="outline" onClick={onAccept} className="flex-1">
+              Close
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={onRegen} disabled={accepting} className="gap-2">
+                <Sparkles className="h-4 w-4" /> Regenerate
+              </Button>
+              <Button
+                onClick={onAccept}
+                disabled={accepting}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
+              >
+                {accepting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Accept & save
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
