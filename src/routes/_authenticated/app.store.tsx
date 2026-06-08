@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -45,7 +44,6 @@ function StorePage() {
   const [slug, setSlug] = useState("");
   const [slugDirty, setSlugDirty] = useState(false);
   const [brandId, setBrandId] = useState<string>("none");
-  const [simulateFail, setSimulateFail] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
 
@@ -96,14 +94,6 @@ function StorePage() {
     if (!user.user) return;
 
     setGenerating(true);
-
-    if (simulateFail) {
-      setTimeout(() => {
-        toast.error("Generation failed — simulated error.");
-        setGenerating(false);
-      }, 1200);
-      return;
-    }
 
     const brand = brands.find((b: any) => b.id === brandId);
     const palette =
@@ -233,13 +223,6 @@ function StorePage() {
                 Optional — pulls palette, type &amp; voice
               </p>
             </div>
-            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-              <Checkbox
-                checked={simulateFail}
-                onCheckedChange={(v) => setSimulateFail(v === true)}
-              />
-              Simulate a generation failure
-            </label>
             <Button type="submit" disabled={generating} className="w-full h-11 gap-2">
               {generating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
