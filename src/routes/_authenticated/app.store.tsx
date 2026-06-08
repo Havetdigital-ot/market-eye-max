@@ -312,6 +312,8 @@ function StorePage() {
                         onClick={() => copyUrl(url)}
                         className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
                         title="Copy URL"
+                        aria-label="Copy URL"
+                        type="button"
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </button>
@@ -321,6 +323,7 @@ function StorePage() {
                         rel="noreferrer"
                         className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
                         title="Open"
+                        aria-label="Open store"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>

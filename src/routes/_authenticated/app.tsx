@@ -253,6 +253,7 @@ function AppShell() {
                 className="h-7 w-7 text-sidebar-foreground/60 hover:text-white hover:bg-sidebar-accent"
                 onClick={handleSignOut}
                 title="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut className="h-4 w-4" />
               </Button>

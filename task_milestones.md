@@ -2,7 +2,16 @@
 
 ## Current Task
 
-_(none — scanning for next issue)_
+_(scanning for next issue)_
+
+### Task 20 — Supabase write error handling: dismiss/toggleSave/togglePublish (Issue #55, PR #56)
+- Added missing `import { toast } from "sonner"` to app.tasks.tsx
+- Error handling added to dismiss(), toggleSave(), togglePublish()
+- Fixed "product(s)"/"alert(s)" pluralization in summaryText()
+
+### Task 21 — Supabase write error handling: markAllRead/toggleStatus/remove (Issue #57, PR #58)
+- markAllRead() in app.alerts.tsx: destructure { error }, toast on failure
+- toggleStatus() + remove() in app.competitors.tsx: same pattern
 
 ---
 

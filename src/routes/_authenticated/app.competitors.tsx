@@ -576,6 +576,7 @@ function CompetitorsPage() {
                         onClick={() => recrawl(c.id)}
                         disabled={isCrawling}
                         title={isCrawling ? "Crawl in progress" : "Recrawl"}
+                        aria-label={isCrawling ? "Crawl in progress" : "Recrawl"}
                       >
                         <RefreshCw className={`h-4 w-4 ${isCrawling ? "animate-spin opacity-40" : ""}`} />
                       </Button>
@@ -584,12 +585,14 @@ function CompetitorsPage() {
                       onClick={() => toggleStatus(c.id, c.status)}
                       disabled={isCrawling}
                       title={c.status === "Active" ? "Pause" : "Resume"}
+                      aria-label={c.status === "Active" ? "Pause" : "Resume"}
                     >
                       {c.status === "Active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-red-500"
                       onClick={() => setPendingDeleteId(c.id)}
                       title="Delete"
+                      aria-label="Delete"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
