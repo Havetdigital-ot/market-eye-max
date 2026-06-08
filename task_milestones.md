@@ -5,6 +5,7 @@
 Discovering next issue…
 
 ### Completed this session
+- Issue #118 (PR #119 merged) — SEO Save button disabled when !isDirty
 - Issue #116 (PR #117 merged) — Add throw to 9 queryFns so isError UI branches are reachable
 - Issue #114 (PR #115 merged) — Competitor product card external link aria-label
 - Issue #112 (PR #113 merged) — Auth mode-switch buttons type="button"
