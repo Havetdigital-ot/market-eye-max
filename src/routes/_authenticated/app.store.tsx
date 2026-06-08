@@ -12,8 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Store as StoreIcon, Loader2, Copy, ExternalLink, AlertCircle } from "lucide-react";
+import { Store as StoreIcon, Loader2, Copy, ExternalLink, AlertCircle, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
@@ -47,6 +52,7 @@ function StorePage() {
   const [brandId, setBrandId] = useState<string>("none");
   const [generating, setGenerating] = useState(false);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const effectiveSlug = slugDirty ? slug : slugify(name);
 
@@ -148,6 +154,13 @@ function StorePage() {
     } catch {
       toast.error("Failed to copy — try selecting the URL manually.");
     }
+  }
+
+  async function deleteStore(id: string) {
+    const { error } = await supabase.from("generated_stores").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["generated_stores"] });
+    toast.success("Store removed");
   }
 
   return (
@@ -329,6 +342,15 @@ function StorePage() {
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
+                      <button
+                        type="button"
+                        title="Delete"
+                        aria-label="Delete store"
+                        className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted hover:text-red-500 text-muted-foreground/50"
+                        onClick={() => setPendingDeleteId(s.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
                 );
@@ -391,6 +413,26 @@ function StorePage() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!pendingDeleteId} onOpenChange={(o) => { if (!o) setPendingDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this store?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The storefront URL will stop working immediately. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (pendingDeleteId) { deleteStore(pendingDeleteId); setPendingDeleteId(null); } }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
