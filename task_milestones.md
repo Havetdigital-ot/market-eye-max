@@ -2,11 +2,14 @@
 
 ## Current Task
 
-**Issue #79** — Competitors add-form double-submit + Brand Builder generate disabled state  
-- Files: `app.competitors.tsx`, `app.brand.tsx`  
-- Status: Code fixed, committing
+**Issue #86** — Hardcoded blue on brand buttons + notifications chrome → primary token  
+- Files: `app.brand.tsx`, `notifications-popover.tsx`  
+- Status: Committed + pushed (aac580c). Awaiting PR/merge.
 
 ### Completed this session
+- Issue #83 (commit 6fcccec) — Discovery toggleSave per-row loading/disabled guard
+- Issue #81 (commit 7d9d864) — Storefront hero button type + palette-aware product card background
+- Issue #79 (commit 2ef9814) — Competitors add-form double-submit + Brand Builder generate disabled state
 - Issue #75 (PR #76 merged) — Tasks dismiss loading state + Discovery keywords validation
 - Issue #77 (PR #78 merged) — Alerts per-row click-to-read + Dashboard store preview placeholder
 
