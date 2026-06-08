@@ -126,7 +126,11 @@ export function GlobalSearch({
         onValueChange={setQuery}
       />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>
+          {debounced
+            ? `No results for "${debounced}" — try a competitor name, product, or keyword.`
+            : "No results found."}
+        </CommandEmpty>
 
         {filteredPages.length > 0 && (
           <CommandGroup heading="Navigate">
@@ -193,14 +197,14 @@ export function GlobalSearch({
               {trends.map((t) => (
                 <CommandItem
                   key={t.id}
-                  value={`trend-${t.id}-${t.keyword}`}
+                  value={`trend-${t.id}-${t.product_name ?? t.keyword ?? ""}`}
                   onSelect={() => go("/app/discovery")}
                 >
                   <TrendingUp className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span className="font-medium">{t.keyword}</span>
-                  {t.product_name && (
+                  <span className="font-medium">{t.product_name ?? t.keyword ?? "Trend"}</span>
+                  {t.product_name && t.keyword && (
                     <span className="ml-2 text-xs text-muted-foreground truncate">
-                      {t.product_name}
+                      {t.keyword}
                     </span>
                   )}
                 </CommandItem>

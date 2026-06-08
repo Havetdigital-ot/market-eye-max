@@ -264,8 +264,13 @@ function SeoPage() {
               <Textarea
                 value={editBody}
                 onChange={(e) => setEditBody(e.target.value)}
-                className="min-h-[420px] font-mono text-sm"
+                className="min-h-[420px] text-sm leading-relaxed"
               />
+              <div className="text-xs text-muted-foreground text-right tabular-nums">
+                {editBody.trim() ? editBody.trim().split(/\s+/).length : 0} words
+                {" · "}
+                {editBody.length} chars
+              </div>
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center">
