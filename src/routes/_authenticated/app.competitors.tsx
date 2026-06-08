@@ -14,8 +14,9 @@ import { startCompetitorCrawl } from "@/lib/api/firecrawl";
 import {
   Trash2, RefreshCw, Pause, Play, Plus,
   Loader2, AlertCircle, ChevronDown, ChevronRight,
-  ExternalLink, Package, Check, Search, Zap, Database,
+  ExternalLink, Package, Check, Search, Zap, Database, Radar,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/app/competitors")({
@@ -280,7 +281,7 @@ function CompetitorsPage() {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const { data: competitors = [] } = useQuery({
+  const { data: competitors = [], isLoading: competitorsLoading } = useQuery({
     queryKey: ["competitors"],
     queryFn: async () => {
       const { data } = await supabase.from("competitors").select("*").order("display_name");
@@ -453,7 +454,28 @@ function CompetitorsPage() {
           <div className="text-right">Actions</div>
         </div>
 
-        {competitors.length === 0 ? (
+        {competitorsLoading ? (
+          <div className="divide-y">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-4 items-center">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
+                  <div className="space-y-1 min-w-0">
+                    <Skeleton className="h-4 w-28 rounded" />
+                    <Skeleton className="h-3 w-36 rounded" />
+                  </div>
+                </div>
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-4 w-8 rounded" />
+                <Skeleton className="h-4 w-24 rounded" />
+                <div className="flex justify-end gap-1">
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : competitors.length === 0 ? (
           <div className="px-6 py-14 text-center">
             <div className="w-12 h-12 rounded-full bg-muted grid place-items-center mx-auto mb-3">
               <Radar className="h-5 w-5 text-muted-foreground" />
