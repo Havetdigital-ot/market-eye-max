@@ -7,18 +7,21 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { format } from "date-fns";
 import { toast } from "sonner";
 
 function timeAgo(iso: string) {
-  const d = new Date(iso).getTime();
-  const diff = Math.max(0, Date.now() - d);
+  const date = new Date(iso);
+  const diff = Math.max(0, Date.now() - date.getTime());
   const m = Math.floor(diff / 60000);
   if (m < 1) return "just now";
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
   const days = Math.floor(h / 24);
-  return `${days}d ago`;
+  if (days < 7) return `${days}d ago`;
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return format(date, sameYear ? "MMM d" : "MMM d, yyyy");
 }
 
 export function NotificationsPopover({ count }: { count: number }) {
@@ -65,14 +68,13 @@ export function NotificationsPopover({ count }: { count: number }) {
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className="relative w-10 h-10 rounded-full bg-white border grid place-items-center hover:bg-muted transition-colors"
-          style={{ borderColor: "oklch(0.922 0.005 256)" }}
+          className="relative w-10 h-10 rounded-full bg-background border grid place-items-center hover:bg-muted transition-colors"
           aria-label="Notifications"
         >
           <Bell className="h-[18px] w-[18px] text-foreground" />
           {count > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full grid place-items-center text-[10px] font-bold text-white bg-rose-500 border-2 border-white">
-              {count > 9 ? "9+" : count}
+            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full grid place-items-center text-[10px] font-bold text-white bg-rose-500 border-2 border-background">
+              {count > 99 ? "99+" : count}
             </span>
           )}
         </button>
