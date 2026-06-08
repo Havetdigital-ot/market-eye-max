@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Store as StoreIcon, Loader2, Copy, ExternalLink } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/app/store")({
@@ -49,7 +50,7 @@ function StorePage() {
 
   const effectiveSlug = slugDirty ? slug : slugify(name);
 
-  const { data: brands = [] } = useQuery({
+  const { data: brands = [], isLoading: brandsLoading } = useQuery({
     queryKey: ["brand_assets"],
     queryFn: async () => {
       const { data } = await supabase
@@ -60,7 +61,7 @@ function StorePage() {
     },
   });
 
-  const { data: previousStores = [] } = useQuery({
+  const { data: previousStores = [], isLoading: storesLoading } = useQuery({
     queryKey: ["generated_stores"],
     queryFn: async () => {
       const { data } = await supabase
@@ -206,9 +207,9 @@ function StorePage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold">Apply brand asset</label>
-              <Select value={brandId} onValueChange={setBrandId}>
+              <Select value={brandId} onValueChange={setBrandId} disabled={brandsLoading}>
                 <SelectTrigger>
-                  <SelectValue placeholder="None — use defaults" />
+                  <SelectValue placeholder={brandsLoading ? "Loading brands…" : "None — use defaults"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None — use defaults</SelectItem>
@@ -254,10 +255,26 @@ function StorePage() {
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="text-sm font-semibold">Published stores</div>
               <span className="text-xs font-mono text-muted-foreground">
-                {previousStores.length}
+                {storesLoading ? "…" : previousStores.length}
               </span>
             </div>
-            {previousStores.length === 0 ? (
+            {storesLoading ? (
+              <div className="divide-y">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-3 px-4 py-3">
+                    <div className="flex-1 space-y-1.5 min-w-0">
+                      <Skeleton className="h-4 w-32 rounded" />
+                      <Skeleton className="h-3 w-48 rounded" />
+                      <Skeleton className="h-3 w-20 rounded" />
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : previousStores.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                 No stores published yet.
               </div>
