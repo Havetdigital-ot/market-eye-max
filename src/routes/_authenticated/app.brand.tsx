@@ -124,12 +124,12 @@ function BrandPage() {
     const { error } = await supabase.from("brand_assets").delete().eq("id", id);
     if (error) return toast.error(error.message);
     if (viewingLibraryId === id) closeLibraryView();
-    qc.invalidateQueries({ queryKey: ["brand-assets"] });
+    qc.invalidateQueries({ queryKey: ["brand_assets"] });
     toast.success("Brand removed");
   }
 
   const { data: assets = [], isLoading: assetsLoading, isError: assetsError } = useQuery({
-    queryKey: ["brand-assets"],
+    queryKey: ["brand_assets"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("brand_assets")
@@ -181,7 +181,7 @@ function BrandPage() {
         font_choices: draft.font_choices,
       });
       if (error) return toast.error(error.message);
-      qc.invalidateQueries({ queryKey: ["brand-assets"] });
+      qc.invalidateQueries({ queryKey: ["brand_assets"] });
       toast.success(`${draft.brand_name} saved to your brand library`);
       setPhase("idle");
       setDraft(null);
