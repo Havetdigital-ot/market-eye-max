@@ -142,7 +142,7 @@ export function NotificationsPopover({ count }: { count: number }) {
                   type="button"
                   onClick={() => openAlert(a.id)}
                   className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-muted/50 transition-colors flex gap-3 ${
-                    !a.is_read ? "bg-blue-50/40" : ""
+                    !a.is_read ? "bg-blue-50/40 dark:bg-blue-950/20" : ""
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-full grid place-items-center shrink-0 ${iconColor}`}>
@@ -155,7 +155,7 @@ export function NotificationsPopover({ count }: { count: number }) {
                     <div className="text-xs text-muted-foreground truncate">
                       {a.product_name}
                       {a.old_price != null && a.new_price != null && (
-                        <> · ${Number(a.old_price)} → ${Number(a.new_price)}</>
+                        <> · ${Number(a.old_price).toFixed(2)} → ${Number(a.new_price).toFixed(2)}</>
                       )}
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
