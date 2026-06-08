@@ -2,7 +2,10 @@
 
 ## Current Task
 
-Discovering next issue…
+**Issue #121** — Global search: false "No results" shown while queries are in-flight  
+Branch: `fix/global-search-loading-states`  
+Plan: Add `isLoading`/`isError` to all four `useQuery` calls; render skeleton rows when `anyLoading`; render error notice when all queries error.  
+Status: Implementing
 
 ### Completed this session
 - Issue #116 (PR #117 merged) — Add throw to 9 queryFns so isError UI branches are reachable
