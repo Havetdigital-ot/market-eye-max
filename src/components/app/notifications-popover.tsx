@@ -1,7 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Check, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
+import { Bell, Check, TrendingUp, TrendingDown, Sparkles, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Popover,
   PopoverContent,
@@ -28,7 +29,7 @@ export function NotificationsPopover({ count }: { count: number }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
 
-  const { data: alerts = [] } = useQuery({
+  const { data: alerts = [], isLoading: alertsLoading, isError: alertsError } = useQuery({
     queryKey: ["alerts", "popover"],
     queryFn: async () => {
       const { data } = await supabase
@@ -99,7 +100,25 @@ export function NotificationsPopover({ count }: { count: number }) {
         </div>
 
         <div className="max-h-[400px] overflow-y-auto">
-          {alerts.length === 0 ? (
+          {alertsError ? (
+            <div className="py-8 flex flex-col items-center gap-1.5 text-center text-sm text-muted-foreground">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <span>Failed to load notifications.</span>
+            </div>
+          ) : alertsLoading ? (
+            <div className="divide-y">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex gap-3 px-4 py-3">
+                  <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3.5 w-36 rounded" />
+                    <Skeleton className="h-3 w-48 rounded" />
+                    <Skeleton className="h-3 w-16 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : alerts.length === 0 ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
               No notifications yet
             </div>
