@@ -256,6 +256,7 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
                 href={p.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={`View ${p.name} on competitor site`}
                 onClick={(e) => e.stopPropagation()}
                 className="absolute top-2 right-2 h-6 w-6 rounded bg-black/50 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               >
