@@ -184,7 +184,8 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
         .from("competitor_products")
         .select(`id, name, description, image_url, category, sku, url, price_history ( price, currency, timestamp )`)
         .eq("competitor_id", competitorId)
-        .order("name");
+        .order("name")
+        .limit(500);
       if (error) throw error;
       return (data ?? []).map((p) => {
         const sorted = [...(p.price_history ?? [])].sort(
@@ -304,7 +305,7 @@ function CompetitorsPage() {
   const { data: competitors = [], isLoading: competitorsLoading, isError: competitorsError } = useQuery({
     queryKey: ["competitors"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("competitors").select("*").order("display_name");
+      const { data, error } = await supabase.from("competitors").select("*").order("display_name").limit(100);
       if (error) throw error;
       return data ?? [];
     },
@@ -313,7 +314,7 @@ function CompetitorsPage() {
   const { data: productCounts = [] } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
-      const { data } = await supabase.from("competitor_products").select("id, competitor_id");
+      const { data } = await supabase.from("competitor_products").select("id, competitor_id").limit(10000);
       return data ?? [];
     },
   });
