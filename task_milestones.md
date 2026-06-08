@@ -2,12 +2,13 @@
 
 ## Current Task
 
-**Issue #77** — Alerts per-row click-to-read + Dashboard store preview placeholder  
-- Files: `app.alerts.tsx`, `app.index.tsx`  
+**Issue #79** — Competitors add-form double-submit + Brand Builder generate disabled state  
+- Files: `app.competitors.tsx`, `app.brand.tsx`  
 - Status: Code fixed, committing
 
 ### Completed this session
 - Issue #75 (PR #76 merged) — Tasks dismiss loading state + Discovery keywords validation
+- Issue #77 (PR #78 merged) — Alerts per-row click-to-read + Dashboard store preview placeholder
 
 ### Task 20 — Supabase write error handling: dismiss/toggleSave/togglePublish (Issue #55, PR #56)
 - Added missing `import { toast } from "sonner"` to app.tasks.tsx

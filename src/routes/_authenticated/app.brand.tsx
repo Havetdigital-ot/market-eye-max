@@ -218,7 +218,7 @@ function BrandPage() {
             )}
             <Button
               onClick={generate}
-              disabled={phase === "generating"}
+              disabled={phase === "generating" || !nicheKey || !desc.trim()}
               className="w-full mt-3.5 h-11 gap-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white"
             >
               {phase === "generating" ? (
