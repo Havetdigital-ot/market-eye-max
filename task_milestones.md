@@ -5,6 +5,7 @@
 Discovering next issue…
 
 ### Completed this session
+- Issue #108 (PR #109 merged) — Competitors toggleStatus togglingId guard against double-click
 - Issue #106 (PR #107 merged) — Store generate() try/finally fix + re-entrancy guard
 - Issue #104 (PR #105 merged) — Alerts unread rows: tabIndex + onKeyDown + aria-label for keyboard a11y
 - Issue #102 (PR #103 merged) — Tasks refresh disabled during fetch; SEO unsaved changes AlertDialog guard

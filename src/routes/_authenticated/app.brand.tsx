@@ -343,7 +343,7 @@ function BrandPage() {
                     type="button"
                     title="Delete"
                     aria-label="Delete brand"
-                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted hover:text-red-500 text-muted-foreground/30 mr-2 shrink-0"
+                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted hover:text-red-500 text-muted-foreground/30 mr-2 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={() => setPendingDeleteBrandId(b.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
