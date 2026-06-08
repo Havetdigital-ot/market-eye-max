@@ -149,7 +149,11 @@ function DiscoveryPage() {
               })}
             </div>
           </div>
-          <Button type="submit" disabled={running} className="h-11 px-5 gap-2 shrink-0">
+          <Button
+            type="submit"
+            disabled={running || !keywords.trim() || !PLATFORMS.some((p) => selected[p])}
+            className="h-11 px-5 gap-2 shrink-0"
+          >
             {running ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             {running ? "Scanning…" : "Scan trends"}
           </Button>

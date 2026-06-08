@@ -412,10 +412,11 @@ function BrandReview({
         </div>
 
         <div className="flex gap-2 pt-2 border-t">
-          <Button variant="outline" onClick={onRegen} disabled={accepting} className="gap-2">
+          <Button type="button" variant="outline" onClick={onRegen} disabled={accepting} className="gap-2">
             <Sparkles className="h-4 w-4" /> Regenerate
           </Button>
           <Button
+            type="button"
             onClick={onAccept}
             disabled={accepting}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"

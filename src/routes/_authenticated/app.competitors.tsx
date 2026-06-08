@@ -88,7 +88,7 @@ function CrawlLogPanel({
           </p>
         </div>
         {onRetry && (
-          <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={onRetry}>
+          <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={onRetry}>
             <RefreshCw className="h-3.5 w-3.5" /> Retry crawl
           </Button>
         )}
@@ -461,7 +461,7 @@ function CompetitorsPage() {
             Click any row to browse products and see live crawl progress.
           </p>
         </div>
-        <Button onClick={() => setOpen(true)} className="gap-1.5 shrink-0">
+        <Button type="button" onClick={() => setOpen(true)} className="gap-1.5 shrink-0">
           <Plus className="h-4 w-4" /> Add competitor
         </Button>
       </div>
@@ -511,7 +511,7 @@ function CompetitorsPage() {
             <div className="text-xs text-muted-foreground mt-0.5 mb-4">
               Add a competitor URL to start tracking products and prices.
             </div>
-            <Button size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
+            <Button type="button" size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
               <Plus className="h-3.5 w-3.5" /> Add competitor
             </Button>
           </div>
@@ -577,7 +577,7 @@ function CompetitorsPage() {
                   {/* Actions — stop propagation so row click doesn't interfere */}
                   <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     {c.status === "Active" && (
-                      <Button size="icon" variant="ghost" className="h-8 w-8"
+                      <Button type="button" size="icon" variant="ghost" className="h-8 w-8"
                         onClick={() => recrawl(c.id)}
                         disabled={isCrawling}
                         title={isCrawling ? "Crawl in progress" : "Recrawl"}
@@ -586,7 +586,7 @@ function CompetitorsPage() {
                         <RefreshCw className={`h-4 w-4 ${isCrawling ? "animate-spin opacity-40" : ""}`} />
                       </Button>
                     )}
-                    <Button size="icon" variant="ghost" className="h-8 w-8"
+                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8"
                       onClick={() => toggleStatus(c.id, c.status)}
                       disabled={isCrawling}
                       title={c.status === "Active" ? "Pause" : "Resume"}
@@ -594,7 +594,7 @@ function CompetitorsPage() {
                     >
                       {c.status === "Active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-red-500"
+                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8 hover:text-red-500"
                       onClick={() => setPendingDeleteId(c.id)}
                       title="Delete"
                       aria-label="Delete"

@@ -177,7 +177,7 @@ function TasksPage() {
             Background jobs across crawling, trend scans, and AI generation. Click a row for full details.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
+        <Button type="button" variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
           <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} /> Refresh
         </Button>
       </div>
@@ -231,7 +231,7 @@ function TasksPage() {
               <div className="font-medium text-sm">Failed to load tasks</div>
               <div className="text-xs text-muted-foreground mt-0.5">Check your connection and try again.</div>
             </div>
-            <Button size="sm" variant="outline" className="gap-1.5 mt-1" onClick={() => refetch()}>
+            <Button type="button" size="sm" variant="outline" className="gap-1.5 mt-1" onClick={() => refetch()}>
               <RefreshCw className="h-3.5 w-3.5" /> Try again
             </Button>
           </div>
