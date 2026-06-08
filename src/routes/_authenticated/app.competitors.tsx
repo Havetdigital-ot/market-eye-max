@@ -89,7 +89,9 @@ function CrawlLogPanel({ task }: { task: { status: string; error_message?: strin
           <span className="h-3 w-3 rounded-full bg-green-500/70" />
         </div>
         <span className="text-[11px] text-white/40 font-mono ml-2">firecrawl — live scraping</span>
-        <Loader2 className="h-3 w-3 text-white/30 animate-spin ml-auto" />
+        {task.status !== "Completed" && (
+          <Loader2 className="h-3 w-3 text-white/30 animate-spin ml-auto" />
+        )}
       </div>
 
       <div className="px-5 py-4 space-y-3 font-mono text-[12px]">
@@ -157,7 +159,7 @@ function CrawlLogPanel({ task }: { task: { status: string; error_message?: strin
 
 // ── Product grid ──────────────────────────────────────────────────────────────
 
-function ProductGrid({ competitorId }: { competitorId: string }) {
+function ProductGrid({ competitorId, isActive }: { competitorId: string; isActive?: boolean }) {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["competitor-products", competitorId],
     queryFn: async () => {
@@ -173,6 +175,7 @@ function ProductGrid({ competitorId }: { competitorId: string }) {
         return { ...p, latestPrice: sorted[0] ?? null };
       });
     },
+    refetchInterval: isActive ? 4000 : false,
   });
 
   if (isLoading) {
@@ -295,6 +298,11 @@ function CompetitorsPage() {
         .order("created_at", { ascending: false });
       return data ?? [];
     },
+    refetchInterval: (q) => {
+      const tasks = q.state.data as any[] | undefined;
+      const hasRunning = tasks?.some((t) => t.status === "Running" || t.status === "Pending");
+      return hasRunning ? 3000 : false;
+    },
   });
 
   // Realtime: watch background_tasks for crawl progress updates
@@ -322,6 +330,23 @@ function CompetitorsPage() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [qc]);
+
+  // When polling detects a completed task, invalidate the products queries
+  // (realtime handles this too, but polling is the fallback when WS drops)
+  const prevTaskStatuses = useRef<Map<string, string>>(new Map());
+  useEffect(() => {
+    for (const task of crawlTasks) {
+      const prev = prevTaskStatuses.current.get(task.id);
+      const curr = task.status;
+      if (prev === "Running" && curr === "Completed") {
+        const cid = (task.details as any)?.competitorId;
+        qc.invalidateQueries({ queryKey: ["competitors"] });
+        qc.invalidateQueries({ queryKey: ["products"] });
+        if (cid) qc.invalidateQueries({ queryKey: ["competitor-products", cid] });
+      }
+      prevTaskStatuses.current.set(task.id, curr);
+    }
+  }, [crawlTasks, qc]);
 
   // Latest task per competitor
   const taskByCompetitor = new Map<string, (typeof crawlTasks)[number]>();
@@ -517,7 +542,7 @@ function CompetitorsPage() {
 
                     {/* Product grid — always show if not currently crawling */}
                     {(!activeTask || activeTask.status === "Completed") && (
-                      <ProductGrid competitorId={c.id} />
+                      <ProductGrid competitorId={c.id} isActive={false} />
                     )}
 
                     {/* While crawling: also show product grid below terminal if there are already products */}
@@ -526,7 +551,7 @@ function CompetitorsPage() {
                         <div className="px-6 py-2 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
                           Previous crawl — {count} products
                         </div>
-                        <ProductGrid competitorId={c.id} />
+                        <ProductGrid competitorId={c.id} isActive={true} />
                       </div>
                     )}
                   </>

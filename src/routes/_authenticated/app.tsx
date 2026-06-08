@@ -127,6 +127,7 @@ function AppShell() {
       .on("postgres_changes", { event: "*", schema: "public", table: "background_tasks" }, () => {
         queryClient.invalidateQueries({ queryKey: ["badge", "tasks"] });
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        queryClient.invalidateQueries({ queryKey: ["crawl-tasks"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "competitor_products" }, () =>
         queryClient.invalidateQueries({ queryKey: ["products"] }),
