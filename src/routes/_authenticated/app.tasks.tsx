@@ -120,6 +120,7 @@ function TasksPage() {
   const [type, setType] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
 
   const { data: tasks = [], isFetching, isLoading, isError, refetch } = useQuery({
     queryKey: ["tasks"],
@@ -152,10 +153,15 @@ function TasksPage() {
   });
 
   async function dismiss(id: string) {
-    const { error } = await supabase.from("background_tasks").update({ dismissed: true }).eq("id", id);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["tasks"] });
-    qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
+    setDismissingId(id);
+    try {
+      const { error } = await supabase.from("background_tasks").update({ dismissed: true }).eq("id", id);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
+    } finally {
+      setDismissingId(null);
+    }
   }
 
   function toggle(id: string) {
@@ -300,7 +306,12 @@ function TasksPage() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     {!isActive && (
-                      <Button variant="outline" size="sm" onClick={() => dismiss(t.id)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={dismissingId === t.id}
+                        onClick={() => dismiss(t.id)}
+                      >
                         Dismiss
                       </Button>
                     )}

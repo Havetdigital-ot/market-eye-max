@@ -2,7 +2,9 @@
 
 ## Current Task
 
-_(scanning for next issue)_
+**Issue #75** — Tasks dismiss loading state + Discovery keywords validation  
+- Files: `app.tasks.tsx`, `app.discovery.tsx`  
+- Status: Code fixed, committing
 
 ### Task 20 — Supabase write error handling: dismiss/toggleSave/togglePublish (Issue #55, PR #56)
 - Added missing `import { toast } from "sonner"` to app.tasks.tsx
