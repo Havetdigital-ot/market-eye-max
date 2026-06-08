@@ -18,7 +18,7 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Sparkles, Star, ChevronRight, Loader2, AlertCircle, Trash2 } from "lucide-react";
+import { Sparkles, Star, ChevronRight, Loader2, AlertCircle, Trash2, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { generateBrandIdentity } from "@/lib/firecrawl.functions";
@@ -128,7 +128,7 @@ function BrandPage() {
     toast.success("Brand removed");
   }
 
-  const { data: assets = [], isLoading: assetsLoading, isError: assetsError } = useQuery({
+  const { data: assets = [], isLoading: assetsLoading, isError: assetsError, refetch: refetchAssets } = useQuery({
     queryKey: ["brand-assets"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -277,9 +277,15 @@ function BrandPage() {
               </span>
             </div>
             {assetsError ? (
-              <div className="px-5 py-8 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+              <div className="px-5 py-8 flex flex-col items-center gap-3 text-center text-sm text-muted-foreground">
                 <AlertCircle className="h-5 w-5 text-destructive" />
-                <span>Failed to load brand library — check your connection.</span>
+                <div>
+                  <div className="font-medium text-sm text-foreground">Failed to load brand library</div>
+                  <div className="text-xs mt-0.5">Check your connection and try again.</div>
+                </div>
+                <Button size="sm" variant="outline" className="gap-1.5 mt-1" onClick={() => refetchAssets()}>
+                  <RefreshCw className="h-3.5 w-3.5" /> Try again
+                </Button>
               </div>
             ) : assetsLoading ? (
               <div className="divide-y">
