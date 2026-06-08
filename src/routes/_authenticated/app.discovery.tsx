@@ -223,7 +223,7 @@ function DiscoveryPage() {
               className="grid grid-cols-[1.6fr_0.7fr_1fr_1fr_1fr_0.7fr_0.6fr] gap-4 px-6 py-4 items-center border-b last:border-b-0 hover:bg-muted/30 transition-colors"
             >
               <div className="min-w-0">
-                <div className="font-medium truncate">{t.product_name}</div>
+                <div className="font-medium truncate" title={t.product_name}>{t.product_name}</div>
                 {t.source_url && (
                   <a
                     href={t.source_url}
