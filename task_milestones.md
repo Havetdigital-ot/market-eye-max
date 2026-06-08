@@ -2,7 +2,9 @@
 
 ## Current Task
 
-_None — scanning for next issue_
+**Issue #102** — Tasks refresh concurrent requests + SEO unsaved changes guard  
+- Files: `app.tasks.tsx`, `app.seo.tsx`  
+- Status: In progress
 
 ### Completed this session
 - Issue #100 (PR #101 merged) — Delete buttons for published stores and saved brand assets
