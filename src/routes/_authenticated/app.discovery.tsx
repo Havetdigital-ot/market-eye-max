@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { startTrendScan } from "@/lib/api/firecrawl";
-import { Check, ExternalLink, Search, RefreshCw } from "lucide-react";
+import { Check, ExternalLink, Search, RefreshCw, Plus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
 type Platform = "TikTok" | "Amazon" | "Reddit" | "Other";
@@ -62,7 +63,7 @@ function DiscoveryPage() {
   const [running, setRunning] = useState(false);
   const [savedOnly, setSavedOnly] = useState(false);
 
-  const { data: trends = [] } = useQuery({
+  const { data: trends = [], isLoading } = useQuery({
     queryKey: ["trends"],
     queryFn: async () => {
       const { data } = await supabase
@@ -163,24 +164,39 @@ function DiscoveryPage() {
               : "bg-background border-border hover:bg-muted"
           }`}
         >
-          <Check className="h-3.5 w-3.5" />
+          {savedOnly && <Check className="h-3.5 w-3.5" />}
           Saved only
         </button>
       </div>
 
       {/* Trends table */}
       <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="grid grid-cols-[1.6fr_0.7fr_1fr_1fr_1fr_0.7fr_0.6fr] gap-4 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
+        <div className="grid grid-cols-[1.6fr_0.7fr_1fr_1fr_1fr_0.7fr_0.6fr] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground border-b bg-muted/30">
           <div>Product</div>
           <div>Platform</div>
-          <div>Trend</div>
+          <div>Trend score</div>
           <div>Virality</div>
           <div>Seasonality</div>
           <div>Found</div>
           <div className="text-right"></div>
         </div>
 
-        {rows.length === 0 ? (
+        {isLoading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="grid grid-cols-[1.6fr_0.7fr_1fr_1fr_1fr_0.7fr_0.6fr] gap-4 px-6 py-4 items-center border-b last:border-b-0"
+            >
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-3 w-28 rounded-full" />
+              <Skeleton className="h-3 w-24 rounded-full" />
+              <Skeleton className="h-3 w-20 rounded-full" />
+              <Skeleton className="h-4 w-14" />
+              <div />
+            </div>
+          ))
+        ) : rows.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-muted-foreground">
             {savedOnly ? "No saved trends yet." : "No trends found — run a scan above."}
           </div>
@@ -230,7 +246,7 @@ function DiscoveryPage() {
                       : "bg-background border-border hover:bg-muted"
                   }`}
                 >
-                  {t.saved ? <Check className="h-3.5 w-3.5" /> : <span className="text-base leading-none">+</span>}
+                  {t.saved ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
                   {t.saved ? "Saved" : "Save"}
                 </button>
               </div>
