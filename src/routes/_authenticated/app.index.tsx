@@ -27,8 +27,7 @@ export const Route = createFileRoute("/_authenticated/app/")({
 });
 
 function money0(n: number | string | null | undefined) {
-  const v = Number(n ?? 0);
-  return "$" + Math.round(v).toLocaleString();
+  return "$" + Number(n ?? 0).toFixed(2);
 }
 
 function timeAgo(d: string) {
