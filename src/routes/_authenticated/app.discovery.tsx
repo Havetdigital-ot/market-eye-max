@@ -111,8 +111,9 @@ function DiscoveryPage() {
       <div className="rounded-xl border bg-card p-5">
         <form onSubmit={scan} className="flex flex-col lg:flex-row gap-5 lg:items-end">
           <div className="flex-1 min-w-0 space-y-2">
-            <label className="text-sm font-semibold">Keywords</label>
+            <label htmlFor="discovery-keywords" className="text-sm font-semibold">Keywords</label>
             <Input
+              id="discovery-keywords"
               placeholder="Enter keywords to scan…"
               value={keywords}
               onChange={(e) => setKeywords(e.target.value)}
@@ -123,7 +124,7 @@ function DiscoveryPage() {
             </p>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-semibold">Platforms</label>
+            <p className="text-sm font-semibold">Platforms</p>
             <div className="flex flex-wrap gap-2">
               {PLATFORMS.map((p) => {
                 const on = selected[p];

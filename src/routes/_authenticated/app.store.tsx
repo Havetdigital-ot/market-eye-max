@@ -162,8 +162,9 @@ function StorePage() {
         <div className="space-y-5">
           <form onSubmit={generate} className="rounded-xl border bg-card p-5 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Store name</label>
+              <label htmlFor="store-name" className="text-sm font-semibold">Store name</label>
               <Input
+                id="store-name"
                 placeholder="e.g. Driftwood Coffee Co."
                 value={name}
                 onChange={(e) => {
@@ -174,9 +175,10 @@ function StorePage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Subdomain</label>
+              <label htmlFor="store-slug" className="text-sm font-semibold">Subdomain</label>
               <div className="flex items-center rounded-md border bg-background overflow-hidden">
                 <Input
+                  id="store-slug"
                   className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   placeholder="driftwood"
                   value={effectiveSlug}
@@ -197,8 +199,9 @@ function StorePage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Product / niche description</label>
+              <label htmlFor="store-desc" className="text-sm font-semibold">Product / niche description</label>
               <Textarea
+                id="store-desc"
                 placeholder="Describe what the store sells…"
                 value={desc}
                 onChange={(e) => setDesc(e.target.value)}
@@ -206,9 +209,9 @@ function StorePage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Apply brand asset</label>
+              <label htmlFor="store-brand" className="text-sm font-semibold">Apply brand asset</label>
               <Select value={brandId} onValueChange={setBrandId} disabled={brandsLoading}>
-                <SelectTrigger>
+                <SelectTrigger id="store-brand">
                   <SelectValue placeholder={brandsLoading ? "Loading brands…" : "None — use defaults"} />
                 </SelectTrigger>
                 <SelectContent>
