@@ -2,11 +2,18 @@
 
 ## Current Task
 
-**Issue #79** — Competitors add-form double-submit + Brand Builder generate disabled state  
-- Files: `app.competitors.tsx`, `app.brand.tsx`  
-- Status: Code fixed, committing
+_None — scanning for next issue_
 
 ### Completed this session
+- Issue #73 closed (already fixed in commit 98efd88 / PR #24)
+- Issue #79 (PR merged) — Competitors add-form double-submit + Brand Builder generate disabled state
+- Issue #81 (PR merged) — Storefront hero button type + palette-aware product card background
+- Issue #83 (PR merged) — Discovery toggleSave per-row loading/disabled guard
+- Issue #94 (PR #95 merged) — money0() toFixed(2) fix in alerts + dashboard
+- Issue #92 (PR #93 merged) — Competitor search filter + stale row indicator
+- Issue #90 (PR #91 merged) — Dashboard table cell truncation + storefront Shop Now scroll
+- Issue #88 (PR #89 merged) — Competitors row keyboard a11y, SEO publish spinner, brand desc maxLength
+- Issue #84 (PR #87 merged) — Price toFixed(2), dark-mode unread bg, button text entity, platform ⌘K
 - Issue #75 (PR #76 merged) — Tasks dismiss loading state + Discovery keywords validation
 - Issue #77 (PR #78 merged) — Alerts per-row click-to-read + Dashboard store preview placeholder
 
