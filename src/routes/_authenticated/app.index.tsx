@@ -81,11 +81,12 @@ function DashboardPage() {
   const { data: alerts = [], isLoading: alertsLoading, isError: alertsError } = useQuery({
     queryKey: ["alerts", "recent"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("alerts")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(5);
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -93,11 +94,12 @@ function DashboardPage() {
   const { data: topTrends = [], isLoading: trendsLoading, isError: trendsError } = useQuery({
     queryKey: ["trends", "top"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("trends")
         .select("*")
         .order("trend_score", { ascending: false })
         .limit(3);
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -105,7 +107,7 @@ function DashboardPage() {
   const { data: lastStore = null, isLoading: storeLoading, isError: storeError } = useQuery({
     queryKey: ["store", "latest"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("background_tasks")
         .select("*")
         .eq("task_type", "Generate Store")
@@ -113,6 +115,7 @@ function DashboardPage() {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      if (error) throw error;
       return data ?? null;
     },
   });
