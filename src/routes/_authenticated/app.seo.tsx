@@ -289,7 +289,8 @@ function SeoPage() {
                     {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                     Save
                   </Button>
-                  <Button size="sm" onClick={togglePublish} disabled={saving}>
+                  <Button size="sm" onClick={togglePublish} disabled={saving} className="gap-1.5">
+                    {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                     {selected.status === "Published" ? "Unpublish" : "Publish"}
                   </Button>
                 </div>

@@ -526,8 +526,12 @@ function CompetitorsPage() {
               <div key={c.id} className="border-b last:border-b-0">
                 {/* Row */}
                 <div
+                  role="button"
+                  tabIndex={0}
                   className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-4 items-center hover:bg-muted/30 transition-colors cursor-pointer select-none"
                   onClick={() => toggleExpand(c.id)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleExpand(c.id); } }}
+                  aria-expanded={isExpanded}
                 >
                   {/* Name + chevron */}
                   <div className="flex items-center gap-3 min-w-0">
