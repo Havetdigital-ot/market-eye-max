@@ -293,6 +293,7 @@ function CompetitorsPage() {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
@@ -392,7 +393,7 @@ function CompetitorsPage() {
 
   async function addCompetitor(e: React.FormEvent) {
     e.preventDefault();
-    if (!url) return;
+    if (!url || adding) return;
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
     let display = name.trim();
@@ -401,22 +402,26 @@ function CompetitorsPage() {
     } catch {
       return toast.error("Enter a valid URL");
     }
-    const { data: inserted, error } = await supabase
-      .from("competitors")
-      .insert({ user_id: user.user.id, display_name: display, url, status: "Active" })
-      .select("id")
-      .single();
-    if (error || !inserted) return toast.error(error?.message ?? "Failed");
-    setName(""); setUrl(""); setOpen(false);
-    qc.invalidateQueries({ queryKey: ["competitors"] });
-    // Auto-expand so user sees the live crawl panel immediately
-    setExpanded((prev) => new Set([...prev, inserted.id]));
-    toast.success("Competitor added — crawl starting…");
+    setAdding(true);
     try {
-      await startCompetitorCrawl(inserted.id);
-      qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
-    } catch (e: any) {
-      toast.error(e?.message ?? "Crawl failed to start");
+      const { data: inserted, error } = await supabase
+        .from("competitors")
+        .insert({ user_id: user.user.id, display_name: display, url, status: "Active" })
+        .select("id")
+        .single();
+      if (error || !inserted) return toast.error(error?.message ?? "Failed");
+      setName(""); setUrl(""); setOpen(false);
+      qc.invalidateQueries({ queryKey: ["competitors"] });
+      setExpanded((prev) => new Set([...prev, inserted.id]));
+      toast.success("Competitor added — crawl starting…");
+      try {
+        await startCompetitorCrawl(inserted.id);
+        qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
+      } catch (e: any) {
+        toast.error(e?.message ?? "Crawl failed to start");
+      }
+    } finally {
+      setAdding(false);
     }
   }
 
@@ -652,8 +657,11 @@ function CompetitorsPage() {
                 value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit">Add & crawl</Button>
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={adding}>Cancel</Button>
+              <Button type="submit" disabled={adding} className="gap-2">
+                {adding && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {adding ? "Adding…" : "Add & crawl"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
