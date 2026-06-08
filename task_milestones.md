@@ -2,9 +2,13 @@
 
 ## Current Task
 
-**Issue #79** — Competitors add-form double-submit + Brand Builder generate disabled state  
-- Files: `app.competitors.tsx`, `app.brand.tsx`  
-- Status: Code fixed, committing
+_(none — ready for next discovery pass)_
+
+### Task 27 — Polish: price decimals, dark-mode unread, &amp; text, platform shortcut (Issue #84)
+- `notifications-popover.tsx:158`: `.toFixed(2)` on old/new price
+- `notifications-popover.tsx:145`: `dark:bg-blue-950/20` on unread row
+- `app.store.tsx:243`: `"Generate &amp; publish store"` JS string → `"Generate & publish store"`
+- `app.tsx:291`: `⌘K` / `Ctrl+K` based on `navigator.platform`
 
 ### Completed this session
 - Issue #75 (PR #76 merged) — Tasks dismiss loading state + Discovery keywords validation
