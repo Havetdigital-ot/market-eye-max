@@ -8,6 +8,11 @@ import {
   Dialog, DialogContent, DialogDescription,
   DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { startCompetitorCrawl } from "@/lib/api/firecrawl";
@@ -280,6 +285,7 @@ function CompetitorsPage() {
   const [url, setUrl] = useState("");
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const { data: competitors = [], isLoading: competitorsLoading, isError: competitorsError } = useQuery({
     queryKey: ["competitors"],
@@ -571,7 +577,7 @@ function CompetitorsPage() {
                       {c.status === "Active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-red-500"
-                      onClick={() => remove(c.id)}
+                      onClick={() => setPendingDeleteId(c.id)}
                       title="Delete"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -638,6 +644,34 @@ function CompetitorsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(v) => { if (!v) setPendingDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove competitor?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {(() => {
+                const c = competitors.find((x) => x.id === pendingDeleteId);
+                return c
+                  ? `This will permanently delete "${c.display_name}" and all its crawl history. This action cannot be undone.`
+                  : "This will permanently delete the competitor and all its crawl history. This action cannot be undone.";
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (pendingDeleteId) remove(pendingDeleteId);
+                setPendingDeleteId(null);
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
