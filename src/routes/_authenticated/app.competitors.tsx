@@ -177,7 +177,7 @@ function CrawlLogPanel({
 // ── Product grid ──────────────────────────────────────────────────────────────
 
 function ProductGrid({ competitorId, isActive }: { competitorId: string; isActive?: boolean }) {
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading, isError: productsError } = useQuery({
     queryKey: ["competitor-products", competitorId],
     queryFn: async () => {
       const { data } = await supabase
@@ -200,6 +200,15 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
       <div className="flex items-center gap-2 px-6 py-6 bg-muted/20 border-t text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Loading products…
+      </div>
+    );
+  }
+
+  if (productsError) {
+    return (
+      <div className="px-6 py-10 flex flex-col items-center gap-2 bg-muted/20 border-t text-sm text-muted-foreground">
+        <AlertCircle className="h-5 w-5 text-destructive" />
+        <span>Failed to load products — check your connection.</span>
       </div>
     );
   }
