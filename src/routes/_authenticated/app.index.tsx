@@ -19,6 +19,7 @@ import {
   FileText,
   Clock,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -295,8 +296,20 @@ function DashboardPage() {
               </div>
             ) : lastStore ? (
               <div>
-                <div className="h-[120px] rounded-md bg-gradient-to-br from-muted to-muted/50 grid place-items-center text-xs text-muted-foreground">
-                  store preview
+                <div className="h-[120px] rounded-md bg-gradient-to-br from-muted to-muted/50 flex flex-col items-center justify-center gap-2 px-4">
+                  <Store className="h-8 w-8 text-muted-foreground/50" />
+                  {(lastStore as any).details?.url && (
+                    <a
+                      href={(lastStore as any).details.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-mono text-muted-foreground hover:text-foreground transition-colors truncate max-w-full"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {(lastStore as any).details.url}
+                      <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                    </a>
+                  )}
                 </div>
                 <div className="mt-3.5 flex items-start justify-between gap-2">
                   <div className="font-semibold text-[15px] leading-tight">
