@@ -18,6 +18,7 @@ import {
   Palette,
   FileText,
   Clock,
+  AlertCircle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -77,7 +78,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: alerts = [], isLoading: alertsLoading } = useQuery({
+  const { data: alerts = [], isLoading: alertsLoading, isError: alertsError } = useQuery({
     queryKey: ["alerts", "recent"],
     queryFn: async () => {
       const { data } = await supabase
@@ -89,7 +90,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: topTrends = [], isLoading: trendsLoading } = useQuery({
+  const { data: topTrends = [], isLoading: trendsLoading, isError: trendsError } = useQuery({
     queryKey: ["trends", "top"],
     queryFn: async () => {
       const { data } = await supabase
@@ -101,7 +102,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: lastStore = null, isLoading: storeLoading } = useQuery({
+  const { data: lastStore = null, isLoading: storeLoading, isError: storeError } = useQuery({
     queryKey: ["store", "latest"],
     queryFn: async () => {
       const { data } = await supabase
@@ -219,6 +220,11 @@ function DashboardPage() {
                 </div>
               ))}
             </div>
+          ) : alertsError ? (
+            <div className="px-5 py-10 flex flex-col items-center gap-1.5 text-center text-sm text-muted-foreground">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <span>Failed to load alerts.</span>
+            </div>
           ) : alerts.length === 0 ? (
             <div className="px-5 py-12 text-center text-sm text-muted-foreground">
               No alerts yet.
@@ -281,6 +287,11 @@ function DashboardPage() {
                 <Skeleton className="h-5 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
                 <Skeleton className="h-9 w-full rounded-md" />
+              </div>
+            ) : storeError ? (
+              <div className="py-8 flex flex-col items-center gap-1.5 text-center text-sm text-muted-foreground">
+                <AlertCircle className="h-4 w-4 text-destructive" />
+                <span>Failed to load store data.</span>
               </div>
             ) : lastStore ? (
               <div>
@@ -345,6 +356,11 @@ function DashboardPage() {
                   <Skeleton className="h-4 w-32" />
                 </div>
               ))}
+            </div>
+          ) : trendsError ? (
+            <div className="px-5 py-10 flex flex-col items-center gap-1.5 text-center text-sm text-muted-foreground">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <span>Failed to load trends.</span>
             </div>
           ) : topTrends.length === 0 ? (
             <div className="px-5 py-12 text-center text-sm text-muted-foreground">
