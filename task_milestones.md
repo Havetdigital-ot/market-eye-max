@@ -2,26 +2,27 @@
 
 ## Current Task
 
-| Field | Value |
-|-------|-------|
-| Issue | [#3 — Alerts page: filtering, pagination, loading skeleton, UX improvements](https://github.com/Havetdigital-ot/market-eye-max/issues/3) |
-| Branch | `claude/wizardly-turing-Xh87h` |
-| Status | **In Progress** |
-| Plan file | (inline — single file change: `src/routes/_authenticated/app.alerts.tsx`) |
-
-### Progress Checklist
-- [x] Issue created (#3)
-- [x] Branch confirmed (`claude/wizardly-turing-Xh87h`)
-- [ ] Implement improvements in `app.alerts.tsx`
-- [ ] Commit with "Fixes #3: ..."
-- [ ] Push branch
-- [ ] Create PR
-- [ ] Submit code review on PR
-- [ ] Merge PR
-- [ ] Mark task completed, restart loop
+_(none — picking next issue after Task 3)_
 
 ---
 
 ## Completed Tasks
 
-_(none yet)_
+### Task 1 — Alerts Page UX Overhaul
+| Field | Value |
+|-------|-------|
+| Issue | [#3](https://github.com/Havetdigital-ot/market-eye-max/issues/3) |
+| PR | [#4](https://github.com/Havetdigital-ot/market-eye-max/pull/4) — **merged** |
+| Branch | `claude/wizardly-turing-Xh87h` |
+| Status | **Completed** |
+
+Changes shipped:
+- Type filter pills (All / Price Change / New Product)
+- Read-status filter (All / Unread) with badge count
+- 25-row client-side pagination with Prev/Next + row counter
+- Skeleton loader (6 rows) while query is in flight
+- Error state card when Supabase query throws
+- AlertDialog confirmation for "Mark all read" (disabled when count = 0)
+- Amber-400 left-border accent for unread rows
+- Colour-coded type badges (blue / emerald / rose)
+- Improved empty-state copy

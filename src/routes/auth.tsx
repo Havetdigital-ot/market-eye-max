@@ -10,7 +10,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
-    meta: [{ title: "Sign in — Market Eye" }],
+    meta: [{ title: "Sign in — Market Eye Pro" }],
   }),
   component: AuthPage,
 });
