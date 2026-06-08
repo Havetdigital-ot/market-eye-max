@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import {
   Radar,
@@ -45,7 +46,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: counts } = useQuery({
+  const { data: counts, isLoading: countsLoading } = useQuery({
     queryKey: ["dashboard-counts"],
     queryFn: async () => {
       const [comp, tasks, alerts, trends] = await Promise.all([
@@ -76,7 +77,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: alerts = [] } = useQuery({
+  const { data: alerts = [], isLoading: alertsLoading } = useQuery({
     queryKey: ["alerts", "recent"],
     queryFn: async () => {
       const { data } = await supabase
@@ -88,7 +89,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: topTrends = [] } = useQuery({
+  const { data: topTrends = [], isLoading: trendsLoading } = useQuery({
     queryKey: ["trends", "top"],
     queryFn: async () => {
       const { data } = await supabase
@@ -100,7 +101,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: lastStore = null } = useQuery({
+  const { data: lastStore = null, isLoading: storeLoading } = useQuery({
     queryKey: ["store", "latest"],
     queryFn: async () => {
       const { data } = await supabase
@@ -122,31 +123,31 @@ function DashboardPage() {
     profile?.email?.split("@")[0] ??
     "there";
 
-  const stats = [
+  const statDefs = [
     {
       label: "Active competitors",
-      value: counts?.competitors ?? 0,
+      key: "competitors" as const,
       icon: Radar,
       iconBg: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
       to: "/app/competitors",
     },
     {
       label: "Running tasks",
-      value: counts?.tasks ?? 0,
+      key: "tasks" as const,
       icon: ListChecks,
       iconBg: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400",
       to: "/app/tasks",
     },
     {
       label: "Unread alerts",
-      value: counts?.alerts ?? 0,
+      key: "alerts" as const,
       icon: Bell,
       iconBg: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
       to: "/app/alerts",
     },
     {
       label: "Saved trends",
-      value: counts?.trends ?? 0,
+      key: "trends" as const,
       icon: Sparkles,
       iconBg: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
       to: "/app/discovery",
@@ -165,7 +166,7 @@ function DashboardPage() {
       {/* Greeting */}
       <div>
         <h1 className="text-[28px] font-bold tracking-tight leading-tight">
-          {greet}, {firstName} 👋
+          {greet}, {firstName}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Here's what's moving across your market today.
@@ -174,7 +175,7 @@ function DashboardPage() {
 
       {/* Stat tiles */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s) => {
+        {statDefs.map((s) => {
           const Icon = s.icon;
           return (
             <Link to={s.to} key={s.label} className="group">
@@ -183,7 +184,11 @@ function DashboardPage() {
                   <Icon className="h-5 w-5" />
                 </div>
                 <div className="mt-4 text-3xl font-bold tabular-nums tracking-tight">
-                  {s.value}
+                  {countsLoading ? (
+                    <Skeleton className="h-8 w-12 rounded" />
+                  ) : (
+                    counts?.[s.key] ?? 0
+                  )}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">{s.label}</div>
               </Card>
@@ -203,14 +208,25 @@ function DashboardPage() {
               </Button>
             </Link>
           </div>
-          {alerts.length === 0 ? (
+          {alertsLoading ? (
+            <div className="divide-y">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-5 py-3">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-40 flex-1" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))}
+            </div>
+          ) : alerts.length === 0 ? (
             <div className="px-5 py-12 text-center text-sm text-muted-foreground">
               No alerts yet.
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs uppercase tracking-wide text-muted-foreground">
+                <tr className="text-xs text-muted-foreground">
                   <th className="text-left font-medium px-5 py-2.5">Competitor</th>
                   <th className="text-left font-medium px-3 py-2.5">Product</th>
                   <th className="text-left font-medium px-3 py-2.5">Change</th>
@@ -259,7 +275,14 @@ function DashboardPage() {
             <h2 className="font-semibold">Latest store</h2>
           </div>
           <div className="p-5">
-            {lastStore ? (
+            {storeLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-[120px] w-full rounded-md" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-9 w-full rounded-md" />
+              </div>
+            ) : lastStore ? (
               <div>
                 <div className="h-[120px] rounded-md bg-gradient-to-br from-muted to-muted/50 grid place-items-center text-xs text-muted-foreground">
                   store preview
@@ -313,14 +336,24 @@ function DashboardPage() {
               </Button>
             </Link>
           </div>
-          {topTrends.length === 0 ? (
+          {trendsLoading ? (
+            <div className="divide-y">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-5 py-3">
+                  <Skeleton className="h-4 w-40 flex-1" />
+                  <Skeleton className="h-5 w-16 rounded" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              ))}
+            </div>
+          ) : topTrends.length === 0 ? (
             <div className="px-5 py-12 text-center text-sm text-muted-foreground">
               No trends yet. Run a scan in Product Discovery.
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs uppercase tracking-wide text-muted-foreground">
+                <tr className="text-xs text-muted-foreground">
                   <th className="text-left font-medium px-5 py-2.5">Product</th>
                   <th className="text-left font-medium px-3 py-2.5">Platform</th>
                   <th className="text-left font-medium px-5 py-2.5">Trend score</th>
