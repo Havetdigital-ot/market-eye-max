@@ -125,12 +125,13 @@ function TasksPage() {
   const { data: tasks = [], isFetching, isLoading, isError, refetch } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("background_tasks")
         .select("*")
         .eq("dismissed", false)
         .order("created_at", { ascending: false })
         .limit(100);
+      if (error) throw error;
       return data ?? [];
     },
     refetchInterval: (q) => {

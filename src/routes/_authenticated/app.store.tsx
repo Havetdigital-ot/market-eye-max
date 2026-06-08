@@ -70,11 +70,12 @@ function StorePage() {
   const { data: previousStores = [], isLoading: storesLoading, isError: storesError } = useQuery({
     queryKey: ["generated_stores"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("generated_stores")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(20);
+      if (error) throw error;
       return data ?? [];
     },
   });

@@ -67,11 +67,12 @@ function DiscoveryPage() {
   const { data: trends = [], isLoading, isError: trendsError } = useQuery({
     queryKey: ["trends"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("trends")
         .select("*")
         .order("discovered_at", { ascending: false })
         .limit(50);
+      if (error) throw error;
       return data ?? [];
     },
   });

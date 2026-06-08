@@ -5,6 +5,7 @@
 Discovering next issue…
 
 ### Completed this session
+- Issue #114 (PR #115 merged) — Competitor product card external link aria-label
 - Issue #112 (PR #113 merged) — Auth mode-switch buttons type="button"
 - Issue #110 (PR #111 merged) — SEO body textarea aria-label; focus rings on delete buttons
 - Issue #108 (PR #109 merged) — Competitors toggleStatus togglingId guard against double-click

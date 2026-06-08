@@ -180,11 +180,12 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
   const { data: products = [], isLoading, isError: productsError } = useQuery({
     queryKey: ["competitor-products", competitorId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("competitor_products")
         .select(`id, name, description, image_url, category, sku, url, price_history ( price, currency, timestamp )`)
         .eq("competitor_id", competitorId)
         .order("name");
+      if (error) throw error;
       return (data ?? []).map((p) => {
         const sorted = [...(p.price_history ?? [])].sort(
           (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
@@ -303,7 +304,8 @@ function CompetitorsPage() {
   const { data: competitors = [], isLoading: competitorsLoading, isError: competitorsError } = useQuery({
     queryKey: ["competitors"],
     queryFn: async () => {
-      const { data } = await supabase.from("competitors").select("*").order("display_name");
+      const { data, error } = await supabase.from("competitors").select("*").order("display_name");
+      if (error) throw error;
       return data ?? [];
     },
   });

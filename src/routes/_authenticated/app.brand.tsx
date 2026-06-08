@@ -131,10 +131,11 @@ function BrandPage() {
   const { data: assets = [], isLoading: assetsLoading, isError: assetsError } = useQuery({
     queryKey: ["brand-assets"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("brand_assets")
         .select("*")
         .order("generated_at", { ascending: false });
+      if (error) throw error;
       return data ?? [];
     },
   });
