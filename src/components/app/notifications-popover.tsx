@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Check, TrendingUp, TrendingDown, Sparkles, AlertCircle } from "lucide-react";
+import { Bell, Check, TrendingUp, TrendingDown, Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Popover,
@@ -28,6 +29,7 @@ function timeAgo(iso: string) {
 export function NotificationsPopover({ count }: { count: number }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const [marking, setMarking] = useState(false);
 
   const { data: alerts = [], isLoading: alertsLoading, isError: alertsError } = useQuery({
     queryKey: ["alerts", "popover"],
@@ -42,20 +44,26 @@ export function NotificationsPopover({ count }: { count: number }) {
   });
 
   async function markAllRead() {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase
-      .from("alerts")
-      .update({ is_read: true })
-      .eq("user_id", u.user.id)
-      .eq("is_read", false);
-    if (error) {
-      toast.error("Couldn't mark as read");
-      return;
+    if (marking) return;
+    setMarking(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { error } = await supabase
+        .from("alerts")
+        .update({ is_read: true })
+        .eq("user_id", u.user.id)
+        .eq("is_read", false);
+      if (error) {
+        toast.error("Couldn't mark as read");
+        return;
+      }
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
+      toast.success("All notifications marked as read");
+    } finally {
+      setMarking(false);
     }
-    qc.invalidateQueries({ queryKey: ["alerts"] });
-    qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
-    toast.success("All notifications marked as read");
   }
 
   async function openAlert(id: string) {
@@ -94,10 +102,15 @@ export function NotificationsPopover({ count }: { count: number }) {
             <button
               type="button"
               onClick={markAllRead}
-              className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              disabled={marking}
+              className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Check className="h-3.5 w-3.5" />
-              Mark all read
+              {marking ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Check className="h-3.5 w-3.5" />
+              )}
+              {marking ? "Marking…" : "Mark all read"}
             </button>
           )}
         </div>
