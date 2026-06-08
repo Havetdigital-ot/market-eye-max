@@ -141,9 +141,13 @@ function StorePage() {
     toast.success("Store published", { description: url });
   }
 
-  function copyUrl(url: string) {
-    navigator.clipboard.writeText(url);
-    toast.success("URL copied");
+  async function copyUrl(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("URL copied");
+    } catch {
+      toast.error("Failed to copy — try selecting the URL manually.");
+    }
   }
 
   return (
