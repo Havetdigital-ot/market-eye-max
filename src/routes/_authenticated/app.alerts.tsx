@@ -41,12 +41,13 @@ function AlertsPage() {
   const [page, setPage] = useState(1);
 
   const { data: alerts = [], isLoading, isError } = useQuery({
-    queryKey: ["alerts", "all"],
+    queryKey: ["alerts"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("alerts")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(250);
       if (error) throw error;
       return data ?? [];
     },
