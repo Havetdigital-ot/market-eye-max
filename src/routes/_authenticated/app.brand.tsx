@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Sparkles, Star, ChevronRight, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { generateBrandIdentity } from "@/lib/firecrawl.functions";
 
@@ -93,7 +94,7 @@ function BrandPage() {
   const [phase, setPhase] = useState<"idle" | "generating" | "review">("idle");
   const [draft, setDraft] = useState<any | null>(null);
 
-  const { data: assets = [] } = useQuery({
+  const { data: assets = [], isLoading: assetsLoading } = useQuery({
     queryKey: ["brand-assets"],
     queryFn: async () => {
       const { data } = await supabase
@@ -229,10 +230,30 @@ function BrandPage() {
             <div className="flex items-center px-5 py-4 border-b">
               <h2 className="font-semibold text-[15px]">Brand library</h2>
               <span className="ml-auto text-xs text-muted-foreground">
-                {assets.length} saved
+                {assetsLoading ? "…" : `${assets.length} saved`}
               </span>
             </div>
-            {assets.length === 0 ? (
+            {assetsLoading ? (
+              <div className="divide-y">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3.5">
+                    <div className="flex">
+                      {[0, 1, 2, 3].map((j) => (
+                        <Skeleton
+                          key={j}
+                          className="w-[18px] h-[18px] rounded-[5px]"
+                          style={{ marginLeft: j ? -5 : 0 }}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <Skeleton className="h-4 w-28 rounded" />
+                      <Skeleton className="h-3 w-16 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : assets.length === 0 ? (
               <div className="px-5 py-10 text-center">
                 <div className="w-12 h-12 rounded-full bg-muted grid place-items-center mx-auto mb-3">
                   <Star className="h-5 w-5 text-muted-foreground" />
