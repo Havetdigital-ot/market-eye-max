@@ -210,9 +210,11 @@ function BrandPage() {
                   onChange={(e) => setDesc(e.target.value)}
                   placeholder="e.g. Premium home espresso gear for design-conscious enthusiasts who care about ritual and craft…"
                   className="mt-2 min-h-[120px] resize-none"
+                  maxLength={500}
                 />
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  The more specific, the better the result.
+                <p className="text-xs text-muted-foreground mt-1.5 flex justify-between">
+                  <span>The more specific, the better the result.</span>
+                  <span className={desc.length >= 450 ? "text-amber-500" : ""}>{desc.length}/500</span>
                 </p>
               </>
             )}
