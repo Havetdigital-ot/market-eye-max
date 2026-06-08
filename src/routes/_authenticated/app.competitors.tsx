@@ -296,6 +296,7 @@ function CompetitorsPage() {
   const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: competitors = [], isLoading: competitorsLoading, isError: competitorsError } = useQuery({
@@ -441,10 +442,16 @@ function CompetitorsPage() {
   }
 
   async function toggleStatus(id: string, status: string) {
-    const next = status === "Active" ? "Paused" : "Active";
-    const { error } = await supabase.from("competitors").update({ status: next }).eq("id", id);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["competitors"] });
+    if (togglingId === id) return;
+    setTogglingId(id);
+    try {
+      const next = status === "Active" ? "Paused" : "Active";
+      const { error } = await supabase.from("competitors").update({ status: next }).eq("id", id);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["competitors"] });
+    } finally {
+      setTogglingId(null);
+    }
   }
 
   async function remove(id: string) {
@@ -631,11 +638,15 @@ function CompetitorsPage() {
                     )}
                     <Button size="icon" variant="ghost" className="h-8 w-8"
                       onClick={() => toggleStatus(c.id, c.status)}
-                      disabled={isCrawling}
+                      disabled={isCrawling || togglingId === c.id}
                       title={c.status === "Active" ? "Pause" : "Resume"}
                       aria-label={c.status === "Active" ? "Pause" : "Resume"}
                     >
-                      {c.status === "Active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      {togglingId === c.id
+                        ? <Loader2 className="h-4 w-4 animate-spin opacity-60" />
+                        : c.status === "Active"
+                        ? <Pause className="h-4 w-4" />
+                        : <Play className="h-4 w-4" />}
                     </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-red-500"
                       onClick={() => setPendingDeleteId(c.id)}
