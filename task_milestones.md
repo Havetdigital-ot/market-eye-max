@@ -2,27 +2,90 @@
 
 ## Current Task
 
-_(none — picking next issue after Task 3)_
+_(none — scanning for next issue)_
 
 ---
 
 ## Completed Tasks
 
-### Task 1 — Alerts Page UX Overhaul
-| Field | Value |
-|-------|-------|
-| Issue | [#3](https://github.com/Havetdigital-ot/market-eye-max/issues/3) |
-| PR | [#4](https://github.com/Havetdigital-ot/market-eye-max/pull/4) — **merged** |
-| Branch | `claude/wizardly-turing-Xh87h` |
-| Status | **Completed** |
+### Session 2 — Completed
 
-Changes shipped:
-- Type filter pills (All / Price Change / New Product)
-- Read-status filter (All / Unread) with badge count
-- 25-row client-side pagination with Prev/Next + row counter
-- Skeleton loader (6 rows) while query is in flight
-- Error state card when Supabase query throws
-- AlertDialog confirmation for "Mark all read" (disabled when count = 0)
-- Amber-400 left-border accent for unread rows
-- Colour-coded type badges (blue / emerald / rose)
-- Improved empty-state copy
+### Task 10 — SEO page skeleton loader (Issue #29, PR #30)
+- Added `isLoading` to SEO items query; 3 skeleton rows; count badge shows "…"
+
+### Task 11 — Store page skeleton loaders (Issue #31, PR #32)
+- `storesLoading` skeleton for Published stores list
+- `brandsLoading` disables brand Select + shows "Loading brands…" placeholder
+
+### Task 12 — Brand Builder skeleton loader (Issue #33, PR #34)
+- `assetsLoading` skeleton (swatch dots + name + timestamp shape) for brand library
+
+### Task 13 — Competitors table skeleton + missing Radar import (Issue #35, PR #36)
+- `competitorsLoading` skeleton (4 rows matching 5-col grid)
+- Fixed runtime bug: `Radar` icon used but missing from lucide import
+
+### Task 14 — Branding inconsistency (Issue #37, PR #38)
+- Auth `<h1>` "Market Eye" → "Market Eye Pro"
+- TITLES fallback "Market Eye" → "Market Eye Pro"
+
+### Task 15 — Error states for 5 pages (Issue #39, PR #40)
+- Added `isError` + error branch to: Competitors, Discovery, SEO, Store, Brand Builder
+
+### Task 16 — Label accessibility (Issue #41, PR #42)
+- Added `htmlFor`/`id` to 11 `<label>` elements across 4 pages
+- Discovery "Platforms" label → `<p>` (no single target ID possible)
+
+### Task 17 — Delete confirmation dialog (Issue #43, PR #44)
+- Competitors delete button now opens AlertDialog with competitor name + warning
+- Uses `pendingDeleteId` state; AlertDialog has destructive "Remove" button
+
+### Task 18 — Tasks + notifications error states (Issue #45, PR #46)
+- Tasks: `isError` + "Try again" button wired to `refetch`
+- Notifications popover: `isLoading` skeleton (3 rows) + `isError` error notice
+
+### Task 19 — Dashboard error states (Issue #47, PR #48)
+- Added `isError` to alerts, trends, and store queries
+- Error notices for 3 dashboard sections that previously showed false empty states
+
+---
+
+### Session 1 — Completed
+
+### Task 1 — Alerts Page UX Overhaul (Issue #3, PR #4 — merged)
+- Type filter pills, read-status filter, pagination, skeleton loader, error state, AlertDialog for mark-all-read
+
+### Task 2 — Tasks Page UX (Issue #5, PR #6 — merged)
+- `useNow()` hook for live timer; skeleton loader; improved empty state
+
+### Task 3 — Dashboard Skeletons + Emoji Removal (Issue #7, PR #8 — merged)
+- Skeleton tiles for all 4 stat queries; removed 👋 emoji
+
+### Task 4 — Notifications Popover Fixes (Issue #9, PR #10 — merged)
+- `timeAgo()` precision fix; badge cap 9+ → 99+; removed hardcoded border colors
+
+### Task 5 — SEO Page (Issue #11, PR #12 — merged)
+- Removed `font-mono` from body textarea; added word/char count
+
+### Task 6 — Global Search (Issue #11, PR #12 — merged)
+- `CommandEmpty` shows query string; trend primary label fallback
+
+### Task 7 — Discovery Page (Issue #13, PR #14 — merged)
+- Fixed Check icon conditional render; replaced + span with `<Plus>` icon; skeleton loader
+
+### Task 8 — App Shell Dark Mode (Issue #15, PR #16 — merged)
+- Removed hardcoded `oklch()` border colors; `bg-white` → `bg-background`; sidebar section label uses `{company}`
+
+### Task 9 — Competitors Page (Issue #17, PR #18 — merged)
+- "Retry crawl" button for failed crawls; empty state with Radar icon; sentence-case headers
+
+### Task 10 — Brand Builder (Issue #19, PR #20 — merged)
+- Removed dead `useQuery` for templates; removed unused seed state; `border-white` → `border-background`
+
+### Task 11 — Meta Tags + Store Debug Code (Issue #23, PR #24 — merged)
+- Replaced Lovable scaffold meta; removed simulateFail debug checkbox
+
+### Task 12 — Auth + Storefront (Issue #25, PR #26 — merged)
+- Auth page title; removed dead #about/#contact nav links
+
+### Task 13 — Dead Scaffold File (Issue #27, PR #28 — merged)
+- Deleted `src/lib/api/example.functions.ts`
