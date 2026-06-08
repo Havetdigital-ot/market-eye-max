@@ -422,12 +422,14 @@ function CompetitorsPage() {
 
   async function toggleStatus(id: string, status: string) {
     const next = status === "Active" ? "Paused" : "Active";
-    await supabase.from("competitors").update({ status: next }).eq("id", id);
+    const { error } = await supabase.from("competitors").update({ status: next }).eq("id", id);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["competitors"] });
   }
 
   async function remove(id: string) {
-    await supabase.from("competitors").delete().eq("id", id);
+    const { error } = await supabase.from("competitors").delete().eq("id", id);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["competitors"] });
     setExpanded((prev) => { const next = new Set(prev); next.delete(id); return next; });
     toast.success("Removed");

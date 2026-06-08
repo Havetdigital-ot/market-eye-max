@@ -56,11 +56,12 @@ function AlertsPage() {
   async function markAllRead() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    await supabase
+    const { error } = await supabase
       .from("alerts")
       .update({ is_read: true })
       .eq("user_id", u.user.id)
       .eq("is_read", false);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["alerts"] });
     qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
     toast.success("Marked all as read");
