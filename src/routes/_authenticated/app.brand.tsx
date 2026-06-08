@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Sparkles, Star, ChevronRight, Loader2 } from "lucide-react";
+import { Sparkles, Star, ChevronRight, Loader2, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { generateBrandIdentity } from "@/lib/firecrawl.functions";
@@ -94,7 +94,7 @@ function BrandPage() {
   const [phase, setPhase] = useState<"idle" | "generating" | "review">("idle");
   const [draft, setDraft] = useState<any | null>(null);
 
-  const { data: assets = [], isLoading: assetsLoading } = useQuery({
+  const { data: assets = [], isLoading: assetsLoading, isError: assetsError } = useQuery({
     queryKey: ["brand-assets"],
     queryFn: async () => {
       const { data } = await supabase
@@ -233,7 +233,12 @@ function BrandPage() {
                 {assetsLoading ? "…" : `${assets.length} saved`}
               </span>
             </div>
-            {assetsLoading ? (
+            {assetsError ? (
+              <div className="px-5 py-8 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                <span>Failed to load brand library — check your connection.</span>
+              </div>
+            ) : assetsLoading ? (
               <div className="divide-y">
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="flex items-center gap-3 px-5 py-3.5">
