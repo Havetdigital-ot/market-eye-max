@@ -77,11 +77,12 @@ function SeoPage() {
   const { data: items = [], isLoading: itemsLoading, isError: itemsError } = useQuery({
     queryKey: ["seo"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("seo_content")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
+      if (error) throw error;
       return data ?? [];
     },
   });
