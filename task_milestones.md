@@ -2,12 +2,13 @@
 
 ## Current Task
 
-### Issue #145 — Two queryFns silently swallow Supabase errors (isError UI unreachable)
-- Files: `src/routes/_authenticated/app.seo.tsx`, `src/components/app/notifications-popover.tsx`
-- Fix: destructure `error` and `throw error` in both queryFns
+### Issue #147 — Dashboard stat tiles silently show 0 when counts query fails
+- File: `src/routes/_authenticated/app.index.tsx`
+- Fix: throw on any Supabase error in Promise.all; add isError to destructure; show "—" in tiles on error
 - Status: IN PROGRESS
 
 ### Completed this session
+- Issue #145 (PR #146 merged) — SEO items + notifications popover queryFns now throw on Supabase error (isError branches reachable)
 - Issue #138 (PR #139 merged) — Character count indicators on Store and SEO bounded text fields
 - Issue #131 (PR #132 merged) — Store Generator form retains stale values after successful publish
 - Issue #129 (PR #130 merged) — brand_assets query key mismatch: Store page brand selector never refreshed
