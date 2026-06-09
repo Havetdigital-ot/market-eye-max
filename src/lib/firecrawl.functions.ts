@@ -298,7 +298,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       }
     })();
 
-    waitUntil(work);
+    await work;
     return { ok: true, started: true };
   });
 
