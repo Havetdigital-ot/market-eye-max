@@ -654,10 +654,9 @@ function CompetitorsPage() {
                       <div className="font-medium truncate flex items-center gap-1.5" title={c.display_name}>
                         {c.display_name}
                         {stale && (
-                          <AlertTriangle
-                            className="h-3.5 w-3.5 text-amber-500 shrink-0"
-                            title="No products crawled in 7+ days"
-                          />
+                          <span title="No products crawled in 7+ days" className="inline-flex">
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                          </span>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground truncate" title={c.url}>{hostOf(c.url)}</div>
