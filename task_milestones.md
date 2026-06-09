@@ -5,6 +5,7 @@
 _Scanning for next issue…_
 
 ### Completed this session
+- Issue #140 (PR #141 merged) — aria-pressed/label on Discovery toggle, context button labels on Competitors, Dashboard empty-state hint
 - Issue #138 (PR #139 merged) — Character count indicators on Store and SEO bounded text fields
 - Issue #131 (PR #132 merged) — Store Generator form retains stale values after successful publish
 - Issue #129 (PR #130 merged) — brand_assets query key mismatch: Store page brand selector never refreshed
