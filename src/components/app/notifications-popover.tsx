@@ -34,11 +34,12 @@ export function NotificationsPopover({ count }: { count: number }) {
   const { data: alerts = [], isLoading: alertsLoading, isError: alertsError } = useQuery({
     queryKey: ["alerts", "popover"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("alerts")
         .select("id, type, competitor_name, product_name, old_price, new_price, is_read, created_at")
         .order("created_at", { ascending: false })
         .limit(10);
+      if (error) throw error;
       return data ?? [];
     },
   });

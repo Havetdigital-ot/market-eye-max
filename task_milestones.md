@@ -2,7 +2,10 @@
 
 ## Current Task
 
-_Scanning for next issue…_
+### Issue #145 — Two queryFns silently swallow Supabase errors (isError UI unreachable)
+- Files: `src/routes/_authenticated/app.seo.tsx`, `src/components/app/notifications-popover.tsx`
+- Fix: destructure `error` and `throw error` in both queryFns
+- Status: IN PROGRESS
 
 ### Completed this session
 - Issue #138 (PR #139 merged) — Character count indicators on Store and SEO bounded text fields
