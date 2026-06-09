@@ -5,6 +5,7 @@
 _Scanning for next issue…_
 
 ### Completed this session
+- Issue #135 (PR #136 merged) — Discovery scan controls not locked during run; SEO type not reset after generate; focus-visible rings missing on role="button" list items
 - Issue #131 (PR #132 merged) — Store Generator form retains stale values after successful publish
 - Issue #129 (PR #130 merged) — brand_assets query key mismatch: Store page brand selector never refreshed
 - Issue #127 (PR #128 merged) — title attributes on truncated text cells across 6 pages
