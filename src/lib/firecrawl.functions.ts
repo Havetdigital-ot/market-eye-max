@@ -20,12 +20,15 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(({ data, context }) => {
+  .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { waitUntil } = await import("./execution-context");
 
     // Return immediately so the HTTP connection closes before the proxy times out.
-    // The actual crawl runs detached on the server event loop via setImmediate.
-    setImmediate(async () => {
+    // The actual crawl is extended past the response via ctx.waitUntil() so the
+    // Cloudflare Workers runtime keeps it alive (setImmediate alone is killed
+    // the moment the response is returned).
+    const work = (async () => {
       const { getFirecrawl, productExtractionSchema } = await import("./firecrawl.server");
 
       const setProgress = async (stage: string, extra: Record<string, any> = {}) => {
@@ -292,9 +295,9 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           })
           .eq("id", data.taskId);
       }
-    });
+    })();
 
-    // Return immediately — crawl runs in background via setImmediate above
+    waitUntil(work);
     return { ok: true, started: true };
   });
 
