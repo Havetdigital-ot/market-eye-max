@@ -128,8 +128,8 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           urls: urls.slice(0, 8),
         });
 
-        const BATCH = 2;
-        const TIMEOUT = 60_000;
+        const BATCH = 3;
+        const TIMEOUT = 20_000;
         const products: any[] = [];
 
         for (let i = 0; i < urls.length; i += BATCH) {
