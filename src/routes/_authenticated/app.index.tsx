@@ -229,8 +229,9 @@ function DashboardPage() {
               <span>Failed to load alerts.</span>
             </div>
           ) : alerts.length === 0 ? (
-            <div className="px-5 py-12 text-center text-sm text-muted-foreground">
-              No alerts yet.
+            <div className="px-5 py-12 text-center text-sm text-muted-foreground space-y-1">
+              <p>No alerts yet.</p>
+              <p className="text-xs">Add a competitor to start receiving price change alerts.</p>
             </div>
           ) : (
             <table className="w-full text-sm">

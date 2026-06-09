@@ -574,6 +574,7 @@ function CompetitorsPage() {
                   onClick={() => toggleExpand(c.id)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleExpand(c.id); } }}
                   aria-expanded={isExpanded}
+                  aria-label={`${isExpanded ? "Collapse" : "Expand"} ${c.display_name} details`}
                 >
                   {/* Name + chevron */}
                   <div className="flex items-center gap-3 min-w-0">
@@ -634,8 +635,8 @@ function CompetitorsPage() {
                       <Button size="icon" variant="ghost" className="h-8 w-8"
                         onClick={() => recrawl(c.id)}
                         disabled={isCrawling}
-                        title={isCrawling ? "Crawl in progress" : "Recrawl"}
-                        aria-label={isCrawling ? "Crawl in progress" : "Recrawl"}
+                        title={isCrawling ? `Crawling ${c.display_name}…` : `Recrawl ${c.display_name}`}
+                        aria-label={isCrawling ? `Crawling ${c.display_name}…` : `Recrawl ${c.display_name}`}
                       >
                         <RefreshCw className={`h-4 w-4 ${isCrawling ? "animate-spin opacity-40" : ""}`} />
                       </Button>
@@ -643,8 +644,8 @@ function CompetitorsPage() {
                     <Button size="icon" variant="ghost" className="h-8 w-8"
                       onClick={() => toggleStatus(c.id, c.status)}
                       disabled={isCrawling || togglingId === c.id}
-                      title={c.status === "Active" ? "Pause" : "Resume"}
-                      aria-label={c.status === "Active" ? "Pause" : "Resume"}
+                      title={c.status === "Active" ? `Pause ${c.display_name}` : `Resume ${c.display_name}`}
+                      aria-label={c.status === "Active" ? `Pause ${c.display_name}` : `Resume ${c.display_name}`}
                     >
                       {togglingId === c.id
                         ? <Loader2 className="h-4 w-4 animate-spin opacity-60" />
@@ -654,8 +655,8 @@ function CompetitorsPage() {
                     </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-red-500"
                       onClick={() => setPendingDeleteId(c.id)}
-                      title="Delete"
-                      aria-label="Delete"
+                      title={`Delete ${c.display_name}`}
+                      aria-label={`Delete ${c.display_name}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
