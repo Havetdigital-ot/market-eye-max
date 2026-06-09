@@ -2,12 +2,10 @@
 
 ## Current Task
 
-### Issue #147 — Dashboard stat tiles silently show 0 when counts query fails
-- File: `src/routes/_authenticated/app.index.tsx`
-- Fix: throw on any Supabase error in Promise.all; add isError to destructure; show "—" in tiles on error
-- Status: IN PROGRESS
+_Scanning for next issue…_
 
 ### Completed this session
+- Issue #147 (PR #148 merged) — Dashboard counts query throws on error; stat tiles show — instead of false 0
 - Issue #145 (PR #146 merged) — SEO items + notifications popover queryFns now throw on Supabase error (isError branches reachable)
 - Issue #138 (PR #139 merged) — Character count indicators on Store and SEO bounded text fields
 - Issue #131 (PR #132 merged) — Store Generator form retains stale values after successful publish
