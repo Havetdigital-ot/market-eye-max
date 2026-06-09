@@ -111,3 +111,8 @@ _This section grows over time. Each rule below was learned from a real mistake._
 - **Trigger**: Any Firecrawl usage
 - **Correct behavior**: All Firecrawl calls go through server-side functions (`*.server.ts` or `*.functions.ts`). The key must never appear in client-side code or `VITE_*` env vars.
 - **Date**: 2026-06-06
+
+### Rule 3: Always work on main — commit and push directly
+- **Trigger**: Any code change task
+- **Correct behavior**: Commit directly to `main` and push. Do NOT create feature branches or PRs unless the user explicitly asks for one. If a feature branch is already open, merge it to main immediately after completing the work.
+- **Date**: 2026-06-09
