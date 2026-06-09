@@ -1,6 +1,8 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getStoreBySlug } from "@/lib/stores.functions";
 
+const APP_URL = "https://market-eye.otmane.net";
+
 export const Route = createFileRoute("/s/$slug")({
   loader: async ({ params }) => {
     const store = await getStoreBySlug({ data: { slug: params.slug } });
@@ -48,8 +50,6 @@ function StorefrontPage() {
         <div className="text-xl font-bold tracking-tight">{store.name}</div>
         <nav className="flex gap-6 text-sm font-medium opacity-80">
           <a href="#shop">Shop</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
         </nav>
       </header>
 
@@ -59,8 +59,10 @@ function StorefrontPage() {
         </h1>
         <p className="mt-6 text-lg opacity-80 max-w-2xl mx-auto">{store.description}</p>
         <button
+          type="button"
           className="mt-8 px-8 py-3 rounded-full font-semibold text-white"
           style={{ background: accent }}
+          onClick={() => document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" })}
         >
           Shop now
         </button>
@@ -73,7 +75,7 @@ function StorefrontPage() {
             <div
               key={i}
               className="rounded-xl overflow-hidden border"
-              style={{ borderColor: `${primary}22`, background: "#fff" }}
+              style={{ borderColor: `${primary}22`, background: `${accent}11` }}
             >
               <div className="aspect-square" style={{ background: `${accent}22` }} />
               <div className="p-4">
@@ -91,7 +93,7 @@ function StorefrontPage() {
       >
         <div className="opacity-70">
           Powered by{" "}
-          <a href="https://market-eye.otmane.net" className="underline">
+          <a href={APP_URL} className="underline">
             Market Eye
           </a>
         </div>

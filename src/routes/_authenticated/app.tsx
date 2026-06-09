@@ -161,7 +161,7 @@ function AppShell() {
     .join("")
     .toUpperCase();
 
-  const title = TITLES[pathname] ?? "Market Eye";
+  const title = TITLES[pathname] ?? "Market Eye Pro";
 
   return (
     <SidebarProvider>
@@ -186,7 +186,7 @@ function AppShell() {
           {/* Nav */}
           <SidebarContent className="px-3 gap-0">
             <div className="text-[11px] font-bold tracking-[0.08em] uppercase text-sidebar-foreground/60 px-3 pt-4 pb-1.5">
-              Workspace
+              {company}
             </div>
             <nav className="flex flex-col gap-0.5">
               {NAV.map((item) => {
@@ -210,14 +210,14 @@ function AppShell() {
                     {active && (
                       <span
                         className="absolute -left-3 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r"
-                        style={{ background: "oklch(0.62 0.176 264)" }}
+                        style={{ background: "var(--sidebar-primary)" }}
                       />
                     )}
                     <Icon className="h-[18px] w-[18px] opacity-85 shrink-0" />
                     <span className="flex-1 whitespace-nowrap">{item.label}</span>
                     {badge > 0 && (
-                      <span className="ml-auto min-w-[19px] h-[19px] px-1.5 rounded-full grid place-items-center text-[11px] font-bold font-mono text-white"
-                        style={{ background: "oklch(0.62 0.176 264)" }}
+                      <span className="ml-auto min-w-[19px] h-[19px] px-1.5 rounded-full grid place-items-center text-[11px] font-bold font-mono text-sidebar-primary-foreground"
+                        style={{ background: "var(--sidebar-primary)" }}
                       >
                         {badge}
                       </span>
@@ -231,12 +231,7 @@ function AppShell() {
           {/* User chip */}
           <SidebarFooter className="border-t border-sidebar-border p-3">
             <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] hover:bg-sidebar-accent cursor-pointer group">
-              <div className="w-8 h-8 rounded-full grid place-items-center text-white font-bold text-[13px] shrink-0"
-                style={{
-                  background:
-                    "linear-gradient(150deg, oklch(0.6 0.13 200), oklch(0.55 0.15 280))",
-                }}
-              >
+              <div className="w-8 h-8 rounded-full grid place-items-center text-sidebar-primary-foreground font-bold text-[13px] shrink-0 bg-sidebar-primary">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
@@ -253,6 +248,7 @@ function AppShell() {
                 className="h-7 w-7 text-sidebar-foreground/60 hover:text-white hover:bg-sidebar-accent"
                 onClick={handleSignOut}
                 title="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -262,10 +258,7 @@ function AppShell() {
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Topbar */}
-          <header
-            className="h-16 px-6 flex items-center gap-4 border-b bg-background/60 backdrop-blur sticky top-0 z-30"
-            style={{ borderColor: "oklch(0.922 0.005 256)" }}
-          >
+          <header className="h-16 px-6 flex items-center gap-4 border-b bg-background/60 backdrop-blur sticky top-0 z-30">
             <SidebarTrigger className="md:hidden" />
             <h1 className="text-xl font-bold tracking-tight">{title}</h1>
             <div className="flex-1" />
@@ -283,20 +276,21 @@ function AppShell() {
   );
 }
 
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
 function SearchBox({ onOpen }: { onOpen: () => void }) {
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="hidden md:flex items-center gap-2 px-3.5 h-10 rounded-full bg-white border w-[360px] hover:bg-muted/40 transition-colors text-left"
-      style={{ borderColor: "oklch(0.922 0.005 256)" }}
+      className="hidden md:flex items-center gap-2 px-3.5 h-10 rounded-full bg-background border w-[360px] hover:bg-muted/40 transition-colors text-left"
     >
       <Search className="h-4 w-4 text-muted-foreground" />
       <span className="flex-1 text-sm text-muted-foreground">
         Search competitors, products, trends…
       </span>
       <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-muted-foreground bg-muted">
-        ⌘K
+        {isMac ? "⌘K" : "Ctrl+K"}
       </kbd>
     </button>
   );

@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -13,8 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Store as StoreIcon, Loader2, Copy, ExternalLink } from "lucide-react";
+import { Store as StoreIcon, Loader2, Copy, ExternalLink, AlertCircle, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/app/store")({
@@ -45,13 +50,13 @@ function StorePage() {
   const [slug, setSlug] = useState("");
   const [slugDirty, setSlugDirty] = useState(false);
   const [brandId, setBrandId] = useState<string>("none");
-  const [simulateFail, setSimulateFail] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const effectiveSlug = slugDirty ? slug : slugify(name);
 
-  const { data: brands = [] } = useQuery({
+  const { data: brands = [], isLoading: brandsLoading } = useQuery({
     queryKey: ["brand_assets"],
     queryFn: async () => {
       const { data } = await supabase
@@ -62,14 +67,15 @@ function StorePage() {
     },
   });
 
-  const { data: previousStores = [] } = useQuery({
+  const { data: previousStores = [], isLoading: storesLoading, isError: storesError } = useQuery({
     queryKey: ["generated_stores"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("generated_stores")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(20);
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -89,70 +95,80 @@ function StorePage() {
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
+    if (generating) return;
     if (!name.trim() || !desc.trim()) return toast.error("Fill in name and description");
     if (!effectiveSlug) return toast.error("Slug is required");
 
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
 
-    setGenerating(true);
-
-    if (simulateFail) {
-      setTimeout(() => {
-        toast.error("Generation failed — simulated error.");
-        setGenerating(false);
-      }, 1200);
-      return;
-    }
-
     const brand = brands.find((b: any) => b.id === brandId);
     const palette =
       (brand?.color_palette as string[]) ?? ["#1F2A24", "#3E7C5A", "#A8C3A0", "#E9F0E6"];
 
-    const { data: inserted, error } = await supabase
-      .from("generated_stores")
-      .insert({
-        user_id: user.user.id,
-        slug: effectiveSlug,
-        name: name.trim(),
-        description: desc.trim(),
-        brand_asset_id: brand?.id ?? null,
-        palette,
-        content: {},
-        published: true,
-      })
-      .select()
-      .single();
+    setGenerating(true);
+    try {
+      const { data: inserted, error } = await supabase
+        .from("generated_stores")
+        .insert({
+          user_id: user.user.id,
+          slug: effectiveSlug,
+          name: name.trim(),
+          description: desc.trim(),
+          brand_asset_id: brand?.id ?? null,
+          palette,
+          content: {},
+          published: true,
+        })
+        .select()
+        .single();
 
-    setGenerating(false);
-
-    if (error) {
-      if (error.code === "23505") {
-        toast.error(`Slug "${effectiveSlug}" is already taken — pick another.`);
-      } else {
-        toast.error(error.message);
+      if (error) {
+        if (error.code === "23505") {
+          toast.error(`Slug "${effectiveSlug}" is already taken — pick another.`);
+        } else {
+          toast.error(error.message);
+        }
+        return;
       }
-      return;
+
+      // Also log a task entry for the task log page.
+      await supabase.from("background_tasks").insert({
+        user_id: user.user.id,
+        task_type: "Generate Store",
+        status: "Completed",
+        details: { store: name.trim(), slug: effectiveSlug, url: storeUrl(effectiveSlug) },
+      });
+
+      const url = storeUrl(inserted.slug);
+      setLastUrl(url);
+      setName("");
+      setDesc("");
+      setSlug("");
+      setSlugDirty(false);
+      setBrandId("none");
+      qc.invalidateQueries({ queryKey: ["generated_stores"] });
+      qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
+      toast.success("Store published", { description: url });
+    } finally {
+      setGenerating(false);
     }
-
-    // Also log a task entry for the task log page.
-    await supabase.from("background_tasks").insert({
-      user_id: user.user.id,
-      task_type: "Generate Store",
-      status: "Completed",
-      details: { store: name.trim(), slug: effectiveSlug, url: storeUrl(effectiveSlug) },
-    });
-
-    const url = storeUrl(inserted.slug);
-    setLastUrl(url);
-    qc.invalidateQueries({ queryKey: ["generated_stores"] });
-    qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
-    toast.success("Store published", { description: url });
   }
 
-  function copyUrl(url: string) {
-    navigator.clipboard.writeText(url);
-    toast.success("URL copied");
+  async function copyUrl(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("URL copied");
+    } catch {
+      toast.error("Failed to copy — try selecting the URL manually.");
+    }
+  }
+
+  async function deleteStore(id: string) {
+    const { error } = await supabase.from("generated_stores").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["generated_stores"] });
+    toast.success("Store removed");
   }
 
   return (
@@ -171,21 +187,27 @@ function StorePage() {
         <div className="space-y-5">
           <form onSubmit={generate} className="rounded-xl border bg-card p-5 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Store name</label>
+              <label htmlFor="store-name" className="text-sm font-semibold">Store name</label>
               <Input
+                id="store-name"
                 placeholder="e.g. Driftwood Coffee Co."
                 value={name}
+                maxLength={100}
                 onChange={(e) => {
                   setName(e.target.value);
                   if (!slugDirty) setSlug(slugify(e.target.value));
                 }}
               />
+              <p className="text-xs text-muted-foreground text-right tabular-nums">
+                <span className={name.length >= 90 ? "text-amber-500" : ""}>{name.length}/100</span>
+              </p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Subdomain</label>
+              <label htmlFor="store-slug" className="text-sm font-semibold">Subdomain</label>
               <div className="flex items-center rounded-md border bg-background overflow-hidden">
                 <Input
+                  id="store-slug"
                   className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   placeholder="driftwood"
                   value={effectiveSlug}
@@ -206,19 +228,24 @@ function StorePage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Product / niche description</label>
+              <label htmlFor="store-desc" className="text-sm font-semibold">Product / niche description</label>
               <Textarea
+                id="store-desc"
                 placeholder="Describe what the store sells…"
                 value={desc}
+                maxLength={500}
                 onChange={(e) => setDesc(e.target.value)}
                 className="min-h-[96px]"
               />
+              <p className="text-xs text-muted-foreground text-right tabular-nums">
+                <span className={desc.length >= 450 ? "text-amber-500" : ""}>{desc.length}/500</span>
+              </p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Apply brand asset</label>
-              <Select value={brandId} onValueChange={setBrandId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="None — use defaults" />
+              <label htmlFor="store-brand" className="text-sm font-semibold">Apply brand asset</label>
+              <Select value={brandId} onValueChange={setBrandId} disabled={brandsLoading}>
+                <SelectTrigger id="store-brand">
+                  <SelectValue placeholder={brandsLoading ? "Loading brands…" : "None — use defaults"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None — use defaults</SelectItem>
@@ -233,20 +260,13 @@ function StorePage() {
                 Optional — pulls palette, type &amp; voice
               </p>
             </div>
-            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-              <Checkbox
-                checked={simulateFail}
-                onCheckedChange={(v) => setSimulateFail(v === true)}
-              />
-              Simulate a generation failure
-            </label>
             <Button type="submit" disabled={generating} className="w-full h-11 gap-2">
               {generating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <StoreIcon className="h-4 w-4" />
               )}
-              {generating ? "Publishing…" : "Generate &amp; publish store"}
+              {generating ? "Publishing…" : "Generate & publish store"}
             </Button>
           </form>
 
@@ -259,7 +279,7 @@ function StorePage() {
                 DNS setup required
               </div>
               <p className="text-amber-800/80 dark:text-amber-300/80 mt-0.5">
-                Add a wildcard <span className="font-mono">CNAME *.market-eye → market-eye.otmane.net</span>{" "}
+                Add a wildcard <span className="font-mono">CNAME *.market-eye → {STORE_DOMAIN}</span>{" "}
                 in Cloudflare and connect <span className="font-mono">*.{STORE_DOMAIN}</span> as
                 a custom domain on this project. Until then, stores publish but their subdomain
                 won't resolve.
@@ -271,10 +291,31 @@ function StorePage() {
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="text-sm font-semibold">Published stores</div>
               <span className="text-xs font-mono text-muted-foreground">
-                {previousStores.length}
+                {storesLoading ? "…" : previousStores.length}
               </span>
             </div>
-            {previousStores.length === 0 ? (
+            {storesError ? (
+              <div className="px-4 py-8 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                <span>Failed to load stores — check your connection.</span>
+              </div>
+            ) : storesLoading ? (
+              <div className="divide-y">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-3 px-4 py-3">
+                    <div className="flex-1 space-y-1.5 min-w-0">
+                      <Skeleton className="h-4 w-32 rounded" />
+                      <Skeleton className="h-3 w-48 rounded" />
+                      <Skeleton className="h-3 w-20 rounded" />
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : previousStores.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                 No stores published yet.
               </div>
@@ -287,8 +328,8 @@ function StorePage() {
                     className="flex items-center justify-between gap-3 px-4 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium truncate">{s.name}</div>
-                      <div className="text-xs text-muted-foreground font-mono truncate">
+                      <div className="font-medium truncate" title={s.name}>{s.name}</div>
+                      <div className="text-xs text-muted-foreground font-mono truncate" title={`${s.slug}.${STORE_DOMAIN}`}>
                         {s.slug}.{STORE_DOMAIN}
                       </div>
                       <div className="text-[11px] text-muted-foreground/70 mt-0.5">
@@ -300,6 +341,8 @@ function StorePage() {
                         onClick={() => copyUrl(url)}
                         className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
                         title="Copy URL"
+                        aria-label="Copy URL"
+                        type="button"
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </button>
@@ -309,9 +352,19 @@ function StorePage() {
                         rel="noreferrer"
                         className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
                         title="Open"
+                        aria-label="Open store"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
+                      <button
+                        type="button"
+                        title="Delete"
+                        aria-label="Delete store"
+                        className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted hover:text-red-500 text-muted-foreground/50"
+                        onClick={() => setPendingDeleteId(s.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
                 );
@@ -342,7 +395,7 @@ function StorePage() {
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Live URL
                   </div>
-                  <div className="font-mono text-sm truncate">{preview.url}</div>
+                  <div className="font-mono text-sm truncate" title={preview.url}>{preview.url}</div>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <Button size="sm" variant="outline" onClick={() => copyUrl(preview.url)}>
@@ -374,6 +427,26 @@ function StorePage() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!pendingDeleteId} onOpenChange={(o) => { if (!o) setPendingDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this store?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The storefront URL will stop working immediately. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (pendingDeleteId) { deleteStore(pendingDeleteId); setPendingDeleteId(null); } }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

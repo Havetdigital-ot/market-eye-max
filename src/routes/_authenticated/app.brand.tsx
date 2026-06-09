@@ -12,8 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Sparkles, Star, ChevronRight, Loader2 } from "lucide-react";
+import { Sparkles, Star, ChevronRight, Loader2, AlertCircle, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { generateBrandIdentity } from "@/lib/firecrawl.functions";
 
@@ -78,15 +84,6 @@ export const Route = createFileRoute("/_authenticated/app/brand")({
   component: BrandPage,
 });
 
-type BrandTemplate = {
-  brand_name: string;
-  brand_voice: string;
-  color_palette: string[];
-  font_primary: string;
-  font_secondary: string;
-};
-
-
 function timeAgo(d: string) {
   try {
     return formatDistanceToNow(new Date(d), { addSuffix: true });
@@ -101,27 +98,45 @@ function BrandPage() {
   const [desc, setDesc] = useState("");
   const [phase, setPhase] = useState<"idle" | "generating" | "review">("idle");
   const [draft, setDraft] = useState<any | null>(null);
-  const [seed, setSeed] = useState(0);
+  const [accepting, setAccepting] = useState(false);
+  const [viewingLibraryId, setViewingLibraryId] = useState<string | null>(null);
+  const [pendingDeleteBrandId, setPendingDeleteBrandId] = useState<string | null>(null);
 
-  const { data: assets = [] } = useQuery({
-    queryKey: ["brand-assets"],
+  function loadFromLibrary(b: any) {
+    setDraft({
+      brand_name: b.brand_name,
+      source_description: b.source_description,
+      brand_voice: b.brand_voice,
+      color_palette: b.color_palette,
+      font_choices: b.font_choices,
+    });
+    setViewingLibraryId(b.id);
+    setPhase("review");
+  }
+
+  function closeLibraryView() {
+    setPhase("idle");
+    setDraft(null);
+    setViewingLibraryId(null);
+  }
+
+  async function deleteBrand(id: string) {
+    const { error } = await supabase.from("brand_assets").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    if (viewingLibraryId === id) closeLibraryView();
+    qc.invalidateQueries({ queryKey: ["brand_assets"] });
+    toast.success("Brand removed");
+  }
+
+  const { data: assets = [], isLoading: assetsLoading, isError: assetsError } = useQuery({
+    queryKey: ["brand_assets"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("brand_assets")
         .select("*")
         .order("generated_at", { ascending: false });
+      if (error) throw error;
       return data ?? [];
-    },
-  });
-
-  const { data: templates = [] } = useQuery<BrandTemplate[]>({
-    queryKey: ["brand-generation-templates"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("brand_generation_templates")
-        .select("brand_name, brand_voice, color_palette, font_primary, font_secondary")
-        .order("sort_order", { ascending: true });
-      return (data ?? []) as BrandTemplate[];
     },
   });
 
@@ -152,24 +167,29 @@ function BrandPage() {
 
 
   async function accept() {
-    if (!draft) return;
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return;
-    const { error } = await supabase.from("brand_assets").insert({
-      user_id: user.user.id,
-      brand_name: draft.brand_name,
-      source_description: draft.source_description,
-      brand_voice: draft.brand_voice,
-      color_palette: draft.color_palette,
-      font_choices: draft.font_choices,
-    });
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["brand-assets"] });
-    toast.success(`${draft.brand_name} saved to your brand library`);
-    setPhase("idle");
-    setDraft(null);
-    setDesc("");
-    setNicheKey("");
+    if (!draft || accepting) return;
+    setAccepting(true);
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+      const { error } = await supabase.from("brand_assets").insert({
+        user_id: user.user.id,
+        brand_name: draft.brand_name,
+        source_description: draft.source_description,
+        brand_voice: draft.brand_voice,
+        color_palette: draft.color_palette,
+        font_choices: draft.font_choices,
+      });
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["brand_assets"] });
+      toast.success(`${draft.brand_name} saved to your brand library`);
+      setPhase("idle");
+      setDraft(null);
+      setDesc("");
+      setNicheKey("");
+    } finally {
+      setAccepting(false);
+    }
   }
 
   return (
@@ -186,7 +206,7 @@ function BrandPage() {
         {/* LEFT: input + library */}
         <div className="space-y-5">
           <Card className="p-5">
-            <label className="text-[13px] font-semibold text-foreground">
+            <label htmlFor="brand-niche" className="text-[13px] font-semibold text-foreground">
               Product / niche
             </label>
             <Select
@@ -201,7 +221,7 @@ function BrandPage() {
                 }
               }}
             >
-              <SelectTrigger className="mt-2 h-11">
+              <SelectTrigger id="brand-niche" className="mt-2 h-11">
                 <SelectValue placeholder="Choose a niche…" />
               </SelectTrigger>
               <SelectContent>
@@ -215,23 +235,26 @@ function BrandPage() {
             </Select>
             {nicheKey && (
               <>
-                <label className="text-[13px] font-semibold text-foreground mt-4 block">
+                <label htmlFor="brand-desc" className="text-[13px] font-semibold text-foreground mt-4 block">
                   {nicheKey === "other" ? "Describe your product or niche" : "Description (edit if needed)"}
                 </label>
                 <Textarea
+                  id="brand-desc"
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
                   placeholder="e.g. Premium home espresso gear for design-conscious enthusiasts who care about ritual and craft…"
                   className="mt-2 min-h-[120px] resize-none"
+                  maxLength={500}
                 />
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  The more specific, the better the result.
+                <p className="text-xs text-muted-foreground mt-1.5 flex justify-between">
+                  <span>The more specific, the better the result.</span>
+                  <span className={desc.length >= 450 ? "text-amber-500" : ""}>{desc.length}/500</span>
                 </p>
               </>
             )}
             <Button
               onClick={generate}
-              disabled={phase === "generating"}
+              disabled={phase === "generating" || !nicheKey || !desc.trim()}
               className="w-full mt-3.5 h-11 gap-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white"
             >
               {phase === "generating" ? (
@@ -250,10 +273,35 @@ function BrandPage() {
             <div className="flex items-center px-5 py-4 border-b">
               <h2 className="font-semibold text-[15px]">Brand library</h2>
               <span className="ml-auto text-xs text-muted-foreground">
-                {assets.length} saved
+                {assetsLoading ? "…" : `${assets.length} saved`}
               </span>
             </div>
-            {assets.length === 0 ? (
+            {assetsError ? (
+              <div className="px-5 py-8 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                <span>Failed to load brand library — check your connection.</span>
+              </div>
+            ) : assetsLoading ? (
+              <div className="divide-y">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3.5">
+                    <div className="flex">
+                      {[0, 1, 2, 3].map((j) => (
+                        <Skeleton
+                          key={j}
+                          className="w-[18px] h-[18px] rounded-[5px]"
+                          style={{ marginLeft: j ? -5 : 0 }}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <Skeleton className="h-4 w-28 rounded" />
+                      <Skeleton className="h-3 w-16 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : assets.length === 0 ? (
               <div className="px-5 py-10 text-center">
                 <div className="w-12 h-12 rounded-full bg-muted grid place-items-center mx-auto mb-3">
                   <Star className="h-5 w-5 text-muted-foreground" />
@@ -264,26 +312,43 @@ function BrandPage() {
               assets.map((b: any) => (
                 <div
                   key={b.id}
-                  className="flex items-center gap-3 px-5 py-3.5 border-b last:border-0 hover:bg-muted/40 cursor-pointer"
+                  className={`flex items-center gap-1 border-b last:border-0 transition-colors ${viewingLibraryId === b.id ? "bg-muted/40" : ""}`}
                 >
-                  <div className="flex">
-                    {(Array.isArray(b.color_palette) ? b.color_palette.slice(0, 4) : []).map(
-                      (c: string, i: number) => (
-                        <div
-                          key={i}
-                          className="w-[18px] h-[18px] rounded-[5px] border-[1.5px] border-white"
-                          style={{ background: c, marginLeft: i ? -5 : 0 }}
-                        />
-                      ),
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm truncate">{b.brand_name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {timeAgo(b.generated_at)}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className="flex items-center gap-3 flex-1 min-w-0 px-5 py-3.5 hover:bg-muted/40 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:rounded"
+                    onClick={() => loadFromLibrary(b)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); loadFromLibrary(b); } }}
+                  >
+                    <div className="flex shrink-0">
+                      {(Array.isArray(b.color_palette) ? b.color_palette.slice(0, 4) : []).map(
+                        (c: string, i: number) => (
+                          <div
+                            key={i}
+                            className="w-[18px] h-[18px] rounded-[5px] border-[1.5px] border-background"
+                            style={{ background: c, marginLeft: i ? -5 : 0 }}
+                          />
+                        ),
+                      )}
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm truncate" title={b.brand_name}>{b.brand_name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {timeAgo(b.generated_at)}
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                   </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+                  <button
+                    type="button"
+                    title="Delete"
+                    aria-label="Delete brand"
+                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted hover:text-red-500 text-muted-foreground/30 mr-2 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={() => setPendingDeleteBrandId(b.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               ))
             )}
@@ -295,12 +360,38 @@ function BrandPage() {
           {phase === "generating" ? (
             <GenLoader />
           ) : phase === "review" && draft ? (
-            <BrandReview draft={draft} onAccept={accept} onRegen={generate} />
+            <BrandReview
+              draft={draft}
+              onAccept={viewingLibraryId ? closeLibraryView : accept}
+              onRegen={generate}
+              accepting={accepting}
+              readOnly={!!viewingLibraryId}
+            />
           ) : (
             <EmptyState />
           )}
         </Card>
       </div>
+
+      <AlertDialog open={!!pendingDeleteBrandId} onOpenChange={(o) => { if (!o) setPendingDeleteBrandId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this brand?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the brand from your library. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (pendingDeleteBrandId) { deleteBrand(pendingDeleteBrandId); setPendingDeleteBrandId(null); } }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -335,10 +426,14 @@ function BrandReview({
   draft,
   onAccept,
   onRegen,
+  accepting,
+  readOnly,
 }: {
   draft: any;
   onAccept: () => void;
   onRegen: () => void;
+  accepting?: boolean;
+  readOnly?: boolean;
 }) {
   return (
     <div>
@@ -398,15 +493,25 @@ function BrandReview({
         </div>
 
         <div className="flex gap-2 pt-2 border-t">
-          <Button variant="outline" onClick={onRegen} className="gap-2">
-            <Sparkles className="h-4 w-4" /> Regenerate
-          </Button>
-          <Button
-            onClick={onAccept}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
-          >
-            Accept & save
-          </Button>
+          {readOnly ? (
+            <Button variant="outline" onClick={onAccept} className="flex-1">
+              Close
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={onRegen} disabled={accepting} className="gap-2">
+                <Sparkles className="h-4 w-4" /> Regenerate
+              </Button>
+              <Button
+                onClick={onAccept}
+                disabled={accepting}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
+              >
+                {accepting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Accept & save
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>

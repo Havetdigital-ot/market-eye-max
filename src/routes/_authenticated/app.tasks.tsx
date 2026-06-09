@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
@@ -10,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Filter,
   FileText,
@@ -20,6 +22,9 @@ import {
   ChevronDown,
   ChevronRight,
   RefreshCw,
+  ClipboardList,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -66,8 +71,8 @@ function summaryText(t: any) {
   const d = t.details ?? {};
   if (t.task_type === "Crawl Competitor") {
     const parts = [d.target];
-    if (typeof d.found === "number") parts.push(`${d.found} product(s)`);
-    if (typeof d.alerts === "number") parts.push(`${d.alerts} alert(s)`);
+    if (typeof d.found === "number") parts.push(`${d.found} product${d.found === 1 ? "" : "s"}`);
+    if (typeof d.alerts === "number") parts.push(`${d.alerts} alert${d.alerts === 1 ? "" : "s"}`);
     return parts.filter(Boolean).join(" · ") || "—";
   }
   if (t.task_type === "Scan Trends") {
@@ -90,8 +95,9 @@ function fmtTime(s: string) {
   }
 }
 
-function duration(a: string, b: string) {
-  const ms = new Date(b).getTime() - new Date(a).getTime();
+function duration(startIso: string, endMs: number | string) {
+  const end = typeof endMs === "number" ? endMs : new Date(endMs).getTime();
+  const ms = end - new Date(startIso).getTime();
   if (isNaN(ms) || ms < 0) return "—";
   if (ms < 1000) return `${ms}ms`;
   const s = Math.floor(ms / 1000);
@@ -100,21 +106,33 @@ function duration(a: string, b: string) {
   return `${m}m ${s % 60}s`;
 }
 
+function useNow(active: boolean) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+  return now;
+}
+
 function TasksPage() {
   const qc = useQueryClient();
   const [type, setType] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
 
-  const { data: tasks = [], isFetching, refetch } = useQuery({
+  const { data: tasks = [], isFetching, isLoading, isError, refetch } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("background_tasks")
         .select("*")
         .eq("dismissed", false)
         .order("created_at", { ascending: false })
         .limit(100);
+      if (error) throw error;
       return data ?? [];
     },
     refetchInterval: (q) => {
@@ -124,6 +142,11 @@ function TasksPage() {
     },
   });
 
+  const hasActiveTasks = tasks.some(
+    (t: any) => t.status === "Running" || t.status === "Pending"
+  );
+  const now = useNow(hasActiveTasks);
+
   const types = Array.from(new Set(tasks.map((t: any) => t.task_type)));
   const filtered = tasks.filter((t: any) => {
     if (type !== "all" && t.task_type !== type) return false;
@@ -132,9 +155,15 @@ function TasksPage() {
   });
 
   async function dismiss(id: string) {
-    await supabase.from("background_tasks").update({ dismissed: true }).eq("id", id);
-    qc.invalidateQueries({ queryKey: ["tasks"] });
-    qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
+    setDismissingId(id);
+    try {
+      const { error } = await supabase.from("background_tasks").update({ dismissed: true }).eq("id", id);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
+    } finally {
+      setDismissingId(null);
+    }
   }
 
   function toggle(id: string) {
@@ -150,7 +179,7 @@ function TasksPage() {
             Background jobs across crawling, trend scans, and AI generation. Click a row for full details.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-1.5">
           <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} /> Refresh
         </Button>
       </div>
@@ -187,7 +216,7 @@ function TasksPage() {
       </div>
 
       <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="grid grid-cols-[24px_1.4fr_0.9fr_2fr_0.8fr_0.8fr_0.7fr] gap-4 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
+        <div className="grid grid-cols-[24px_1.4fr_0.9fr_2fr_0.8fr_0.8fr_0.7fr] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground border-b bg-muted/30">
           <div></div>
           <div>Task</div>
           <div>Status</div>
@@ -197,14 +226,57 @@ function TasksPage() {
           <div className="text-right"></div>
         </div>
 
-        {filtered.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-muted-foreground">No tasks.</div>
+        {isError ? (
+          <div className="py-14 flex flex-col items-center gap-3 text-center">
+            <AlertCircle className="h-6 w-6 text-destructive" />
+            <div>
+              <div className="font-medium text-sm">Failed to load tasks</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Check your connection and try again.</div>
+            </div>
+            <Button size="sm" variant="outline" className="gap-1.5 mt-1" onClick={() => refetch()}>
+              <RefreshCw className="h-3.5 w-3.5" /> Try again
+            </Button>
+          </div>
+        ) : isLoading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="grid grid-cols-[24px_1.4fr_0.9fr_2fr_0.8fr_0.8fr_0.7fr] gap-4 px-6 py-4 items-center border-b last:border-b-0"
+            >
+              <Skeleton className="h-4 w-4 rounded" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-9 rounded-[10px] shrink-0" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-12" />
+              <div />
+            </div>
+          ))
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="w-12 h-12 rounded-full bg-muted grid place-items-center mx-auto mb-3">
+              <ClipboardList className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="font-medium text-sm">
+              {tasks.length === 0 ? "No tasks yet" : "No tasks match your filters"}
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {tasks.length === 0
+                ? "Tasks appear here when you crawl competitors, scan trends, or generate content."
+                : "Try changing the task type or status filter above."}
+            </div>
+          </div>
         ) : (
           filtered.map((t: any) => {
             const Icon = TYPE_ICON[t.task_type] ?? FileText;
             const failed = t.status === "Failed";
+            const isActive = t.status === "Running" || t.status === "Pending";
             const isOpen = !!expanded[t.id];
             const Chevron = isOpen ? ChevronDown : ChevronRight;
+            const taskDuration = duration(t.created_at, isActive ? now : t.updated_at);
             return (
               <div key={t.id} className="border-b last:border-b-0">
                 <button
@@ -228,16 +300,23 @@ function TasksPage() {
                   <div className="text-xs text-muted-foreground font-mono">
                     {formatDistanceToNow(new Date(t.created_at), { addSuffix: true })}
                   </div>
-                  <div className="text-xs text-muted-foreground font-mono">
-                    {duration(t.created_at, t.updated_at)}
+                  <div className="text-xs text-muted-foreground font-mono tabular-nums">
+                    {taskDuration}
                   </div>
                   <div
                     className="flex justify-end"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {t.status !== "Running" && t.status !== "Pending" && (
-                      <Button variant="outline" size="sm" onClick={() => dismiss(t.id)}>
-                        Dismiss
+                    {!isActive && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={dismissingId === t.id}
+                        onClick={() => dismiss(t.id)}
+                        className="gap-1.5"
+                      >
+                        {dismissingId === t.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        {dismissingId === t.id ? "Dismissing…" : "Dismiss"}
                       </Button>
                     )}
                   </div>
@@ -251,11 +330,7 @@ function TasksPage() {
                       <Field label="Status" value={t.status} />
                       <Field label="Created" value={fmtTime(t.created_at)} mono />
                       <Field label="Last update" value={fmtTime(t.updated_at)} mono />
-                      <Field
-                        label="Duration"
-                        value={duration(t.created_at, t.updated_at)}
-                        mono
-                      />
+                      <Field label="Duration" value={taskDuration} mono />
                     </div>
 
                     {t.error_message && (
@@ -263,7 +338,7 @@ function TasksPage() {
                         <div className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase mb-1.5">
                           Error
                         </div>
-                        <pre className="text-xs bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 rounded-md p-3 whitespace-pre-wrap break-all border border-red-200/60 dark:border-red-900/40">
+                        <pre className="text-xs bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 rounded-md p-3 whitespace-pre-wrap break-all border border-red-200/60 dark:border-red-900/40 max-h-[300px] overflow-y-auto">
                           {t.error_message}
                         </pre>
                       </div>

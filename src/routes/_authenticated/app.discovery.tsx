@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { startTrendScan } from "@/lib/api/firecrawl";
-import { Check, ExternalLink, Search, RefreshCw } from "lucide-react";
+import { Check, ExternalLink, Search, RefreshCw, Plus, AlertCircle, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
 type Platform = "TikTok" | "Amazon" | "Reddit" | "Other";
@@ -61,15 +62,17 @@ function DiscoveryPage() {
   });
   const [running, setRunning] = useState(false);
   const [savedOnly, setSavedOnly] = useState(false);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
-  const { data: trends = [] } = useQuery({
+  const { data: trends = [], isLoading, isError: trendsError } = useQuery({
     queryKey: ["trends"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("trends")
         .select("*")
         .order("discovered_at", { ascending: false })
         .limit(50);
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -79,6 +82,7 @@ function DiscoveryPage() {
   async function scan(e: React.FormEvent) {
     e.preventDefault();
     const kws = keywords.split(",").map((k) => k.trim()).filter(Boolean);
+    if (kws.length === 0) return toast.error("Enter at least one keyword");
     const plats = PLATFORMS.filter((p) => selected[p]);
     if (plats.length === 0) return toast.error("Select at least one platform");
     setRunning(true);
@@ -93,8 +97,14 @@ function DiscoveryPage() {
   }
 
   async function toggleSave(id: string, saved: boolean) {
-    await supabase.from("trends").update({ saved: !saved }).eq("id", id);
-    qc.invalidateQueries({ queryKey: ["trends"] });
+    setSavingId(id);
+    try {
+      const { error } = await supabase.from("trends").update({ saved: !saved }).eq("id", id);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["trends"] });
+    } finally {
+      setSavingId(null);
+    }
   }
 
   return (
@@ -110,11 +120,14 @@ function DiscoveryPage() {
       <div className="rounded-xl border bg-card p-5">
         <form onSubmit={scan} className="flex flex-col lg:flex-row gap-5 lg:items-end">
           <div className="flex-1 min-w-0 space-y-2">
-            <label className="text-sm font-semibold">Keywords</label>
+            <label htmlFor="discovery-keywords" className="text-sm font-semibold">Keywords</label>
             <Input
+              id="discovery-keywords"
               placeholder="Enter keywords to scan…"
               value={keywords}
+              maxLength={200}
               onChange={(e) => setKeywords(e.target.value)}
+              disabled={running}
               className="h-11"
             />
             <p className="text-xs text-muted-foreground">
@@ -122,7 +135,7 @@ function DiscoveryPage() {
             </p>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-semibold">Platforms</label>
+            <p className="text-sm font-semibold">Platforms</p>
             <div className="flex flex-wrap gap-2">
               {PLATFORMS.map((p) => {
                 const on = selected[p];
@@ -131,7 +144,8 @@ function DiscoveryPage() {
                     type="button"
                     key={p}
                     onClick={() => setSelected((s) => ({ ...s, [p]: !s[p] }))}
-                    className={`inline-flex items-center gap-1.5 px-3.5 h-9 rounded-full text-sm font-medium border transition-colors ${
+                    disabled={running}
+                    className={`inline-flex items-center gap-1.5 px-3.5 h-9 rounded-full text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                       on
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-background border-border hover:bg-muted"
@@ -157,30 +171,52 @@ function DiscoveryPage() {
         <button
           type="button"
           onClick={() => setSavedOnly((s) => !s)}
+          aria-pressed={savedOnly}
+          aria-label={savedOnly ? "Show all trends" : "Show saved trends only"}
           className={`inline-flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium border transition-colors ${
             savedOnly
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-background border-border hover:bg-muted"
           }`}
         >
-          <Check className="h-3.5 w-3.5" />
+          {savedOnly && <Check className="h-3.5 w-3.5" />}
           Saved only
         </button>
       </div>
 
       {/* Trends table */}
       <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="grid grid-cols-[1.6fr_0.7fr_1fr_1fr_1fr_0.7fr_0.6fr] gap-4 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
+        <div className="grid grid-cols-[1.6fr_0.7fr_1fr_1fr_1fr_0.7fr_0.6fr] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground border-b bg-muted/30">
           <div>Product</div>
           <div>Platform</div>
-          <div>Trend</div>
+          <div>Trend score</div>
           <div>Virality</div>
           <div>Seasonality</div>
           <div>Found</div>
           <div className="text-right"></div>
         </div>
 
-        {rows.length === 0 ? (
+        {trendsError ? (
+          <div className="px-6 py-12 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <span>Failed to load trends — check your connection.</span>
+          </div>
+        ) : isLoading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="grid grid-cols-[1.6fr_0.7fr_1fr_1fr_1fr_0.7fr_0.6fr] gap-4 px-6 py-4 items-center border-b last:border-b-0"
+            >
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-3 w-28 rounded-full" />
+              <Skeleton className="h-3 w-24 rounded-full" />
+              <Skeleton className="h-3 w-20 rounded-full" />
+              <Skeleton className="h-4 w-14" />
+              <div />
+            </div>
+          ))
+        ) : rows.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-muted-foreground">
             {savedOnly ? "No saved trends yet." : "No trends found — run a scan above."}
           </div>
@@ -191,7 +227,7 @@ function DiscoveryPage() {
               className="grid grid-cols-[1.6fr_0.7fr_1fr_1fr_1fr_0.7fr_0.6fr] gap-4 px-6 py-4 items-center border-b last:border-b-0 hover:bg-muted/30 transition-colors"
             >
               <div className="min-w-0">
-                <div className="font-medium truncate">{t.product_name}</div>
+                <div className="font-medium truncate" title={t.product_name}>{t.product_name}</div>
                 {t.source_url && (
                   <a
                     href={t.source_url}
@@ -224,13 +260,22 @@ function DiscoveryPage() {
                 <button
                   type="button"
                   onClick={() => toggleSave(t.id, t.saved)}
+                  disabled={savingId === t.id}
                   className={`inline-flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium border transition-colors ${
-                    t.saved
+                    savingId === t.id
+                      ? "opacity-50 cursor-not-allowed border-border"
+                      : t.saved
                       ? "bg-primary/10 border-primary/20 text-primary"
                       : "bg-background border-border hover:bg-muted"
                   }`}
                 >
-                  {t.saved ? <Check className="h-3.5 w-3.5" /> : <span className="text-base leading-none">+</span>}
+                  {savingId === t.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : t.saved ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5" />
+                  )}
                   {t.saved ? "Saved" : "Save"}
                 </button>
               </div>

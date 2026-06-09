@@ -5,45 +5,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription,
+  DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { startCompetitorCrawl } from "@/lib/api/firecrawl";
 import {
-  Trash2,
-  RefreshCw,
-  Pause,
-  Play,
-  Plus,
-  Loader2,
-  AlertCircle,
-  ChevronDown,
-  ChevronRight,
-  ExternalLink,
-  Package,
-  Check,
-  Search,
-  Zap,
-  Database,
-  AlertTriangle,
+  Trash2, RefreshCw, Pause, Play, Plus,
+  Loader2, AlertCircle, ChevronDown, ChevronRight,
+  ExternalLink, Package, Check, Search, Zap, Database, Radar, AlertTriangle,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/app/competitors")({
@@ -57,57 +36,21 @@ function avatarGradient(name: string) {
 }
 
 function hostOf(u: string) {
-  try {
-    return new URL(u).hostname.replace("www.", "");
-  } catch {
-    return u;
-  }
+  try { return new URL(u).hostname.replace("www.", ""); } catch { return u; }
 }
 
-function isStaleCompetitor(
-  c: {
-    status: string;
-    last_crawled_at: string | null;
-  },
-  productCount: number,
-): boolean {
-  if (c.status !== "Active") return false;
-  if (productCount > 0) return false;
-  if (!c.last_crawled_at) return true;
-  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  return new Date(c.last_crawled_at).getTime() < sevenDaysAgo;
-}
-
-function StatusPill({ status, stale }: { status: string; stale?: boolean }) {
+function StatusPill({ status }: { status: string }) {
   const map: Record<string, { dot: string; cls: string }> = {
-    Active: {
-      dot: "bg-emerald-500",
-      cls: "text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40",
-    },
+    Active: { dot: "bg-emerald-500", cls: "text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40" },
     Paused: { dot: "bg-muted-foreground", cls: "text-muted-foreground bg-muted" },
-    Error: {
-      dot: "bg-red-500",
-      cls: "text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40",
-    },
+    Error:  { dot: "bg-red-500",          cls: "text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40" },
   };
   const s = map[status] ?? map.Paused;
   return (
-    <div className="flex items-center gap-2">
-      <span
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${s.cls}`}
-      >
-        <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-        {status}
-      </span>
-      {stale && (
-        <span
-          title="No products — consider recrawling"
-          className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-amber-100 dark:bg-amber-950/50"
-        >
-          <AlertTriangle className="h-3 w-3 text-amber-500" />
-        </span>
-      )}
-    </div>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${s.cls}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      {status}
+    </span>
   );
 }
 
@@ -116,20 +59,19 @@ function StatusPill({ status, stale }: { status: string; stale?: boolean }) {
 const STAGE_ORDER = ["mapping", "extracting", "saving", "done"] as const;
 type Stage = (typeof STAGE_ORDER)[number];
 
-const STAGE_META: Record<
-  Stage,
-  { icon: React.FC<{ className?: string }>; label: (d: any) => string }
-> = {
-  mapping: { icon: Search, label: (d) => `Discovering pages on ${d?.domain ?? "site"}…` },
-  extracting: { icon: Zap, label: (d) => `Extracting products from ${d?.urlCount ?? "?"} pages…` },
-  saving: { icon: Database, label: (d) => `Saving ${d?.found ?? "?"} products to database…` },
-  done: { icon: Check, label: (d) => `Done — ${d?.found ?? 0} products found` },
+const STAGE_META: Record<Stage, { icon: React.FC<any>; label: (d: any) => string }> = {
+  mapping:    { icon: Search,   label: (d) => `Discovering pages on ${d?.domain ?? "site"}…` },
+  extracting: { icon: Zap,      label: (d) => `Extracting products from ${d?.urlCount ?? "?"} pages…` },
+  saving:     { icon: Database, label: (d) => `Saving ${d?.found ?? "?"} products to database…` },
+  done:       { icon: Check,    label: (d) => `Done — ${d?.found ?? 0} products found` },
 };
 
 function CrawlLogPanel({
   task,
+  onRetry,
 }: {
   task: { status: string; error_message?: string | null; details: any };
+  onRetry?: () => void;
 }) {
   const details = task.details ?? {};
   const currentStage = (details.stage ?? "mapping") as Stage;
@@ -140,12 +82,17 @@ function CrawlLogPanel({
     return (
       <div className="px-6 py-6 bg-red-50/50 dark:bg-red-950/20 border-t flex items-start gap-3">
         <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-        <div>
+        <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-red-700 dark:text-red-300">Crawl failed</p>
-          <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5 font-mono">
+          <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5 font-mono break-all">
             {task.error_message ?? "Unknown error"}
           </p>
         </div>
+        {onRetry && (
+          <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={onRetry}>
+            <RefreshCw className="h-3.5 w-3.5" /> Retry crawl
+          </Button>
+        )}
       </div>
     );
   }
@@ -186,11 +133,11 @@ function CrawlLogPanel({
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <span
-                  className={
-                    isDone ? "text-emerald-400" : isCurrent ? "text-blue-300" : "text-white/30"
-                  }
-                >
+                <span className={
+                  isDone ? "text-emerald-400" :
+                  isCurrent ? "text-blue-300" :
+                  "text-white/30"
+                }>
                   {meta.label(details)}
                 </span>
                 {isCurrent && stage === "extracting" && urls.length > 0 && (
@@ -198,7 +145,7 @@ function CrawlLogPanel({
                     {urls.map((u, i) => (
                       <div key={i} className="flex items-center gap-2 text-[11px] text-white/50">
                         <span className="text-blue-500/60">→</span>
-                        <span className="truncate">{u}</span>
+                        <span className="truncate" title={u}>{u}</span>
                       </div>
                     ))}
                     {(details.urlCount ?? 0) > urls.length && (
@@ -225,16 +172,16 @@ function CrawlLogPanel({
 // ── Product grid ──────────────────────────────────────────────────────────────
 
 function ProductGrid({ competitorId, isActive }: { competitorId: string; isActive?: boolean }) {
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading, isError: productsError } = useQuery({
     queryKey: ["competitor-products", competitorId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("competitor_products")
-        .select(
-          `id, name, description, image_url, category, sku, url, price_history ( price, currency, timestamp )`,
-        )
+        .select(`id, name, description, image_url, category, sku, url, price_history ( price, currency, timestamp )`)
         .eq("competitor_id", competitorId)
-        .order("name");
+        .order("name")
+        .limit(500);
+      if (error) throw error;
       return (data ?? []).map((p) => {
         const sorted = [...(p.price_history ?? [])].sort(
           (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
@@ -254,6 +201,15 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
     );
   }
 
+  if (productsError) {
+    return (
+      <div className="px-6 py-10 flex flex-col items-center gap-2 bg-muted/20 border-t text-sm text-muted-foreground">
+        <AlertCircle className="h-5 w-5 text-destructive" />
+        <span>Failed to load products — check your connection.</span>
+      </div>
+    );
+  }
+
   if (products.length === 0) {
     return (
       <div className="px-6 py-10 flex flex-col items-center gap-2 bg-muted/20 border-t text-sm text-muted-foreground">
@@ -266,10 +222,7 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
   return (
     <div className="px-6 py-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 bg-muted/20 border-t">
       {products.map((p) => (
-        <div
-          key={p.id}
-          className="group flex flex-col rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow"
-        >
+        <div key={p.id} className="group flex flex-col rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow">
           <div className="relative aspect-square bg-muted overflow-hidden">
             {p.image_url ? (
               <img
@@ -278,8 +231,7 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
-                  const fallback = (e.target as HTMLImageElement)
-                    .nextElementSibling as HTMLElement | null;
+                  const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement | null;
                   if (fallback) fallback.style.display = "flex";
                 }}
               />
@@ -300,6 +252,7 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
                 href={p.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={`View ${p.name} on competitor site`}
                 onClick={(e) => e.stopPropagation()}
                 className="absolute top-2 right-2 h-6 w-6 rounded bg-black/50 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               >
@@ -310,9 +263,7 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
           <div className="p-3 flex flex-col gap-1 flex-1">
             <p className="text-xs font-medium line-clamp-2 leading-snug">{p.name}</p>
             {p.description && (
-              <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">
-                {p.description}
-              </p>
+              <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">{p.description}</p>
             )}
             {p.latestPrice && (
               <p className="mt-auto pt-1 text-sm font-semibold">
@@ -320,7 +271,9 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
                 {Number(p.latestPrice.price).toFixed(2)}
               </p>
             )}
-            {p.sku && <p className="text-[10px] text-muted-foreground/70 font-mono">SKU {p.sku}</p>}
+            {p.sku && (
+              <p className="text-[10px] text-muted-foreground/70 font-mono">SKU {p.sku}</p>
+            )}
           </div>
         </div>
       ))}
@@ -335,24 +288,19 @@ function CompetitorsPage() {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-
-  // Bulk select state
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-
-  // Delete confirmation state
-  // deleteTarget: single competitor id to delete, or null
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  // bulkDeleteOpen: whether the bulk delete dialog is open
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-
-  // Search / filter
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: competitors = [] } = useQuery({
+  const { data: competitors = [], isLoading: competitorsLoading, isError: competitorsError } = useQuery({
     queryKey: ["competitors"],
     queryFn: async () => {
-      const { data } = await supabase.from("competitors").select("*").order("display_name");
+      const { data, error } = await supabase.from("competitors").select("*").order("display_name").limit(100);
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -360,7 +308,7 @@ function CompetitorsPage() {
   const { data: productCounts = [] } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
-      const { data } = await supabase.from("competitor_products").select("id, competitor_id");
+      const { data } = await supabase.from("competitor_products").select("id, competitor_id").limit(10000);
       return data ?? [];
     },
   });
@@ -385,18 +333,12 @@ function CompetitorsPage() {
     },
   });
 
-  // Realtime: watch background_tasks for crawl progress updates
   useEffect(() => {
     const channel = supabase
       .channel("crawl-tasks-live")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "background_tasks",
-          filter: "task_type=eq.Crawl Competitor",
-        },
+        { event: "*", schema: "public", table: "background_tasks", filter: "task_type=eq.Crawl Competitor" },
         (payload) => {
           qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
           const row = payload.new as any;
@@ -413,12 +355,9 @@ function CompetitorsPage() {
         },
       )
       .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [qc]);
 
-  // When polling detects a completed task, invalidate the products queries
   const prevTaskStatuses = useRef<Map<string, string>>(new Map());
   useEffect(() => {
     for (const task of crawlTasks) {
@@ -434,34 +373,41 @@ function CompetitorsPage() {
     }
   }, [crawlTasks, qc]);
 
-  // Latest task per competitor
   const taskByCompetitor = new Map<string, (typeof crawlTasks)[number]>();
   for (const task of crawlTasks) {
     const cid = (task.details as any)?.competitorId;
     if (cid && !taskByCompetitor.has(cid)) taskByCompetitor.set(cid, task);
   }
 
-  // Filtered competitors by search query
-  const filteredCompetitors = searchQuery.trim()
-    ? competitors.filter((c) => {
-        const q = searchQuery.toLowerCase();
-        return c.display_name.toLowerCase().includes(q) || hostOf(c.url).toLowerCase().includes(q);
-      })
+  const q = searchQuery.trim().toLowerCase();
+  const filtered = q
+    ? competitors.filter((c: any) =>
+        c.display_name.toLowerCase().includes(q) || hostOf(c.url).toLowerCase().includes(q)
+      )
     : competitors;
 
-  function toggleExpand(id: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+  const STALE_MS = 7 * 24 * 60 * 60 * 1000;
+  function isStale(c: any, count: number, isCrawling: boolean) {
+    if (isCrawling || c.status !== "Active" || count > 0) return false;
+    const ref = c.last_crawled_at ?? c.created_at;
+    return ref ? Date.now() - new Date(ref).getTime() > STALE_MS : false;
   }
 
-  // ── Selection helpers ────────────────────────────────────────────────────────
+  const visibleIds = filtered.map((c: any) => c.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id: string) => selected.has(id));
+  const someVisibleSelected = visibleIds.some((id: string) => selected.has(id));
+
+  function toggleSelectAll() {
+    if (allVisibleSelected) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        visibleIds.forEach((id: string) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelected((prev) => new Set([...prev, ...visibleIds]));
+    }
+  }
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -471,25 +417,17 @@ function CompetitorsPage() {
     });
   }
 
-  function toggleSelectAll() {
-    const visibleIds = filteredCompetitors.map((c) => c.id);
-    const allSelected = visibleIds.every((id) => selected.has(id));
-    if (allSelected) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(visibleIds));
-    }
+  function toggleExpand(id: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   }
-
-  function clearSelection() {
-    setSelected(new Set());
-  }
-
-  // ── Mutations ────────────────────────────────────────────────────────────────
 
   async function addCompetitor(e: React.FormEvent) {
     e.preventDefault();
-    if (!url) return;
+    if (!url || adding) return;
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
     let display = name.trim();
@@ -498,63 +436,59 @@ function CompetitorsPage() {
     } catch {
       return toast.error("Enter a valid URL");
     }
-    const { data: inserted, error } = await supabase
-      .from("competitors")
-      .insert({ user_id: user.user.id, display_name: display, url, status: "Active" })
-      .select("id")
-      .single();
-    if (error || !inserted) return toast.error(error?.message ?? "Failed");
-    setName("");
-    setUrl("");
-    setOpen(false);
-    qc.invalidateQueries({ queryKey: ["competitors"] });
-    setExpanded((prev) => new Set([...prev, inserted.id]));
-    toast.success("Competitor added — crawl starting…");
+    setAdding(true);
     try {
-      await startCompetitorCrawl(inserted.id);
-      qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
-    } catch (e: any) {
-      toast.error(e?.message ?? "Crawl failed to start");
+      const { data: inserted, error } = await supabase
+        .from("competitors")
+        .insert({ user_id: user.user.id, display_name: display, url, status: "Active" })
+        .select("id")
+        .single();
+      if (error || !inserted) return toast.error(error?.message ?? "Failed");
+      setName(""); setUrl(""); setOpen(false);
+      qc.invalidateQueries({ queryKey: ["competitors"] });
+      setExpanded((prev) => new Set([...prev, inserted.id]));
+      toast.success("Competitor added — crawl starting…");
+      try {
+        await startCompetitorCrawl(inserted.id);
+        qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
+      } catch (e: any) {
+        toast.error(e?.message ?? "Crawl failed to start");
+      }
+    } finally {
+      setAdding(false);
     }
   }
 
   async function toggleStatus(id: string, status: string) {
-    const next = status === "Active" ? "Paused" : "Active";
-    await supabase.from("competitors").update({ status: next }).eq("id", id);
-    qc.invalidateQueries({ queryKey: ["competitors"] });
+    if (togglingId === id) return;
+    setTogglingId(id);
+    try {
+      const next = status === "Active" ? "Paused" : "Active";
+      const { error } = await supabase.from("competitors").update({ status: next }).eq("id", id);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["competitors"] });
+    } finally {
+      setTogglingId(null);
+    }
   }
 
-  async function confirmDelete(id: string) {
-    await supabase.from("competitors").delete().eq("id", id);
+  async function remove(id: string) {
+    const { error } = await supabase.from("competitors").delete().eq("id", id);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["competitors"] });
-    qc.invalidateQueries({ queryKey: ["products"] });
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-    setDeleteTarget(null);
+    setExpanded((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
     toast.success("Removed");
   }
 
-  async function confirmBulkDelete() {
+  async function bulkDelete() {
     const ids = Array.from(selected);
-    await supabase.from("competitors").delete().in("id", ids);
+    const { error } = await supabase.from("competitors").delete().in("id", ids);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["competitors"] });
     qc.invalidateQueries({ queryKey: ["products"] });
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      ids.forEach((id) => next.delete(id));
-      return next;
-    });
     setSelected(new Set());
-    setBulkDeleteOpen(false);
-    toast.success(`Removed ${ids.length} competitor${ids.length === 1 ? "" : "s"}`);
+    toast.success(`Removed ${ids.length} competitor${ids.length > 1 ? "s" : ""}`);
   }
 
   async function recrawl(id: string) {
@@ -568,20 +502,8 @@ function CompetitorsPage() {
     }
   }
 
-  // Derived selection state for the header checkbox
-  const visibleIds = filteredCompetitors.map((c) => c.id);
-  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
-  const someVisibleSelected = visibleIds.some((id) => selected.has(id));
-  const selectedCount = selected.size;
-
-  // The competitor being targeted for single delete (for dialog label)
-  const deleteTargetCompetitor = deleteTarget
-    ? competitors.find((c) => c.id === deleteTarget)
-    : null;
-
   return (
     <div className="space-y-6">
-      {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight">Competitor Monitor</h1>
@@ -590,14 +512,13 @@ function CompetitorsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {/* Search input */}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Filter competitors…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-9 w-52 text-sm"
+              placeholder="Search competitors…"
+              className="pl-8 h-9 w-48 text-sm"
             />
           </div>
           <Button onClick={() => setOpen(true)} className="gap-1.5">
@@ -606,42 +527,34 @@ function CompetitorsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border bg-card overflow-hidden">
-        {/* Bulk action bar */}
-        {selectedCount > 0 && (
-          <div className="flex items-center gap-3 px-4 py-2.5 bg-muted/50 border-b text-sm">
-            <span className="font-medium text-foreground">{selectedCount} selected</span>
-            <span className="text-muted-foreground">·</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
-              onClick={() => setBulkDeleteOpen(true)}
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-              Delete selected
-            </Button>
-            <button
-              className="text-muted-foreground hover:text-foreground underline underline-offset-2 text-xs transition-colors"
-              onClick={clearSelection}
-            >
-              Clear selection
-            </button>
-          </div>
-        )}
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg border bg-muted/50 text-sm">
+          <span className="font-medium">{selected.size} selected</span>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="gap-1.5 h-7"
+            onClick={() => setBulkDeleteOpen(true)}
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete selected
+          </Button>
+          <button
+            className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => setSelected(new Set())}
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
 
+      <div className="rounded-xl border bg-card overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[40px_2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-4 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
-          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+        <div className="grid grid-cols-[auto_2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-4 py-3 text-xs font-medium text-muted-foreground border-b bg-muted/30 items-center">
+          <div className="flex items-center justify-center w-8">
             <Checkbox
               checked={allVisibleSelected}
-              data-state={
-                someVisibleSelected && !allVisibleSelected
-                  ? "indeterminate"
-                  : allVisibleSelected
-                    ? "checked"
-                    : "unchecked"
-              }
+              data-state={someVisibleSelected && !allVisibleSelected ? "indeterminate" : undefined}
               onCheckedChange={toggleSelectAll}
               aria-label="Select all"
             />
@@ -653,51 +566,83 @@ function CompetitorsPage() {
           <div className="text-right">Actions</div>
         </div>
 
-        {filteredCompetitors.length === 0 ? (
+        {competitorsError ? (
+          <div className="px-6 py-12 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <span>Failed to load competitors — check your connection.</span>
+          </div>
+        ) : competitorsLoading ? (
+          <div className="divide-y">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="grid grid-cols-[auto_2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-4 py-4 items-center">
+                <div className="w-8" />
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
+                  <div className="space-y-1 min-w-0">
+                    <Skeleton className="h-4 w-28 rounded" />
+                    <Skeleton className="h-3 w-36 rounded" />
+                  </div>
+                </div>
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-4 w-8 rounded" />
+                <Skeleton className="h-4 w-24 rounded" />
+                <div className="flex justify-end gap-1">
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : competitors.length === 0 ? (
+          <div className="px-6 py-14 text-center">
+            <div className="w-12 h-12 rounded-full bg-muted grid place-items-center mx-auto mb-3">
+              <Radar className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="font-medium text-sm">No competitors yet</div>
+            <div className="text-xs text-muted-foreground mt-0.5 mb-4">
+              Add a competitor URL to start tracking products and prices.
+            </div>
+            <Button size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
+              <Plus className="h-3.5 w-3.5" /> Add competitor
+            </Button>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-muted-foreground">
-            {searchQuery.trim()
-              ? `No results for "${searchQuery}"`
-              : "No competitors yet — add one to get started."}
+            No competitors match <span className="font-medium">"{searchQuery}"</span>
           </div>
         ) : (
-          filteredCompetitors.map((c) => {
+          filtered.map((c: any) => {
             const count = productCounts.filter((p) => p.competitor_id === c.id).length;
             const activeTask = taskByCompetitor.get(c.id);
             const isCrawling = activeTask?.status === "Running";
             const isExpanded = expanded.has(c.id);
             const isSelected = selected.has(c.id);
-            const stale = isStaleCompetitor(c, count);
-            const showInlineCrawl = c.status === "Active" && count === 0 && !isCrawling;
+            const stale = isStale(c, count, isCrawling);
+            const showCrawlNow = c.status === "Active" && count === 0 && !isCrawling;
 
             return (
               <div key={c.id} className="border-b last:border-b-0">
                 <div
-                  className={`grid grid-cols-[40px_2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-4 py-4 items-center hover:bg-muted/30 transition-colors cursor-pointer select-none ${isSelected ? "bg-muted/20" : ""}`}
+                  role="button"
+                  tabIndex={0}
+                  className={`grid grid-cols-[auto_2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-4 py-4 items-center hover:bg-muted/30 transition-colors cursor-pointer select-none ${isSelected ? "bg-muted/40" : ""}`}
                   onClick={() => toggleExpand(c.id)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleExpand(c.id); } }}
+                  aria-expanded={isExpanded}
+                  aria-label={`${isExpanded ? "Collapse" : "Expand"} ${c.display_name} details`}
                 >
                   {/* Checkbox */}
                   <div
-                    className="flex items-center justify-center"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleSelect(c.id);
-                    }}
+                    className="flex items-center justify-center w-8"
+                    onClick={(e) => { e.stopPropagation(); toggleSelect(c.id); }}
                   >
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => toggleSelect(c.id)}
-                      aria-label={`Select ${c.display_name}`}
-                    />
+                    <Checkbox checked={isSelected} aria-label={`Select ${c.display_name}`} />
                   </div>
 
                   {/* Name + chevron */}
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="shrink-0 text-muted-foreground/40">
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
+                      {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </span>
                     <div
                       className="h-9 w-9 rounded-[10px] flex items-center justify-center text-white text-sm font-semibold shrink-0"
@@ -706,8 +651,16 @@ function CompetitorsPage() {
                       {c.display_name[0]?.toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-medium truncate">{c.display_name}</div>
-                      <div className="text-xs text-muted-foreground truncate">{hostOf(c.url)}</div>
+                      <div className="font-medium truncate flex items-center gap-1.5" title={c.display_name}>
+                        {c.display_name}
+                        {stale && (
+                          <AlertTriangle
+                            className="h-3.5 w-3.5 text-amber-500 shrink-0"
+                            title="No products crawled in 7+ days"
+                          />
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate" title={c.url}>{hostOf(c.url)}</div>
                     </div>
                   </div>
 
@@ -719,82 +672,68 @@ function CompetitorsPage() {
                         Crawling…
                       </span>
                     ) : (
-                      <StatusPill status={c.status} stale={stale} />
+                      <StatusPill status={c.status} />
                     )}
                   </div>
 
-                  {/* Product count + inline crawl button */}
-                  <div className="flex items-center gap-2">
+                  {/* Count + inline crawl shortcut */}
+                  <div
+                    className="flex items-center gap-2"
+                    onClick={(e) => { if (showCrawlNow) e.stopPropagation(); }}
+                  >
                     <span className="font-mono font-semibold text-sm">
-                      {isCrawling ? (
-                        <span className="text-muted-foreground animate-pulse">…</span>
-                      ) : (
-                        count
-                      )}
+                      {isCrawling ? <span className="text-muted-foreground animate-pulse">…</span> : count}
                     </span>
-                    {showInlineCrawl && (
+                    {showCrawlNow && (
                       <Button
-                        variant="outline"
                         size="sm"
-                        className="h-6 px-2 text-[11px] font-medium"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          recrawl(c.id);
-                        }}
+                        variant="outline"
+                        className="h-6 px-2 text-[11px] shrink-0"
+                        onClick={() => recrawl(c.id)}
                         title="Crawl now"
                       >
-                        Crawl now
+                        Crawl
                       </Button>
                     )}
                   </div>
 
                   {/* Last crawled */}
                   <div className="text-xs text-muted-foreground">
-                    {isCrawling ? (
-                      <span className="text-blue-500 text-xs animate-pulse">crawling now</span>
-                    ) : c.last_crawled_at ? (
-                      formatDistanceToNow(new Date(c.last_crawled_at), { addSuffix: true })
-                    ) : (
-                      "never"
-                    )}
+                    {isCrawling
+                      ? <span className="text-blue-500 text-xs animate-pulse">crawling now</span>
+                      : c.last_crawled_at
+                        ? formatDistanceToNow(new Date(c.last_crawled_at), { addSuffix: true })
+                        : "never"}
                   </div>
 
                   {/* Actions */}
                   <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     {c.status === "Active" && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
+                      <Button size="icon" variant="ghost" className="h-8 w-8"
                         onClick={() => recrawl(c.id)}
                         disabled={isCrawling}
-                        title={isCrawling ? "Crawl in progress" : "Recrawl"}
+                        title={isCrawling ? `Crawling ${c.display_name}…` : `Recrawl ${c.display_name}`}
+                        aria-label={isCrawling ? `Crawling ${c.display_name}…` : `Recrawl ${c.display_name}`}
                       >
-                        <RefreshCw
-                          className={`h-4 w-4 ${isCrawling ? "animate-spin opacity-40" : ""}`}
-                        />
+                        <RefreshCw className={`h-4 w-4 ${isCrawling ? "animate-spin opacity-40" : ""}`} />
                       </Button>
                     )}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
+                    <Button size="icon" variant="ghost" className="h-8 w-8"
                       onClick={() => toggleStatus(c.id, c.status)}
-                      disabled={isCrawling}
-                      title={c.status === "Active" ? "Pause" : "Resume"}
+                      disabled={isCrawling || togglingId === c.id}
+                      title={c.status === "Active" ? `Pause ${c.display_name}` : `Resume ${c.display_name}`}
+                      aria-label={c.status === "Active" ? `Pause ${c.display_name}` : `Resume ${c.display_name}`}
                     >
-                      {c.status === "Active" ? (
-                        <Pause className="h-4 w-4" />
-                      ) : (
-                        <Play className="h-4 w-4" />
-                      )}
+                      {togglingId === c.id
+                        ? <Loader2 className="h-4 w-4 animate-spin opacity-60" />
+                        : c.status === "Active"
+                        ? <Pause className="h-4 w-4" />
+                        : <Play className="h-4 w-4" />}
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 hover:text-red-500"
-                      onClick={() => setDeleteTarget(c.id)}
-                      title="Delete"
+                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-red-500"
+                      onClick={() => setPendingDeleteId(c.id)}
+                      title={`Delete ${c.display_name}`}
+                      aria-label={`Delete ${c.display_name}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -805,7 +744,10 @@ function CompetitorsPage() {
                 {isExpanded && (
                   <>
                     {activeTask && activeTask.status !== "Completed" ? (
-                      <CrawlLogPanel task={activeTask} />
+                      <CrawlLogPanel
+                        task={activeTask}
+                        onRetry={activeTask.status === "Failed" ? () => recrawl(c.id) : undefined}
+                      />
                     ) : null}
                     {(!activeTask || activeTask.status === "Completed") && (
                       <ProductGrid competitorId={c.id} isActive={false} />
@@ -838,59 +780,44 @@ function CompetitorsPage() {
           <form onSubmit={addCompetitor} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="url">Store URL</Label>
-              <Input
-                id="url"
-                type="url"
-                placeholder="https://competitor.com"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                required
-                autoFocus
-              />
+              <Input id="url" type="url" placeholder="https://competitor.com"
+                value={url} onChange={(e) => setUrl(e.target.value)} required autoFocus maxLength={300} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Display name</Label>
-              <Input
-                id="name"
-                placeholder="Optional — defaults to the domain"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+              <Input id="name" placeholder="Optional — defaults to the domain"
+                value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
-                Cancel
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={adding}>Cancel</Button>
+              <Button type="submit" disabled={adding} className="gap-2">
+                {adding && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {adding ? "Adding…" : "Add & crawl"}
               </Button>
-              <Button type="submit">Add & crawl</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Single delete confirmation dialog */}
-      <AlertDialog
-        open={deleteTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-      >
+      {/* Single delete confirmation */}
+      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(v) => { if (!v) setPendingDeleteId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              Remove {deleteTargetCompetitor?.display_name ?? "competitor"}?
-            </AlertDialogTitle>
+            <AlertDialogTitle>Remove competitor?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will also delete all scraped products and price history associated with this
-              competitor. This action cannot be undone.
+              {(() => {
+                const c = competitors.find((x: any) => x.id === pendingDeleteId);
+                return c
+                  ? `This will permanently delete "${c.display_name}" and all its crawl history. This action cannot be undone.`
+                  : "This will permanently delete the competitor and all its crawl history. This action cannot be undone.";
+              })()}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-              onClick={() => {
-                if (deleteTarget) confirmDelete(deleteTarget);
-              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (pendingDeleteId) remove(pendingDeleteId); setPendingDeleteId(null); }}
             >
               Remove
             </AlertDialogAction>
@@ -898,25 +825,22 @@ function CompetitorsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Bulk delete confirmation dialog */}
+      {/* Bulk delete confirmation */}
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              Remove {selectedCount} competitor{selectedCount === 1 ? "" : "s"}?
-            </AlertDialogTitle>
+            <AlertDialogTitle>Remove {selected.size} competitor{selected.size > 1 ? "s" : ""}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will also delete all scraped products and price history for the selected
-              competitors. This action cannot be undone.
+              This will permanently delete {selected.size} competitor{selected.size > 1 ? "s" : ""} and all their scraped products and price history. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-              onClick={confirmBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { bulkDelete(); setBulkDeleteOpen(false); }}
             >
-              Remove {selectedCount} competitor{selectedCount === 1 ? "" : "s"}
+              Remove {selected.size}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

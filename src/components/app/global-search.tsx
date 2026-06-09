@@ -11,6 +11,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   LayoutDashboard,
   Radar,
@@ -22,6 +23,7 @@ import {
   TrendingUp,
   Package,
   Bell,
+  AlertCircle,
 } from "lucide-react";
 
 const PAGES = [
@@ -57,57 +59,64 @@ export function GlobalSearch({
   const enabled = debounced.length > 0;
   const like = `%${debounced}%`;
 
-  const { data: competitors = [] } = useQuery({
+  const { data: competitors = [], isLoading: competitorsLoading, isError: competitorsError } = useQuery({
     queryKey: ["search", "competitors", debounced],
     enabled,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("competitors")
         .select("id, display_name, url")
         .or(`display_name.ilike.${like},url.ilike.${like}`)
         .limit(5);
+      if (error) throw error;
       return data ?? [];
     },
   });
 
-  const { data: products = [] } = useQuery({
+  const { data: products = [], isLoading: productsLoading, isError: productsError } = useQuery({
     queryKey: ["search", "products", debounced],
     enabled,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("competitor_products")
         .select("id, name, category")
         .ilike("name", like)
         .limit(5);
+      if (error) throw error;
       return data ?? [];
     },
   });
 
-  const { data: trends = [] } = useQuery({
+  const { data: trends = [], isLoading: trendsLoading, isError: trendsError } = useQuery({
     queryKey: ["search", "trends", debounced],
     enabled,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("trends")
         .select("id, keyword, product_name, platform")
         .or(`keyword.ilike.${like},product_name.ilike.${like}`)
         .limit(5);
+      if (error) throw error;
       return data ?? [];
     },
   });
 
-  const { data: alerts = [] } = useQuery({
+  const { data: alerts = [], isLoading: alertsLoading, isError: alertsError } = useQuery({
     queryKey: ["search", "alerts", debounced],
     enabled,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("alerts")
         .select("id, type, competitor_name, product_name")
         .or(`competitor_name.ilike.${like},product_name.ilike.${like},type.ilike.${like}`)
         .limit(5);
+      if (error) throw error;
       return data ?? [];
     },
   });
+
+  const anyLoading = enabled && (competitorsLoading || productsLoading || trendsLoading || alertsLoading);
+  const anyError = enabled && !anyLoading && (competitorsError && productsError && trendsError && alertsError);
 
   const go = (to: string) => {
     onOpenChange(false);
@@ -126,9 +135,33 @@ export function GlobalSearch({
         onValueChange={setQuery}
       />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        {!anyLoading && (
+          <CommandEmpty>
+            {debounced
+              ? `No results for "${debounced}" — try a competitor name, product, or keyword.`
+              : "No results found."}
+          </CommandEmpty>
+        )}
 
-        {filteredPages.length > 0 && (
+        {anyLoading && (
+          <CommandGroup heading="Searching…">
+            {[0, 1, 2, 3].map((i) => (
+              <CommandItem key={i} value={`__loading-${i}`} disabled>
+                <Skeleton className="h-4 w-4 mr-2 rounded-sm shrink-0" />
+                <Skeleton className="h-3.5 rounded" style={{ width: `${[120, 96, 144, 108][i]}px` }} />
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+
+        {anyError && (
+          <div className="flex items-center gap-2 px-3 py-4 text-sm text-muted-foreground">
+            <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+            <span>Search failed — check your connection and try again.</span>
+          </div>
+        )}
+
+        {!anyLoading && filteredPages.length > 0 && (
           <CommandGroup heading="Navigate">
             {filteredPages.map((p) => {
               const Icon = p.icon;
@@ -142,7 +175,7 @@ export function GlobalSearch({
           </CommandGroup>
         )}
 
-        {competitors.length > 0 && (
+        {!anyLoading && competitors.length > 0 && (
           <>
             <CommandSeparator />
             <CommandGroup heading="Competitors">
@@ -165,7 +198,7 @@ export function GlobalSearch({
           </>
         )}
 
-        {products.length > 0 && (
+        {!anyLoading && products.length > 0 && (
           <>
             <CommandSeparator />
             <CommandGroup heading="Products">
@@ -186,21 +219,21 @@ export function GlobalSearch({
           </>
         )}
 
-        {trends.length > 0 && (
+        {!anyLoading && trends.length > 0 && (
           <>
             <CommandSeparator />
             <CommandGroup heading="Trends">
               {trends.map((t) => (
                 <CommandItem
                   key={t.id}
-                  value={`trend-${t.id}-${t.keyword}`}
+                  value={`trend-${t.id}-${t.product_name ?? t.keyword ?? ""}`}
                   onSelect={() => go("/app/discovery")}
                 >
                   <TrendingUp className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span className="font-medium">{t.keyword}</span>
-                  {t.product_name && (
+                  <span className="font-medium">{t.product_name ?? t.keyword ?? "Trend"}</span>
+                  {t.product_name && t.keyword && (
                     <span className="ml-2 text-xs text-muted-foreground truncate">
-                      {t.product_name}
+                      {t.keyword}
                     </span>
                   )}
                 </CommandItem>
@@ -209,7 +242,7 @@ export function GlobalSearch({
           </>
         )}
 
-        {alerts.length > 0 && (
+        {!anyLoading && alerts.length > 0 && (
           <>
             <CommandSeparator />
             <CommandGroup heading="Alerts">
