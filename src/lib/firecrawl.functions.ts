@@ -99,7 +99,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           const mapRes: any = await Promise.race([
             firecrawl.map(competitor.url, { limit: data.limit * 4 }),
             new Promise((_, rej) =>
-              setTimeout(() => rej(new Error("map timeout after 25s")), 25_000)
+              setTimeout(() => rej(new Error("map timeout after 10s")), 10_000)
             ),
           ]);
           // SDK v4 returns { links: SearchResultWeb[] } — extract url string from each entry.
