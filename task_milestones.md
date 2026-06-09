@@ -2,7 +2,7 @@
 
 ## Current Task
 
-_Scanning for next issue…_
+- Issue #143 (PR #144 opened) — Store preview race, SEO dirty-dot, DeltaHint zero-avg
 
 ### Completed this session
 - Issue #138 (PR #139 merged) — Character count indicators on Store and SEO bounded text fields
