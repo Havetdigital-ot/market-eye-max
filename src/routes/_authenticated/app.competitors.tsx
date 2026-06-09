@@ -5,16 +5,44 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Dialog, DialogContent, DialogDescription,
-  DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { startCompetitorCrawl } from "@/lib/api/firecrawl";
 import {
-  Trash2, RefreshCw, Pause, Play, Plus,
-  Loader2, AlertCircle, ChevronDown, ChevronRight,
-  ExternalLink, Package, Check, Search, Zap, Database,
+  Trash2,
+  RefreshCw,
+  Pause,
+  Play,
+  Plus,
+  Loader2,
+  AlertCircle,
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  Package,
+  Check,
+  Search,
+  Zap,
+  Database,
+  AlertTriangle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -29,21 +57,57 @@ function avatarGradient(name: string) {
 }
 
 function hostOf(u: string) {
-  try { return new URL(u).hostname.replace("www.", ""); } catch { return u; }
+  try {
+    return new URL(u).hostname.replace("www.", "");
+  } catch {
+    return u;
+  }
 }
 
-function StatusPill({ status }: { status: string }) {
+function isStaleCompetitor(
+  c: {
+    status: string;
+    last_crawled_at: string | null;
+  },
+  productCount: number,
+): boolean {
+  if (c.status !== "Active") return false;
+  if (productCount > 0) return false;
+  if (!c.last_crawled_at) return true;
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  return new Date(c.last_crawled_at).getTime() < sevenDaysAgo;
+}
+
+function StatusPill({ status, stale }: { status: string; stale?: boolean }) {
   const map: Record<string, { dot: string; cls: string }> = {
-    Active: { dot: "bg-emerald-500", cls: "text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40" },
+    Active: {
+      dot: "bg-emerald-500",
+      cls: "text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40",
+    },
     Paused: { dot: "bg-muted-foreground", cls: "text-muted-foreground bg-muted" },
-    Error:  { dot: "bg-red-500",          cls: "text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40" },
+    Error: {
+      dot: "bg-red-500",
+      cls: "text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40",
+    },
   };
   const s = map[status] ?? map.Paused;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${s.cls}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-      {status}
-    </span>
+    <div className="flex items-center gap-2">
+      <span
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${s.cls}`}
+      >
+        <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+        {status}
+      </span>
+      {stale && (
+        <span
+          title="No products — consider recrawling"
+          className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-amber-100 dark:bg-amber-950/50"
+        >
+          <AlertTriangle className="h-3 w-3 text-amber-500" />
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -52,14 +116,21 @@ function StatusPill({ status }: { status: string }) {
 const STAGE_ORDER = ["mapping", "extracting", "saving", "done"] as const;
 type Stage = (typeof STAGE_ORDER)[number];
 
-const STAGE_META: Record<Stage, { icon: React.FC<any>; label: (d: any) => string }> = {
-  mapping:    { icon: Search,   label: (d) => `Discovering pages on ${d?.domain ?? "site"}…` },
-  extracting: { icon: Zap,      label: (d) => `Extracting products from ${d?.urlCount ?? "?"} pages…` },
-  saving:     { icon: Database, label: (d) => `Saving ${d?.found ?? "?"} products to database…` },
-  done:       { icon: Check,    label: (d) => `Done — ${d?.found ?? 0} products found` },
+const STAGE_META: Record<
+  Stage,
+  { icon: React.FC<{ className?: string }>; label: (d: any) => string }
+> = {
+  mapping: { icon: Search, label: (d) => `Discovering pages on ${d?.domain ?? "site"}…` },
+  extracting: { icon: Zap, label: (d) => `Extracting products from ${d?.urlCount ?? "?"} pages…` },
+  saving: { icon: Database, label: (d) => `Saving ${d?.found ?? "?"} products to database…` },
+  done: { icon: Check, label: (d) => `Done — ${d?.found ?? 0} products found` },
 };
 
-function CrawlLogPanel({ task }: { task: { status: string; error_message?: string | null; details: any } }) {
+function CrawlLogPanel({
+  task,
+}: {
+  task: { status: string; error_message?: string | null; details: any };
+}) {
   const details = task.details ?? {};
   const currentStage = (details.stage ?? "mapping") as Stage;
   const currentIdx = STAGE_ORDER.indexOf(currentStage);
@@ -81,7 +152,6 @@ function CrawlLogPanel({ task }: { task: { status: string; error_message?: strin
 
   return (
     <div className="border-t bg-[#0d1117] dark:bg-[#0d1117]">
-      {/* Header */}
       <div className="flex items-center gap-2 px-5 py-3 border-b border-white/10">
         <div className="flex gap-1.5">
           <span className="h-3 w-3 rounded-full bg-red-500/70" />
@@ -95,7 +165,6 @@ function CrawlLogPanel({ task }: { task: { status: string; error_message?: strin
       </div>
 
       <div className="px-5 py-4 space-y-3 font-mono text-[12px]">
-        {/* Stage steps */}
         {STAGE_ORDER.map((stage, idx) => {
           const meta = STAGE_META[stage];
           const Icon = meta.icon;
@@ -117,15 +186,13 @@ function CrawlLogPanel({ task }: { task: { status: string; error_message?: strin
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <span className={
-                  isDone ? "text-emerald-400" :
-                  isCurrent ? "text-blue-300" :
-                  "text-white/30"
-                }>
+                <span
+                  className={
+                    isDone ? "text-emerald-400" : isCurrent ? "text-blue-300" : "text-white/30"
+                  }
+                >
                   {meta.label(details)}
                 </span>
-
-                {/* Show URLs being scraped during extracting stage */}
                 {isCurrent && stage === "extracting" && urls.length > 0 && (
                   <div className="mt-2 space-y-1">
                     {urls.map((u, i) => (
@@ -145,8 +212,6 @@ function CrawlLogPanel({ task }: { task: { status: string; error_message?: strin
             </div>
           );
         })}
-
-        {/* Completion message */}
         {task.status === "Completed" && (
           <div className="pt-2 border-t border-white/10 text-emerald-400">
             ✓ Crawl complete — scroll down to see products
@@ -165,7 +230,9 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
     queryFn: async () => {
       const { data } = await supabase
         .from("competitor_products")
-        .select(`id, name, description, image_url, category, sku, url, price_history ( price, currency, timestamp )`)
+        .select(
+          `id, name, description, image_url, category, sku, url, price_history ( price, currency, timestamp )`,
+        )
         .eq("competitor_id", competitorId)
         .order("name");
       return (data ?? []).map((p) => {
@@ -199,8 +266,10 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
   return (
     <div className="px-6 py-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 bg-muted/20 border-t">
       {products.map((p) => (
-        <div key={p.id} className="group flex flex-col rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow">
-          {/* Image */}
+        <div
+          key={p.id}
+          className="group flex flex-col rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow"
+        >
           <div className="relative aspect-square bg-muted overflow-hidden">
             {p.image_url ? (
               <img
@@ -209,7 +278,8 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
-                  const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement | null;
+                  const fallback = (e.target as HTMLImageElement)
+                    .nextElementSibling as HTMLElement | null;
                   if (fallback) fallback.style.display = "flex";
                 }}
               />
@@ -237,12 +307,12 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
               </a>
             )}
           </div>
-
-          {/* Info */}
           <div className="p-3 flex flex-col gap-1 flex-1">
             <p className="text-xs font-medium line-clamp-2 leading-snug">{p.name}</p>
             {p.description && (
-              <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">{p.description}</p>
+              <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">
+                {p.description}
+              </p>
             )}
             {p.latestPrice && (
               <p className="mt-auto pt-1 text-sm font-semibold">
@@ -250,9 +320,7 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
                 {Number(p.latestPrice.price).toFixed(2)}
               </p>
             )}
-            {p.sku && (
-              <p className="text-[10px] text-muted-foreground/70 font-mono">SKU {p.sku}</p>
-            )}
+            {p.sku && <p className="text-[10px] text-muted-foreground/70 font-mono">SKU {p.sku}</p>}
           </div>
         </div>
       ))}
@@ -268,6 +336,18 @@ function CompetitorsPage() {
   const [url, setUrl] = useState("");
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  // Bulk select state
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  // Delete confirmation state
+  // deleteTarget: single competitor id to delete, or null
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  // bulkDeleteOpen: whether the bulk delete dialog is open
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
+  // Search / filter
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: competitors = [] } = useQuery({
     queryKey: ["competitors"],
@@ -311,7 +391,12 @@ function CompetitorsPage() {
       .channel("crawl-tasks-live")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "background_tasks", filter: "task_type=eq.Crawl Competitor" },
+        {
+          event: "*",
+          schema: "public",
+          table: "background_tasks",
+          filter: "task_type=eq.Crawl Competitor",
+        },
         (payload) => {
           qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
           const row = payload.new as any;
@@ -328,11 +413,12 @@ function CompetitorsPage() {
         },
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [qc]);
 
   // When polling detects a completed task, invalidate the products queries
-  // (realtime handles this too, but polling is the fallback when WS drops)
   const prevTaskStatuses = useRef<Map<string, string>>(new Map());
   useEffect(() => {
     for (const task of crawlTasks) {
@@ -355,13 +441,51 @@ function CompetitorsPage() {
     if (cid && !taskByCompetitor.has(cid)) taskByCompetitor.set(cid, task);
   }
 
+  // Filtered competitors by search query
+  const filteredCompetitors = searchQuery.trim()
+    ? competitors.filter((c) => {
+        const q = searchQuery.toLowerCase();
+        return c.display_name.toLowerCase().includes(q) || hostOf(c.url).toLowerCase().includes(q);
+      })
+    : competitors;
+
   function toggleExpand(id: string) {
     setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  // ── Selection helpers ────────────────────────────────────────────────────────
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   }
+
+  function toggleSelectAll() {
+    const visibleIds = filteredCompetitors.map((c) => c.id);
+    const allSelected = visibleIds.every((id) => selected.has(id));
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(visibleIds));
+    }
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  // ── Mutations ────────────────────────────────────────────────────────────────
 
   async function addCompetitor(e: React.FormEvent) {
     e.preventDefault();
@@ -380,9 +504,10 @@ function CompetitorsPage() {
       .select("id")
       .single();
     if (error || !inserted) return toast.error(error?.message ?? "Failed");
-    setName(""); setUrl(""); setOpen(false);
+    setName("");
+    setUrl("");
+    setOpen(false);
     qc.invalidateQueries({ queryKey: ["competitors"] });
-    // Auto-expand so user sees the live crawl panel immediately
     setExpanded((prev) => new Set([...prev, inserted.id]));
     toast.success("Competitor added — crawl starting…");
     try {
@@ -399,16 +524,41 @@ function CompetitorsPage() {
     qc.invalidateQueries({ queryKey: ["competitors"] });
   }
 
-  async function remove(id: string) {
+  async function confirmDelete(id: string) {
     await supabase.from("competitors").delete().eq("id", id);
     qc.invalidateQueries({ queryKey: ["competitors"] });
-    setExpanded((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    qc.invalidateQueries({ queryKey: ["products"] });
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setDeleteTarget(null);
     toast.success("Removed");
+  }
+
+  async function confirmBulkDelete() {
+    const ids = Array.from(selected);
+    await supabase.from("competitors").delete().in("id", ids);
+    qc.invalidateQueries({ queryKey: ["competitors"] });
+    qc.invalidateQueries({ queryKey: ["products"] });
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+    setSelected(new Set());
+    setBulkDeleteOpen(false);
+    toast.success(`Removed ${ids.length} competitor${ids.length === 1 ? "" : "s"}`);
   }
 
   async function recrawl(id: string) {
     try {
-      // Auto-expand to show live crawl panel
       setExpanded((prev) => new Set([...prev, id]));
       toast.info("Starting crawl…");
       await startCompetitorCrawl(id);
@@ -418,8 +568,20 @@ function CompetitorsPage() {
     }
   }
 
+  // Derived selection state for the header checkbox
+  const visibleIds = filteredCompetitors.map((c) => c.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
+  const someVisibleSelected = visibleIds.some((id) => selected.has(id));
+  const selectedCount = selected.size;
+
+  // The competitor being targeted for single delete (for dialog label)
+  const deleteTargetCompetitor = deleteTarget
+    ? competitors.find((c) => c.id === deleteTarget)
+    : null;
+
   return (
     <div className="space-y-6">
+      {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight">Competitor Monitor</h1>
@@ -427,14 +589,63 @@ function CompetitorsPage() {
             Click any row to browse products and see live crawl progress.
           </p>
         </div>
-        <Button onClick={() => setOpen(true)} className="gap-1.5 shrink-0">
-          <Plus className="h-4 w-4" /> Add competitor
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Search input */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Filter competitors…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-9 w-52 text-sm"
+            />
+          </div>
+          <Button onClick={() => setOpen(true)} className="gap-1.5">
+            <Plus className="h-4 w-4" /> Add competitor
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-xl border bg-card overflow-hidden">
+        {/* Bulk action bar */}
+        {selectedCount > 0 && (
+          <div className="flex items-center gap-3 px-4 py-2.5 bg-muted/50 border-b text-sm">
+            <span className="font-medium text-foreground">{selectedCount} selected</span>
+            <span className="text-muted-foreground">·</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              Delete selected
+            </Button>
+            <button
+              className="text-muted-foreground hover:text-foreground underline underline-offset-2 text-xs transition-colors"
+              onClick={clearSelection}
+            >
+              Clear selection
+            </button>
+          </div>
+        )}
+
         {/* Table header */}
-        <div className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
+        <div className="grid grid-cols-[40px_2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-4 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-b bg-muted/30">
+          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={allVisibleSelected}
+              data-state={
+                someVisibleSelected && !allVisibleSelected
+                  ? "indeterminate"
+                  : allVisibleSelected
+                    ? "checked"
+                    : "unchecked"
+              }
+              onCheckedChange={toggleSelectAll}
+              aria-label="Select all"
+            />
+          </div>
           <div>Competitor</div>
           <div>Status</div>
           <div>Products</div>
@@ -442,30 +653,51 @@ function CompetitorsPage() {
           <div className="text-right">Actions</div>
         </div>
 
-        {competitors.length === 0 ? (
+        {filteredCompetitors.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-muted-foreground">
-            No competitors yet — add one to get started.
+            {searchQuery.trim()
+              ? `No results for "${searchQuery}"`
+              : "No competitors yet — add one to get started."}
           </div>
         ) : (
-          competitors.map((c) => {
+          filteredCompetitors.map((c) => {
             const count = productCounts.filter((p) => p.competitor_id === c.id).length;
             const activeTask = taskByCompetitor.get(c.id);
             const isCrawling = activeTask?.status === "Running";
             const isExpanded = expanded.has(c.id);
+            const isSelected = selected.has(c.id);
+            const stale = isStaleCompetitor(c, count);
+            const showInlineCrawl = c.status === "Active" && count === 0 && !isCrawling;
 
             return (
               <div key={c.id} className="border-b last:border-b-0">
-                {/* Row */}
                 <div
-                  className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-4 items-center hover:bg-muted/30 transition-colors cursor-pointer select-none"
+                  className={`grid grid-cols-[40px_2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-4 py-4 items-center hover:bg-muted/30 transition-colors cursor-pointer select-none ${isSelected ? "bg-muted/20" : ""}`}
                   onClick={() => toggleExpand(c.id)}
                 >
+                  {/* Checkbox */}
+                  <div
+                    className="flex items-center justify-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSelect(c.id);
+                    }}
+                  >
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelect(c.id)}
+                      aria-label={`Select ${c.display_name}`}
+                    />
+                  </div>
+
                   {/* Name + chevron */}
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="shrink-0 text-muted-foreground/40">
-                      {isExpanded
-                        ? <ChevronDown className="h-4 w-4" />
-                        : <ChevronRight className="h-4 w-4" />}
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
                     </span>
                     <div
                       className="h-9 w-9 rounded-[10px] flex items-center justify-center text-white text-sm font-semibold shrink-0"
@@ -487,44 +719,81 @@ function CompetitorsPage() {
                         Crawling…
                       </span>
                     ) : (
-                      <StatusPill status={c.status} />
+                      <StatusPill status={c.status} stale={stale} />
                     )}
                   </div>
 
-                  {/* Count */}
-                  <div className="font-mono font-semibold text-sm">
-                    {isCrawling ? <span className="text-muted-foreground animate-pulse">…</span> : count}
+                  {/* Product count + inline crawl button */}
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-semibold text-sm">
+                      {isCrawling ? (
+                        <span className="text-muted-foreground animate-pulse">…</span>
+                      ) : (
+                        count
+                      )}
+                    </span>
+                    {showInlineCrawl && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-[11px] font-medium"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          recrawl(c.id);
+                        }}
+                        title="Crawl now"
+                      >
+                        Crawl now
+                      </Button>
+                    )}
                   </div>
 
                   {/* Last crawled */}
                   <div className="text-xs text-muted-foreground">
-                    {isCrawling
-                      ? <span className="text-blue-500 text-xs animate-pulse">crawling now</span>
-                      : c.last_crawled_at
-                        ? formatDistanceToNow(new Date(c.last_crawled_at), { addSuffix: true })
-                        : "never"}
+                    {isCrawling ? (
+                      <span className="text-blue-500 text-xs animate-pulse">crawling now</span>
+                    ) : c.last_crawled_at ? (
+                      formatDistanceToNow(new Date(c.last_crawled_at), { addSuffix: true })
+                    ) : (
+                      "never"
+                    )}
                   </div>
 
-                  {/* Actions — stop propagation so row click doesn't interfere */}
+                  {/* Actions */}
                   <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     {c.status === "Active" && (
-                      <Button size="icon" variant="ghost" className="h-8 w-8"
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
                         onClick={() => recrawl(c.id)}
                         disabled={isCrawling}
                         title={isCrawling ? "Crawl in progress" : "Recrawl"}
                       >
-                        <RefreshCw className={`h-4 w-4 ${isCrawling ? "animate-spin opacity-40" : ""}`} />
+                        <RefreshCw
+                          className={`h-4 w-4 ${isCrawling ? "animate-spin opacity-40" : ""}`}
+                        />
                       </Button>
                     )}
-                    <Button size="icon" variant="ghost" className="h-8 w-8"
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
                       onClick={() => toggleStatus(c.id, c.status)}
                       disabled={isCrawling}
                       title={c.status === "Active" ? "Pause" : "Resume"}
                     >
-                      {c.status === "Active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      {c.status === "Active" ? (
+                        <Pause className="h-4 w-4" />
+                      ) : (
+                        <Play className="h-4 w-4" />
+                      )}
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-red-500"
-                      onClick={() => remove(c.id)}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 hover:text-red-500"
+                      onClick={() => setDeleteTarget(c.id)}
                       title="Delete"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -535,17 +804,12 @@ function CompetitorsPage() {
                 {/* Expanded panel */}
                 {isExpanded && (
                   <>
-                    {/* Show live terminal while crawling, product grid when done */}
                     {activeTask && activeTask.status !== "Completed" ? (
                       <CrawlLogPanel task={activeTask} />
                     ) : null}
-
-                    {/* Product grid — always show if not currently crawling */}
                     {(!activeTask || activeTask.status === "Completed") && (
                       <ProductGrid competitorId={c.id} isActive={false} />
                     )}
-
-                    {/* While crawling: also show product grid below terminal if there are already products */}
                     {isCrawling && count > 0 && (
                       <div className="border-t bg-muted/10">
                         <div className="px-6 py-2 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
@@ -562,6 +826,7 @@ function CompetitorsPage() {
         )}
       </div>
 
+      {/* Add competitor dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
@@ -573,21 +838,89 @@ function CompetitorsPage() {
           <form onSubmit={addCompetitor} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="url">Store URL</Label>
-              <Input id="url" type="url" placeholder="https://competitor.com"
-                value={url} onChange={(e) => setUrl(e.target.value)} required autoFocus />
+              <Input
+                id="url"
+                type="url"
+                placeholder="https://competitor.com"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                required
+                autoFocus
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Display name</Label>
-              <Input id="name" placeholder="Optional — defaults to the domain"
-                value={name} onChange={(e) => setName(e.target.value)} />
+              <Input
+                id="name"
+                placeholder="Optional — defaults to the domain"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
               <Button type="submit">Add & crawl</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Single delete confirmation dialog */}
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Remove {deleteTargetCompetitor?.display_name ?? "competitor"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will also delete all scraped products and price history associated with this
+              competitor. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              onClick={() => {
+                if (deleteTarget) confirmDelete(deleteTarget);
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk delete confirmation dialog */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Remove {selectedCount} competitor{selectedCount === 1 ? "" : "s"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will also delete all scraped products and price history for the selected
+              competitors. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              onClick={confirmBulkDelete}
+            >
+              Remove {selectedCount} competitor{selectedCount === 1 ? "" : "s"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -60,33 +60,54 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
 
         const firecrawl = getFirecrawl();
 
-        // 1) Map URLs — over-fetch then filter down to product-likely pages
-        await setProgress("mapping", { target: competitor.display_name, domain: new URL(competitor.url).hostname });
-        let urls: string[] = [];
+        // 1) Build candidate URLs — try firecrawl.map() with a hard 25s timeout,
+        //    then fall back to common product-page patterns so the crawl never hangs.
+        const hostname = new URL(competitor.url).hostname;
+        await setProgress("mapping", { target: competitor.display_name, domain: hostname });
+
+        const base = competitor.url.replace(/\/$/, "");
+        const fallbackUrls = [
+          `${base}/products`,
+          `${base}/shop`,
+          `${base}/collections`,
+          `${base}/collections/all`,
+          `${base}/catalog`,
+          base,
+        ].slice(0, data.limit);
+
+        let urls: string[] = fallbackUrls;
         try {
-          const mapRes: any = await firecrawl.map(competitor.url, { limit: data.limit * 4 });
-          // SDK v4 returns { links: SearchResultWeb[] } — extract the url string from each entry.
-          // Older builds returned { links: string[] } — handle both.
+          const mapRes: any = await Promise.race([
+            firecrawl.map(competitor.url, { limit: data.limit * 4 }),
+            new Promise((_, rej) =>
+              setTimeout(() => rej(new Error("map timeout after 25s")), 25_000)
+            ),
+          ]);
+          // SDK v4 returns { links: SearchResultWeb[] } — extract url string from each entry.
           const rawLinks: any[] = mapRes?.links ?? mapRes?.data?.links ?? [];
-          const allLinks: string[] = rawLinks.map((l: any) =>
-            typeof l === "string" ? l : (l?.url ?? "")
-          ).filter(Boolean);
+          const allLinks: string[] = rawLinks
+            .map((l: any) => (typeof l === "string" ? l : (l?.url ?? "")))
+            .filter(Boolean);
 
           const productPat = /\/(products?|shop|store|catalog|collections?|items?|buy|categor)\b/i;
-          const skipPat = /\/(about|faq|contact|help|blog|news|press|career|legal|terms|privacy|account|cart|checkout|search|wishlist)\b/i;
+          const skipPat =
+            /\/(about|faq|contact|help|blog|news|press|career|legal|terms|privacy|account|cart|checkout|search|wishlist)\b/i;
 
-          const productLinks = allLinks.filter(u => productPat.test(u) && !skipPat.test(u));
-          const otherLinks   = allLinks.filter(u => !productPat.test(u) && !skipPat.test(u));
-          urls = [...productLinks, ...otherLinks].slice(0, data.limit);
+          const productLinks = allLinks.filter((u) => productPat.test(u) && !skipPat.test(u));
+          const otherLinks = allLinks.filter((u) => !productPat.test(u) && !skipPat.test(u));
+          const mapped = [...productLinks, ...otherLinks].slice(0, data.limit);
+          if (mapped.length > 0) urls = mapped;
           console.log("[crawlCompetitor] mapped", allLinks.length, "→ using", urls.length, "urls");
         } catch (mapErr: any) {
-          console.error("[crawlCompetitor] map failed:", mapErr?.message ?? mapErr);
-          urls = [competitor.url];
+          console.warn("[crawlCompetitor] map skipped:", mapErr?.message ?? mapErr, "— using fallback URLs");
         }
-        if (urls.length === 0) urls = [competitor.url];
 
         // 2) Scrape each URL with formats:[{type:"json"}] — the v4 SDK way to do LLM extraction.
-        await setProgress("extracting", { target: competitor.display_name, urlCount: urls.length, urls: urls.slice(0, 8) });
+        await setProgress("extracting", {
+          target: competitor.display_name,
+          urlCount: urls.length,
+          urls: urls.slice(0, 8),
+        });
 
         const BATCH = 2;
         const TIMEOUT = 60_000;
@@ -115,9 +136,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
             if (r.status === "fulfilled") {
               const doc: any = r.value;
               const raw = doc?.json ?? doc?.extract;
-              const list: any[] = Array.isArray(raw)
-                ? raw
-                : raw?.products ?? [];
+              const list: any[] = Array.isArray(raw) ? raw : (raw?.products ?? []);
               products.push(...list);
             } else {
               console.error("[crawlCompetitor] scrape rejected:", r.reason?.message ?? r.reason);
@@ -194,41 +213,61 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
             const oldPrice = last?.price ?? null;
             if (isNew) {
               await supabase.from("alerts").insert({
-                user_id: userId, type: "New Product",
+                user_id: userId,
+                type: "New Product",
                 competitor_name: competitor.display_name,
-                product_name: p.name, old_price: null, new_price: p.price, is_read: false,
+                product_name: p.name,
+                old_price: null,
+                new_price: p.price,
+                is_read: false,
               });
               alertsFired++;
             } else if (oldPrice != null && Number(oldPrice) !== p.price) {
               await supabase.from("alerts").insert({
-                user_id: userId, type: "Price Change",
+                user_id: userId,
+                type: "Price Change",
                 competitor_name: competitor.display_name,
-                product_name: p.name, old_price: oldPrice, new_price: p.price, is_read: false,
+                product_name: p.name,
+                old_price: oldPrice,
+                new_price: p.price,
+                is_read: false,
               });
               alertsFired++;
             }
           }
         }
 
-        await supabase.from("competitors").update({
-          last_crawled_at: new Date().toISOString(), status: "Active",
-        }).eq("id", competitor.id);
+        await supabase
+          .from("competitors")
+          .update({
+            last_crawled_at: new Date().toISOString(),
+            status: "Active",
+          })
+          .eq("id", competitor.id);
 
-        await supabase.from("background_tasks").update({
-          status: "Completed",
-          details: {
-            competitorId: data.competitorId, stage: "done",
-            target: competitor.display_name, found: upserts, alerts: alertsFired,
-          },
-          updated_at: new Date().toISOString(),
-        }).eq("id", data.taskId);
-
+        await supabase
+          .from("background_tasks")
+          .update({
+            status: "Completed",
+            details: {
+              competitorId: data.competitorId,
+              stage: "done",
+              target: competitor.display_name,
+              found: upserts,
+              alerts: alertsFired,
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", data.taskId);
       } catch (err: any) {
-        await supabase.from("background_tasks").update({
-          status: "Failed",
-          error_message: (err?.message ?? String(err)).slice(0, 1000),
-          updated_at: new Date().toISOString(),
-        }).eq("id", data.taskId);
+        await supabase
+          .from("background_tasks")
+          .update({
+            status: "Failed",
+            error_message: (err?.message ?? String(err)).slice(0, 1000),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", data.taskId);
       }
     });
 
@@ -290,8 +329,7 @@ export const scanTrends = createServerFn({ method: "POST" })
             const res: any = await firecrawl.search(query, {
               limit: data.perQuery,
             });
-            results =
-              res?.web ?? res?.data?.web ?? res?.data ?? res?.results ?? [];
+            results = res?.web ?? res?.data?.web ?? res?.data ?? res?.results ?? [];
           } catch (e: any) {
             // Continue with other platforms; record nothing for this one.
             console.error("[firecrawl.search]", platform, keyword, e?.message);
@@ -300,14 +338,10 @@ export const scanTrends = createServerFn({ method: "POST" })
 
           for (const r of results) {
             const url: string | undefined = r?.url ?? r?.link;
-            const title: string | undefined =
-              r?.title ?? r?.metadata?.title ?? url;
+            const title: string | undefined = r?.title ?? r?.metadata?.title ?? url;
             if (!url || !title) continue;
 
-            const trendScore = Math.min(
-              99,
-              Math.max(40, 60 + Math.floor(Math.random() * 35)),
-            );
+            const trendScore = Math.min(99, Math.max(40, 60 + Math.floor(Math.random() * 35)));
 
             const { error: tErr } = await supabase.from("trends").insert({
               user_id: userId,
@@ -359,12 +393,19 @@ export const generateBrandIdentity = createServerFn({ method: "POST" })
     const firecrawl = getFirecrawl();
     try {
       const searchRes: any = await firecrawl.search(data.description + " top brands", { limit: 3 });
-      const results = searchRes?.web ?? searchRes?.data?.web ?? searchRes?.data ?? searchRes?.results ?? [];
+      const results =
+        searchRes?.web ?? searchRes?.data?.web ?? searchRes?.data ?? searchRes?.results ?? [];
       const urls = results.map((r: any) => r.url ?? r.link).filter(Boolean);
-      let extractUrls = urls.length > 0 ? urls : ["https://dribbble.com/search/" + encodeURIComponent(data.description)];
+      let extractUrls =
+        urls.length > 0
+          ? urls
+          : ["https://dribbble.com/search/" + encodeURIComponent(data.description)];
       const extractRes: any = await (firecrawl as any).extract({
         urls: extractUrls,
-        prompt: "Analyze these pages and generate a premium, unique brand identity for a company described as: " + data.description + ". Return brand_name, brand_voice, color_palette (array of 4-5 hex codes), font_primary, and font_secondary.",
+        prompt:
+          "Analyze these pages and generate a premium, unique brand identity for a company described as: " +
+          data.description +
+          ". Return brand_name, brand_voice, color_palette (array of 4-5 hex codes), font_primary, and font_secondary.",
         schema: brandExtractionSchema as any,
       });
       const payload = extractRes?.data ?? extractRes;
@@ -377,23 +418,44 @@ export const generateBrandIdentity = createServerFn({ method: "POST" })
 
 export const generateSeoContent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ 
-    topic: z.string(), 
-    type: z.string(), 
-    keywords: z.array(z.string()).optional() 
-  }).parse(input))
+  .inputValidator((input) =>
+    z
+      .object({
+        topic: z.string(),
+        type: z.string(),
+        keywords: z.array(z.string()).optional(),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { getFirecrawl, seoExtractionSchema } = await import("./firecrawl.server");
     const firecrawl = getFirecrawl();
     try {
       const searchRes: any = await firecrawl.search(data.topic, { limit: 3 });
-      const results = searchRes?.web ?? searchRes?.data?.web ?? searchRes?.data ?? searchRes?.results ?? [];
+      const results =
+        searchRes?.web ?? searchRes?.data?.web ?? searchRes?.data ?? searchRes?.results ?? [];
       const urls = results.map((r: any) => r.url ?? r.link).filter(Boolean);
-      let extractUrls = urls.length > 0 ? urls : ["https://en.wikipedia.org/wiki/Special:Search?search=" + encodeURIComponent(data.topic)];
-      const keywordsStr = data.keywords && data.keywords.length > 0 ? "Target keywords: " + data.keywords.join(", ") : "";
+      let extractUrls =
+        urls.length > 0
+          ? urls
+          : [
+              "https://en.wikipedia.org/wiki/Special:Search?search=" +
+                encodeURIComponent(data.topic),
+            ];
+      const keywordsStr =
+        data.keywords && data.keywords.length > 0
+          ? "Target keywords: " + data.keywords.join(", ")
+          : "";
       const extractRes: any = await (firecrawl as any).extract({
         urls: extractUrls,
-        prompt: "Read these top ranking pages and write a high-quality, comprehensive " + data.type + " about " + data.topic + ". " + keywordsStr + " Output a catchy 'title' and a detailed 'body' in Markdown format.",
+        prompt:
+          "Read these top ranking pages and write a high-quality, comprehensive " +
+          data.type +
+          " about " +
+          data.topic +
+          ". " +
+          keywordsStr +
+          " Output a catchy 'title' and a detailed 'body' in Markdown format.",
         schema: seoExtractionSchema as any,
       });
       const payload = extractRes?.data ?? extractRes;
@@ -403,4 +465,3 @@ export const generateSeoContent = createServerFn({ method: "POST" })
       return { ok: false, error: err?.message ?? String(err) };
     }
   });
-
