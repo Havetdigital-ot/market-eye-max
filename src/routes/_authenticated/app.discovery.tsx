@@ -127,6 +127,7 @@ function DiscoveryPage() {
               value={keywords}
               maxLength={200}
               onChange={(e) => setKeywords(e.target.value)}
+              disabled={running}
               className="h-11"
             />
             <p className="text-xs text-muted-foreground">
@@ -143,7 +144,8 @@ function DiscoveryPage() {
                     type="button"
                     key={p}
                     onClick={() => setSelected((s) => ({ ...s, [p]: !s[p] }))}
-                    className={`inline-flex items-center gap-1.5 px-3.5 h-9 rounded-full text-sm font-medium border transition-colors ${
+                    disabled={running}
+                    className={`inline-flex items-center gap-1.5 px-3.5 h-9 rounded-full text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                       on
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-background border-border hover:bg-muted"
