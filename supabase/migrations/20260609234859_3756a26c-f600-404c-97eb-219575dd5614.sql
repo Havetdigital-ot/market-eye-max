@@ -1,0 +1,1 @@
+UPDATE public.background_tasks SET status='Failed', error_message='Orphaned by server restart', updated_at=now() WHERE status='Running' AND updated_at < now() - interval '5 minutes';

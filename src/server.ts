@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { runWithExecutionCtx } from "./lib/execution-context";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -88,7 +89,9 @@ export default {
     try {
       const rewritten = rewriteStoreSubdomain(request);
       const handler = await getServerEntry();
-      const response = await handler.fetch(rewritten, env, ctx);
+      const response = await runWithExecutionCtx(ctx, () =>
+        handler.fetch(rewritten, env, ctx),
+      );
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);
