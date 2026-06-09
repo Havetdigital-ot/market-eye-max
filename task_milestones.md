@@ -2,10 +2,7 @@
 
 ## Current Task
 
-### Issue #147 — Dashboard stat tiles silently show 0 when counts query fails
-- File: `src/routes/_authenticated/app.index.tsx`
-- Fix: throw on any Supabase error in Promise.all; add isError to destructure; show "—" in tiles on error
-- Status: IN PROGRESS
+_Scanning for next issue…_
 
 ### Completed this session
 - Issue #145 (PR #146 merged) — SEO items + notifications popover queryFns now throw on Supabase error (isError branches reachable)
