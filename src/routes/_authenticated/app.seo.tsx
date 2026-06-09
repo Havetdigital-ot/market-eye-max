@@ -226,6 +226,9 @@ function SeoPage() {
                 maxLength={200}
                 onChange={(e) => setTopic(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground text-right tabular-nums">
+                <span className={topic.length >= 180 ? "text-amber-500" : ""}>{topic.length}/200</span>
+              </p>
             </div>
             <div className="space-y-2">
               <label htmlFor="seo-keywords" className="text-sm font-semibold">Target keywords</label>
@@ -236,7 +239,10 @@ function SeoPage() {
                 maxLength={200}
                 onChange={(e) => setKeywords(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">Optional, comma-separated</p>
+              <p className="text-xs text-muted-foreground flex justify-between tabular-nums">
+                <span>Optional, comma-separated</span>
+                <span className={keywords.length >= 180 ? "text-amber-500" : ""}>{keywords.length}/200</span>
+              </p>
             </div>
             <Button type="submit" disabled={generating} className="w-full h-11 gap-2">
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
@@ -341,6 +347,9 @@ function SeoPage() {
                 onChange={(e) => setEditTitle(e.target.value)}
                 className="text-xl font-semibold h-12"
               />
+              <p className="text-xs text-muted-foreground text-right tabular-nums -mt-1">
+                <span className={(editTitle?.length ?? 0) >= 180 ? "text-amber-500" : ""}>{editTitle?.length ?? 0}/200</span>
+              </p>
               <Textarea
                 aria-label="Content body"
                 value={editBody}
