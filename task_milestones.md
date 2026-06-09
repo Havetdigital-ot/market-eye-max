@@ -2,7 +2,10 @@
 
 ## Current Task
 
-_Scanning for next issue…_
+### PR #137 — Fixes #86 #120: primary token cleanup + brand retry + alerts aria-label
+- Status: **Open, watching CI**
+- Branch: `claude/friendly-gauss-3hmlif`
+- Commit: b40a02c
 
 ### Completed this session
 - Issue #131 (PR #132 merged) — Store Generator form retains stale values after successful publish
