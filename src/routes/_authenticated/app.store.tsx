@@ -198,6 +198,9 @@ function StorePage() {
                   if (!slugDirty) setSlug(slugify(e.target.value));
                 }}
               />
+              <p className="text-xs text-muted-foreground text-right tabular-nums">
+                <span className={name.length >= 90 ? "text-amber-500" : ""}>{name.length}/100</span>
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -234,6 +237,9 @@ function StorePage() {
                 onChange={(e) => setDesc(e.target.value)}
                 className="min-h-[96px]"
               />
+              <p className="text-xs text-muted-foreground text-right tabular-nums">
+                <span className={desc.length >= 450 ? "text-amber-500" : ""}>{desc.length}/500</span>
+              </p>
             </div>
             <div className="space-y-2">
               <label htmlFor="store-brand" className="text-sm font-semibold">Apply brand asset</label>
