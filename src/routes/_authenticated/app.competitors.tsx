@@ -13,6 +13,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { startCompetitorCrawl } from "@/lib/api/firecrawl";
@@ -98,7 +99,6 @@ function CrawlLogPanel({
 
   return (
     <div className="border-t bg-[#0d1117] dark:bg-[#0d1117]">
-      {/* Header */}
       <div className="flex items-center gap-2 px-5 py-3 border-b border-white/10">
         <div className="flex gap-1.5">
           <span className="h-3 w-3 rounded-full bg-red-500/70" />
@@ -112,7 +112,6 @@ function CrawlLogPanel({
       </div>
 
       <div className="px-5 py-4 space-y-3 font-mono text-[12px]">
-        {/* Stage steps */}
         {STAGE_ORDER.map((stage, idx) => {
           const meta = STAGE_META[stage];
           const Icon = meta.icon;
@@ -141,8 +140,6 @@ function CrawlLogPanel({
                 }>
                   {meta.label(details)}
                 </span>
-
-                {/* Show URLs being scraped during extracting stage */}
                 {isCurrent && stage === "extracting" && urls.length > 0 && (
                   <div className="mt-2 space-y-1">
                     {urls.map((u, i) => (
@@ -162,8 +159,6 @@ function CrawlLogPanel({
             </div>
           );
         })}
-
-        {/* Completion message */}
         {task.status === "Completed" && (
           <div className="pt-2 border-t border-white/10 text-emerald-400">
             ✓ Crawl complete — scroll down to see products
@@ -228,7 +223,6 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
     <div className="px-6 py-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 bg-muted/20 border-t">
       {products.map((p) => (
         <div key={p.id} className="group flex flex-col rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow">
-          {/* Image */}
           <div className="relative aspect-square bg-muted overflow-hidden">
             {p.image_url ? (
               <img
@@ -266,8 +260,6 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
               </a>
             )}
           </div>
-
-          {/* Info */}
           <div className="p-3 flex flex-col gap-1 flex-1">
             <p className="text-xs font-medium line-clamp-2 leading-snug">{p.name}</p>
             {p.description && (
@@ -299,6 +291,8 @@ function CompetitorsPage() {
   const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -339,7 +333,6 @@ function CompetitorsPage() {
     },
   });
 
-  // Realtime: watch background_tasks for crawl progress updates
   useEffect(() => {
     const channel = supabase
       .channel("crawl-tasks-live")
@@ -365,8 +358,6 @@ function CompetitorsPage() {
     return () => { supabase.removeChannel(channel); };
   }, [qc]);
 
-  // When polling detects a completed task, invalidate the products queries
-  // (realtime handles this too, but polling is the fallback when WS drops)
   const prevTaskStatuses = useRef<Map<string, string>>(new Map());
   useEffect(() => {
     for (const task of crawlTasks) {
@@ -382,7 +373,6 @@ function CompetitorsPage() {
     }
   }, [crawlTasks, qc]);
 
-  // Latest task per competitor
   const taskByCompetitor = new Map<string, (typeof crawlTasks)[number]>();
   for (const task of crawlTasks) {
     const cid = (task.details as any)?.competitorId;
@@ -401,6 +391,30 @@ function CompetitorsPage() {
     if (isCrawling || c.status !== "Active" || count > 0) return false;
     const ref = c.last_crawled_at ?? c.created_at;
     return ref ? Date.now() - new Date(ref).getTime() > STALE_MS : false;
+  }
+
+  const visibleIds = filtered.map((c: any) => c.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id: string) => selected.has(id));
+  const someVisibleSelected = visibleIds.some((id: string) => selected.has(id));
+
+  function toggleSelectAll() {
+    if (allVisibleSelected) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        visibleIds.forEach((id: string) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelected((prev) => new Set([...prev, ...visibleIds]));
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   }
 
   function toggleExpand(id: string) {
@@ -463,12 +477,22 @@ function CompetitorsPage() {
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["competitors"] });
     setExpanded((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
     toast.success("Removed");
+  }
+
+  async function bulkDelete() {
+    const ids = Array.from(selected);
+    const { error } = await supabase.from("competitors").delete().in("id", ids);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["competitors"] });
+    qc.invalidateQueries({ queryKey: ["products"] });
+    setSelected(new Set());
+    toast.success(`Removed ${ids.length} competitor${ids.length > 1 ? "s" : ""}`);
   }
 
   async function recrawl(id: string) {
     try {
-      // Auto-expand to show live crawl panel
       setExpanded((prev) => new Set([...prev, id]));
       toast.info("Starting crawl…");
       await startCompetitorCrawl(id);
@@ -503,9 +527,38 @@ function CompetitorsPage() {
         </div>
       </div>
 
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg border bg-muted/50 text-sm">
+          <span className="font-medium">{selected.size} selected</span>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="gap-1.5 h-7"
+            onClick={() => setBulkDeleteOpen(true)}
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete selected
+          </Button>
+          <button
+            className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => setSelected(new Set())}
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
+
       <div className="rounded-xl border bg-card overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground border-b bg-muted/30">
+        <div className="grid grid-cols-[auto_2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-4 py-3 text-xs font-medium text-muted-foreground border-b bg-muted/30 items-center">
+          <div className="flex items-center justify-center w-8">
+            <Checkbox
+              checked={allVisibleSelected}
+              data-state={someVisibleSelected && !allVisibleSelected ? "indeterminate" : undefined}
+              onCheckedChange={toggleSelectAll}
+              aria-label="Select all"
+            />
+          </div>
           <div>Competitor</div>
           <div>Status</div>
           <div>Products</div>
@@ -521,7 +574,8 @@ function CompetitorsPage() {
         ) : competitorsLoading ? (
           <div className="divide-y">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-4 items-center">
+              <div key={i} className="grid grid-cols-[auto_2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-4 py-4 items-center">
+                <div className="w-8" />
                 <div className="flex items-center gap-3">
                   <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
                   <div className="space-y-1 min-w-0">
@@ -557,31 +611,38 @@ function CompetitorsPage() {
             No competitors match <span className="font-medium">"{searchQuery}"</span>
           </div>
         ) : (
-          filtered.map((c) => {
+          filtered.map((c: any) => {
             const count = productCounts.filter((p) => p.competitor_id === c.id).length;
             const activeTask = taskByCompetitor.get(c.id);
             const isCrawling = activeTask?.status === "Running";
             const isExpanded = expanded.has(c.id);
+            const isSelected = selected.has(c.id);
             const stale = isStale(c, count, isCrawling);
+            const showCrawlNow = c.status === "Active" && count === 0 && !isCrawling;
 
             return (
               <div key={c.id} className="border-b last:border-b-0">
-                {/* Row */}
                 <div
                   role="button"
                   tabIndex={0}
-                  className="grid grid-cols-[2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-6 py-4 items-center hover:bg-muted/30 transition-colors cursor-pointer select-none"
+                  className={`grid grid-cols-[auto_2fr_1fr_0.5fr_1fr_0.8fr] gap-4 px-4 py-4 items-center hover:bg-muted/30 transition-colors cursor-pointer select-none ${isSelected ? "bg-muted/40" : ""}`}
                   onClick={() => toggleExpand(c.id)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleExpand(c.id); } }}
                   aria-expanded={isExpanded}
                   aria-label={`${isExpanded ? "Collapse" : "Expand"} ${c.display_name} details`}
                 >
+                  {/* Checkbox */}
+                  <div
+                    className="flex items-center justify-center w-8"
+                    onClick={(e) => { e.stopPropagation(); toggleSelect(c.id); }}
+                  >
+                    <Checkbox checked={isSelected} aria-label={`Select ${c.display_name}`} />
+                  </div>
+
                   {/* Name + chevron */}
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="shrink-0 text-muted-foreground/40">
-                      {isExpanded
-                        ? <ChevronDown className="h-4 w-4" />
-                        : <ChevronRight className="h-4 w-4" />}
+                      {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </span>
                     <div
                       className="h-9 w-9 rounded-[10px] flex items-center justify-center text-white text-sm font-semibold shrink-0"
@@ -615,9 +676,25 @@ function CompetitorsPage() {
                     )}
                   </div>
 
-                  {/* Count */}
-                  <div className="font-mono font-semibold text-sm">
-                    {isCrawling ? <span className="text-muted-foreground animate-pulse">…</span> : count}
+                  {/* Count + inline crawl shortcut */}
+                  <div
+                    className="flex items-center gap-2"
+                    onClick={(e) => { if (showCrawlNow) e.stopPropagation(); }}
+                  >
+                    <span className="font-mono font-semibold text-sm">
+                      {isCrawling ? <span className="text-muted-foreground animate-pulse">…</span> : count}
+                    </span>
+                    {showCrawlNow && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 px-2 text-[11px] shrink-0"
+                        onClick={() => recrawl(c.id)}
+                        title="Crawl now"
+                      >
+                        Crawl
+                      </Button>
+                    )}
                   </div>
 
                   {/* Last crawled */}
@@ -629,7 +706,7 @@ function CompetitorsPage() {
                         : "never"}
                   </div>
 
-                  {/* Actions — stop propagation so row click doesn't interfere */}
+                  {/* Actions */}
                   <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     {c.status === "Active" && (
                       <Button size="icon" variant="ghost" className="h-8 w-8"
@@ -666,20 +743,15 @@ function CompetitorsPage() {
                 {/* Expanded panel */}
                 {isExpanded && (
                   <>
-                    {/* Show live terminal while crawling, product grid when done */}
                     {activeTask && activeTask.status !== "Completed" ? (
                       <CrawlLogPanel
                         task={activeTask}
                         onRetry={activeTask.status === "Failed" ? () => recrawl(c.id) : undefined}
                       />
                     ) : null}
-
-                    {/* Product grid — always show if not currently crawling */}
                     {(!activeTask || activeTask.status === "Completed") && (
                       <ProductGrid competitorId={c.id} isActive={false} />
                     )}
-
-                    {/* While crawling: also show product grid below terminal if there are already products */}
                     {isCrawling && count > 0 && (
                       <div className="border-t bg-muted/10">
                         <div className="px-6 py-2 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
@@ -696,6 +768,7 @@ function CompetitorsPage() {
         )}
       </div>
 
+      {/* Add competitor dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
@@ -726,13 +799,14 @@ function CompetitorsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Single delete confirmation */}
       <AlertDialog open={pendingDeleteId !== null} onOpenChange={(v) => { if (!v) setPendingDeleteId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove competitor?</AlertDialogTitle>
             <AlertDialogDescription>
               {(() => {
-                const c = competitors.find((x) => x.id === pendingDeleteId);
+                const c = competitors.find((x: any) => x.id === pendingDeleteId);
                 return c
                   ? `This will permanently delete "${c.display_name}" and all its crawl history. This action cannot be undone.`
                   : "This will permanently delete the competitor and all its crawl history. This action cannot be undone.";
@@ -743,12 +817,30 @@ function CompetitorsPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (pendingDeleteId) remove(pendingDeleteId);
-                setPendingDeleteId(null);
-              }}
+              onClick={() => { if (pendingDeleteId) remove(pendingDeleteId); setPendingDeleteId(null); }}
             >
               Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk delete confirmation */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {selected.size} competitor{selected.size > 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {selected.size} competitor{selected.size > 1 ? "s" : ""} and all their scraped products and price history. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { bulkDelete(); setBulkDeleteOpen(false); }}
+            >
+              Remove {selected.size}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
