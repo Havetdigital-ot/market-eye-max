@@ -47,7 +47,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: counts, isLoading: countsLoading } = useQuery({
+  const { data: counts, isLoading: countsLoading, isError: countsError } = useQuery({
     queryKey: ["dashboard-counts"],
     queryFn: async () => {
       const [comp, tasks, alerts, trends] = await Promise.all([
@@ -69,6 +69,8 @@ function DashboardPage() {
           .select("id", { count: "exact", head: true })
           .eq("saved", true),
       ]);
+      const firstError = [comp.error, tasks.error, alerts.error, trends.error].find(Boolean);
+      if (firstError) throw firstError;
       return {
         competitors: comp.count ?? 0,
         tasks: tasks.count ?? 0,
@@ -190,6 +192,8 @@ function DashboardPage() {
                 <div className="mt-4 text-3xl font-bold tabular-nums tracking-tight">
                   {countsLoading ? (
                     <Skeleton className="h-8 w-12 rounded" />
+                  ) : countsError ? (
+                    <span className="text-muted-foreground text-2xl">—</span>
                   ) : (
                     counts?.[s.key] ?? 0
                   )}
