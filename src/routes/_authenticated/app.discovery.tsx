@@ -171,6 +171,8 @@ function DiscoveryPage() {
         <button
           type="button"
           onClick={() => setSavedOnly((s) => !s)}
+          aria-pressed={savedOnly}
+          aria-label={savedOnly ? "Show all trends" : "Show saved trends only"}
           className={`inline-flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium border transition-colors ${
             savedOnly
               ? "bg-primary text-primary-foreground border-primary"
