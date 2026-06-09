@@ -386,6 +386,7 @@ function CompetitorsPage() {
       )
     : competitors;
 
+  const CRAWL_TIMEOUT_MS = 5 * 60 * 1000;
   const STALE_MS = 7 * 24 * 60 * 60 * 1000;
   function isStale(c: any, count: number, isCrawling: boolean) {
     if (isCrawling || c.status !== "Active" || count > 0) return false;
@@ -614,7 +615,11 @@ function CompetitorsPage() {
           filtered.map((c: any) => {
             const count = productCounts.filter((p) => p.competitor_id === c.id).length;
             const activeTask = taskByCompetitor.get(c.id);
-            const isCrawling = activeTask?.status === "Running";
+            // Treat Running tasks older than 5 min as stale (server restart orphan).
+            const isCrawling =
+              activeTask?.status === "Running" &&
+              activeTask.updated_at != null &&
+              Date.now() - new Date(activeTask.updated_at).getTime() < CRAWL_TIMEOUT_MS;
             const isExpanded = expanded.has(c.id);
             const isSelected = selected.has(c.id);
             const stale = isStale(c, count, isCrawling);

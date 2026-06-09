@@ -3,10 +3,43 @@
 import { supabase } from "@/integrations/supabase/client";
 import { crawlCompetitor, scanTrends } from "@/lib/firecrawl.functions";
 
+const CRAWL_ACTIVE_MS = 5 * 60 * 1000; // 5 minutes
+
 export async function startCompetitorCrawl(competitorId: string) {
   const { data: userRes } = await supabase.auth.getUser();
   const userId = userRes.user?.id;
   if (!userId) throw new Error("Not authenticated");
+
+  // Requirement 4: prevent duplicate overlapping crawls.
+  // Fetch any Running tasks for this competitor from the last 24h.
+  const { data: runningTasks } = await supabase
+    .from("background_tasks")
+    .select("id, updated_at, details")
+    .eq("task_type", "Crawl Competitor")
+    .eq("status", "Running")
+    .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+  const forThisCompetitor = (runningTasks ?? []).filter(
+    (t: any) => t.details?.competitorId === competitorId,
+  );
+
+  // Split into active (updated < 5 min ago) vs stale (server restart orphans).
+  const activeTasks = forThisCompetitor.filter(
+    (t: any) => Date.now() - new Date(t.updated_at).getTime() < CRAWL_ACTIVE_MS,
+  );
+  if (activeTasks.length > 0) throw new Error("A crawl is already in progress");
+
+  // Auto-fail orphaned stale tasks so the UI stops showing "Crawling…".
+  for (const t of forThisCompetitor) {
+    await supabase
+      .from("background_tasks")
+      .update({
+        status: "Failed",
+        error_message: "Timed out — server restarted mid-crawl",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", t.id);
+  }
 
   const { data: comp } = await supabase
     .from("competitors")

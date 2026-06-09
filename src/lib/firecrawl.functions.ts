@@ -49,6 +49,21 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           .eq("id", data.taskId);
       };
 
+      // Hard 5-minute overall timeout — guards against server restart leaving
+      // the task stuck "Running" forever. Uses .eq("status","Running") so it
+      // won't overwrite a task that already completed normally.
+      const hardTimeoutId = setTimeout(async () => {
+        await supabase
+          .from("background_tasks")
+          .update({
+            status: "Failed",
+            error_message: "Crawl timed out after 5 minutes",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", data.taskId)
+          .eq("status", "Running");
+      }, 5 * 60 * 1000);
+
       try {
         const { data: competitor, error: cErr } = await supabase
           .from("competitors")
@@ -115,6 +130,12 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
 
         for (let i = 0; i < urls.length; i += BATCH) {
           const batch = urls.slice(i, i + BATCH);
+          // Heartbeat: keep updated_at fresh so staleness checks don't misfire.
+          await supabase
+            .from("background_tasks")
+            .update({ updated_at: new Date().toISOString() })
+            .eq("id", data.taskId);
+
           const results = await Promise.allSettled(
             batch.map((u) =>
               Promise.race([
@@ -245,6 +266,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           })
           .eq("id", competitor.id);
 
+        clearTimeout(hardTimeoutId);
         await supabase
           .from("background_tasks")
           .update({
@@ -260,6 +282,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           })
           .eq("id", data.taskId);
       } catch (err: any) {
+        clearTimeout(hardTimeoutId);
         await supabase
           .from("background_tasks")
           .update({
