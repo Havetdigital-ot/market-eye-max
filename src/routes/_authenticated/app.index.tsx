@@ -466,6 +466,7 @@ function DeltaHint({ alerts }: { alerts: any[] }) {
       (s, a) => s + (Number(a.new_price) - Number(a.old_price)),
       0,
     ) / priceChanges.length;
+  if (avg === 0) return null;
   const up = avg > 0;
   const Icon = up ? TrendingUp : TrendingDown;
   return (
