@@ -88,6 +88,7 @@ function DiscoveryPage() {
     setRunning(true);
     try {
       await startTrendScan(kws, plats);
+      setKeywords("");
       toast.success("Scan started — results will appear as they're found");
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to start scan");

@@ -40,6 +40,7 @@ function AlertsPage() {
   const [readFilter, setReadFilter] = useState<ReadFilter>("All");
   const [page, setPage] = useState(1);
   const [marking, setMarking] = useState(false);
+  const [readingId, setReadingId] = useState<string | null>(null);
 
   const { data: alerts = [], isLoading, isError } = useQuery({
     queryKey: ["alerts"],
@@ -55,11 +56,17 @@ function AlertsPage() {
   });
 
   async function markRead(id: string) {
-    const { error } = await supabase.from("alerts").update({ is_read: true }).eq("id", id);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["alerts"] });
-    qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
-    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    if (readingId === id) return;
+    setReadingId(id);
+    try {
+      const { error } = await supabase.from("alerts").update({ is_read: true }).eq("id", id);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    } finally {
+      setReadingId(null);
+    }
   }
 
   async function markAllRead() {
@@ -239,14 +246,15 @@ function AlertsPage() {
                 return (
                   <tr
                     key={a.id}
-                    onClick={!a.is_read ? () => markRead(a.id) : undefined}
+                    onClick={!a.is_read && readingId !== a.id ? () => markRead(a.id) : undefined}
                     tabIndex={!a.is_read ? 0 : undefined}
                     aria-label={!a.is_read ? "Mark as read" : undefined}
-                    onKeyDown={!a.is_read ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); markRead(a.id); } } : undefined}
+                    onKeyDown={!a.is_read && readingId !== a.id ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); markRead(a.id); } } : undefined}
                     className={cn(
                       "border-t transition-colors",
                       !a.is_read &&
-                        "bg-amber-50/60 dark:bg-amber-500/8 border-l-2 border-l-amber-400 cursor-pointer hover:bg-amber-100/60 dark:hover:bg-amber-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                        "bg-amber-50/60 dark:bg-amber-500/8 border-l-2 border-l-amber-400 cursor-pointer hover:bg-amber-100/60 dark:hover:bg-amber-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                      readingId === a.id && "opacity-50 pointer-events-none"
                     )}
                   >
                     <td className="px-5 py-3 font-medium">{a.competitor_name}</td>

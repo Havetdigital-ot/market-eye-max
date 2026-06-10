@@ -64,10 +64,11 @@ function StorePage() {
   const { data: brands = [], isLoading: brandsLoading } = useQuery({
     queryKey: ["brand_assets"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("brand_assets")
         .select("*")
         .order("generated_at", { ascending: false });
+      if (error) throw error;
       return data ?? [];
     },
   });

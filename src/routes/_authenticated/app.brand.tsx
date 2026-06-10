@@ -259,7 +259,7 @@ function BrandPage() {
             <Button
               onClick={generate}
               disabled={phase === "generating" || !nicheKey || !desc.trim()}
-              className="w-full mt-3.5 h-11 gap-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full mt-3.5 h-11 gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {phase === "generating" ? (
                 <>
@@ -509,7 +509,7 @@ function BrandReview({
               <Button
                 onClick={onAccept}
                 disabled={accepting}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
               >
                 {accepting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Accept & save

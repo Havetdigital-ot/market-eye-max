@@ -98,7 +98,7 @@ function CrawlLogPanel({
   }
 
   return (
-    <div className="border-t bg-[#0d1117] dark:bg-[#0d1117]">
+    <div className="border-t bg-zinc-950">
       <div className="flex items-center gap-2 px-5 py-3 border-b border-white/10">
         <div className="flex gap-1.5">
           <span className="h-3 w-3 rounded-full bg-red-500/70" />
