@@ -187,8 +187,22 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
         let upserts = 0;
         let alertsFired = 0;
 
+        // Resolve relative URLs against the competitor's origin
+        const origin = new URL(competitor.url).origin;
+        const toAbsolute = (u: string | undefined | null): string | null => {
+          if (!u) return null;
+          try {
+            return u.startsWith("http") ? u : new URL(u, origin).href;
+          } catch {
+            return null;
+          }
+        };
+
         for (const p of products) {
           if (!p?.name) continue;
+          const productUrl = toAbsolute(p.url);
+          const imageUrl = toAbsolute(p.image_url);
+
           const { data: existing } = await supabase
             .from("competitor_products")
             .select("id")
@@ -205,9 +219,9 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
               .insert({
                 competitor_id: competitor.id,
                 name: p.name,
-                url: p.url ?? null,
+                url: productUrl,
                 description: p.description ?? null,
-                image_url: p.image_url ?? null,
+                image_url: imageUrl,
                 category: p.category ?? null,
                 sku: p.sku ?? null,
                 last_updated_at: new Date().toISOString(),
@@ -220,9 +234,9 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
             await supabase
               .from("competitor_products")
               .update({
-                url: p.url ?? null,
+                url: productUrl,
                 description: p.description ?? null,
-                image_url: p.image_url ?? null,
+                image_url: imageUrl,
                 category: p.category ?? null,
                 sku: p.sku ?? null,
                 last_updated_at: new Date().toISOString(),
