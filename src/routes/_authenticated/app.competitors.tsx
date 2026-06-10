@@ -173,6 +173,7 @@ function CrawlLogPanel({
 // ── Product grid ──────────────────────────────────────────────────────────────
 
 function ProductGrid({ competitorId, isActive }: { competitorId: string; isActive?: boolean }) {
+  const [productSearch, setProductSearch] = useState("");
   const { data: products = [], isLoading, isError: productsError } = useQuery({
     queryKey: ["competitor-products", competitorId],
     queryFn: async () => {
@@ -220,9 +221,39 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
     );
   }
 
+  const q = productSearch.trim().toLowerCase();
+  const visible = q
+    ? products.filter((p) =>
+        [p.name, p.description, p.category, p.sku]
+          .filter(Boolean)
+          .some((v) => (v as string).toLowerCase().includes(q))
+      )
+    : products;
+
   return (
-    <div className="px-6 py-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 bg-muted/20 border-t">
-      {products.map((p) => (
+    <div className="bg-muted/20 border-t">
+      <div className="flex items-center gap-3 px-6 pt-4 pb-2">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <Input
+            value={productSearch}
+            onChange={(e) => setProductSearch(e.target.value)}
+            placeholder="Filter products…"
+            aria-label="Filter products"
+            className="pl-8 h-8 text-xs"
+          />
+        </div>
+        <span className="text-xs text-muted-foreground font-mono">
+          {q ? `${visible.length} / ${products.length}` : `${products.length}`} products
+        </span>
+      </div>
+      {visible.length === 0 ? (
+        <div className="px-6 py-8 text-center text-sm text-muted-foreground">
+          No products match <span className="font-medium">"{productSearch}"</span>
+        </div>
+      ) : (
+      <div className="px-6 pb-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      {visible.map((p) => (
         <div key={p.id} className="group flex flex-col rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow">
           <div className="relative aspect-square bg-muted overflow-hidden">
             {p.image_url ? (
@@ -278,6 +309,8 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
           </div>
         </div>
       ))}
+      </div>
+      )}
     </div>
   );
 }

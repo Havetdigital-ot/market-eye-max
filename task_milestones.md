@@ -2,10 +2,15 @@
 
 ## Current Task
 
-### Issue #156 — Brand library loadFromLibrary doesn't pre-fill description form
+### Issue #157 — ProductGrid in competitors has no search/filter for products
+- File: `src/routes/_authenticated/app.competitors.tsx`
+- Fix: Add a local text search state to ProductGrid; filter displayed products by name/description/category/SKU; show match count in header
+- Status: IN PROGRESS
+
+### Issue #156 — Brand library loadFromLibrary doesn't pre-fill description form (COMPLETED)
 - File: `src/routes/_authenticated/app.brand.tsx`
 - Fix: When loading a library brand for review, also set `desc = b.source_description` and `nicheKey = "other"` so after closing the review panel the form is ready to regenerate
-- Status: IN PROGRESS
+- Status: COMPLETED (commit cfab91f)
 
 ### Issue #155 — Alerts page "Mark all read" missing loading state guard (COMPLETED)
 - File: `src/routes/_authenticated/app.alerts.tsx`
