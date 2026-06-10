@@ -203,11 +203,12 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           const productUrl = toAbsolute(p.url);
           const imageUrl = toAbsolute(p.image_url);
 
+          // Check for existing product by name (safe — uses parameterized .eq())
           const { data: existing } = await supabase
             .from("competitor_products")
             .select("id")
             .eq("competitor_id", competitor.id)
-            .or(`sku.eq.${p.sku ?? "__none__"},name.eq.${(p.name as string).replace(/,/g, "")}`)
+            .eq("name", p.name as string)
             .maybeSingle();
 
           let productId = existing?.id as string | undefined;
