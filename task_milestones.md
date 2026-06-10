@@ -2,10 +2,15 @@
 
 ## Current Task
 
-### Issue #149 — Unicode arrow in auth page + missing title on tasks summary column
+### Issue #150 — Missing type="button" on error boundary and Clear selection buttons
+- Files: `src/routes/__root.tsx`, `src/routes/_authenticated/app.competitors.tsx`
+- Fix: Add `type="button"` to the "Try again" button in ErrorComponent; add `type="button"` to the "Clear selection" button in bulk-action bar
+- Status: IN PROGRESS
+
+### Issue #149 — Unicode arrow in auth page + missing title on tasks summary column (COMPLETED)
 - Files: `src/routes/auth.tsx`, `src/routes/_authenticated/app.tasks.tsx`
 - Fix: Replace `←` Unicode char with `ArrowLeft` icon; add `title={summaryText(t)}` to the truncated summary `<div>` in the tasks table
-- Status: IN PROGRESS
+- Status: COMPLETED (commit 6375773)
 
 ### Issue #148 — Emoji in CrawlLogPanel + missing title attributes on truncated text (COMPLETED)
 - Files: `src/routes/_authenticated/app.competitors.tsx`, `src/components/app/notifications-popover.tsx`
