@@ -123,11 +123,13 @@ function AppShell() {
       .on("postgres_changes", { event: "*", schema: "public", table: "alerts" }, () => {
         queryClient.invalidateQueries({ queryKey: ["badge", "alerts"] });
         queryClient.invalidateQueries({ queryKey: ["alerts"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-counts"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "background_tasks" }, () => {
         queryClient.invalidateQueries({ queryKey: ["badge", "tasks"] });
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
         queryClient.invalidateQueries({ queryKey: ["crawl-tasks"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-counts"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "competitor_products" }, () =>
         queryClient.invalidateQueries({ queryKey: ["products"] }),
