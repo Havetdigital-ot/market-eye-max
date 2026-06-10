@@ -2,10 +2,15 @@
 
 ## Current Task
 
-### Issue #153 — DeltaHint missing currency sign on average price change
+### Issue #154 — Store generator right panel shows empty state on page load even when stores exist
+- File: `src/routes/_authenticated/app.store.tsx`
+- Fix: When `previousStores` loads and `lastUrl` is null, auto-set `lastUrl` to the most recent store's URL so the preview panel populates on first visit
+- Status: IN PROGRESS
+
+### Issue #153 — DeltaHint missing currency sign on average price change (COMPLETED)
 - File: `src/routes/_authenticated/app.index.tsx`
 - Fix: Add `$` prefix to the average price delta so it reads "+$5.00" / "-$5.00" instead of "+5.00" / "-5.00"
-- Status: IN PROGRESS
+- Status: COMPLETED (commit 53a80af)
 
 ### Issue #152 — Competitor search aria-label + dismissible store DNS notice (COMPLETED)
 - Files: `src/routes/_authenticated/app.competitors.tsx`, `src/routes/_authenticated/app.store.tsx`

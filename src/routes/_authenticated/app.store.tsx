@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +84,12 @@ function StorePage() {
       return data ?? [];
     },
   });
+
+  useEffect(() => {
+    if (!lastUrl && previousStores.length > 0) {
+      setLastUrl(storeUrl((previousStores[0] as any).slug));
+    }
+  }, [previousStores, lastUrl]);
 
   const preview = useMemo(() => {
     if (!lastUrl) return null;
