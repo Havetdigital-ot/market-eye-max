@@ -61,6 +61,7 @@ export function NotificationsPopover({ count }: { count: number }) {
       }
       qc.invalidateQueries({ queryKey: ["alerts"] });
       qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
       toast.success("All notifications marked as read");
     } finally {
       setMarking(false);
