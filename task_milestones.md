@@ -2,6 +2,11 @@
 
 ## Current Task
 
+### Issue #178 — recrawl() function missing re-entrancy guard (COMPLETED)
+- File: `src/routes/_authenticated/app.competitors.tsx`
+- Fix: Add `recrawlingId` state + try/finally; disable both "Crawl" and "Recrawl" buttons while request is in-flight
+- Status: COMPLETED (commit tbd)
+
 ### Issue #177 — External links missing noopener on target="_blank" (COMPLETED)
 - Files: `app.index.tsx`, `app.discovery.tsx`, `app.store.tsx`
 - Fix: Change `rel="noreferrer"` to `rel="noopener noreferrer"` on all target="_blank" links for defense-in-depth

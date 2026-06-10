@@ -329,6 +329,7 @@ function CompetitorsPage() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [recrawlingId, setRecrawlingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: competitors = [], isLoading: competitorsLoading, isError: competitorsError } = useQuery({
@@ -538,6 +539,8 @@ function CompetitorsPage() {
   }
 
   async function recrawl(id: string) {
+    if (recrawlingId === id) return;
+    setRecrawlingId(id);
     try {
       setExpanded((prev) => new Set([...prev, id]));
       toast.info("Starting crawl…");
@@ -545,6 +548,8 @@ function CompetitorsPage() {
       qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to start crawl");
+    } finally {
+      setRecrawlingId(null);
     }
   }
 
@@ -741,6 +746,7 @@ function CompetitorsPage() {
                         variant="outline"
                         className="h-6 px-2 text-[11px] shrink-0"
                         onClick={() => recrawl(c.id)}
+                        disabled={recrawlingId === c.id}
                         title="Crawl now"
                       >
                         Crawl
@@ -762,7 +768,7 @@ function CompetitorsPage() {
                     {c.status === "Active" && (
                       <Button size="icon" variant="ghost" className="h-8 w-8"
                         onClick={() => recrawl(c.id)}
-                        disabled={isCrawling}
+                        disabled={isCrawling || recrawlingId === c.id}
                         title={isCrawling ? `Crawling ${c.display_name}…` : `Recrawl ${c.display_name}`}
                         aria-label={isCrawling ? `Crawling ${c.display_name}…` : `Recrawl ${c.display_name}`}
                       >
