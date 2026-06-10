@@ -2,10 +2,15 @@
 
 ## Current Task
 
-### Issue #152 — Competitor search aria-label + dismissible store DNS notice
+### Issue #153 — DeltaHint missing currency sign on average price change
+- File: `src/routes/_authenticated/app.index.tsx`
+- Fix: Add `$` prefix to the average price delta so it reads "+$5.00" / "-$5.00" instead of "+5.00" / "-5.00"
+- Status: IN PROGRESS
+
+### Issue #152 — Competitor search aria-label + dismissible store DNS notice (COMPLETED)
 - Files: `src/routes/_authenticated/app.competitors.tsx`, `src/routes/_authenticated/app.store.tsx`
 - Fix: Add `aria-label` to the unlabeled competitor search input; add a "Got it" dismiss button on the DNS notice that persists to localStorage
-- Status: IN PROGRESS
+- Status: COMPLETED (commit a1b9ac3)
 
 ### Issue #151 — Sidebar branding "Market Eye" → "Market Eye Pro" + user chip title attrs (COMPLETED)
 - Files: `src/routes/_authenticated/app.tsx`

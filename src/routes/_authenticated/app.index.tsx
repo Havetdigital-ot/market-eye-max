@@ -477,8 +477,7 @@ function DeltaHint({ alerts }: { alerts: any[] }) {
       <Icon className={`h-3.5 w-3.5 ${up ? "text-rose-500" : "text-emerald-500"}`} />
       Average price change across recent alerts:{" "}
       <span className={`font-mono font-semibold ${up ? "text-rose-600" : "text-emerald-600"}`}>
-        {up ? "+" : ""}
-        {avg.toFixed(2)}
+        {up ? "+" : "-"}${Math.abs(avg).toFixed(2)}
       </span>
     </div>
   );
