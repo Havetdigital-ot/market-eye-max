@@ -78,6 +78,8 @@ function AppShell() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        const t = e.target as HTMLElement;
+        if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.contentEditable === "true") return;
         e.preventDefault();
         setSearchOpen((v) => !v);
       }

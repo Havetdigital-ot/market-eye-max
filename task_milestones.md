@@ -2,6 +2,11 @@
 
 ## Current Task
 
+### Issue #174 — Cmd+K global shortcut fires inside form inputs, interrupting typing (COMPLETED)
+- File: `src/routes/_authenticated/app.tsx`
+- Fix: In the keydown handler, return early if `e.target` is an INPUT, TEXTAREA, or contenteditable element
+- Status: COMPLETED (commit tbd)
+
 ### Issue #173 — Store preview copy button missing type="button" (COMPLETED)
 - File: `src/routes/_authenticated/app.store.tsx`
 - Fix: Add `type="button"` to the copy URL Button in the store preview panel
