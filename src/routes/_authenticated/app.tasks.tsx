@@ -294,7 +294,7 @@ function TasksPage() {
                   <div>
                     <StatusPill status={t.status} />
                   </div>
-                  <div className={`text-sm truncate ${failed ? "text-red-600 dark:text-red-400" : ""}`}>
+                  <div className={`text-sm truncate ${failed ? "text-red-600 dark:text-red-400" : ""}`} title={summaryText(t)}>
                     {summaryText(t)}
                   </div>
                   <div className="text-xs text-muted-foreground font-mono">

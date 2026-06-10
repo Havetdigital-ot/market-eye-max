@@ -2,10 +2,15 @@
 
 ## Current Task
 
-### Issue #148 — Emoji in CrawlLogPanel + missing title attributes on truncated text
+### Issue #149 — Unicode arrow in auth page + missing title on tasks summary column
+- Files: `src/routes/auth.tsx`, `src/routes/_authenticated/app.tasks.tsx`
+- Fix: Replace `←` Unicode char with `ArrowLeft` icon; add `title={summaryText(t)}` to the truncated summary `<div>` in the tasks table
+- Status: IN PROGRESS
+
+### Issue #148 — Emoji in CrawlLogPanel + missing title attributes on truncated text (COMPLETED)
 - Files: `src/routes/_authenticated/app.competitors.tsx`, `src/components/app/notifications-popover.tsx`
 - Fix: Replace `✓` emoji in CrawlLogPanel with `<Check>` icon; add `title` on product name/description `line-clamp-2` elements in ProductGrid; add `title` on truncated competitor name and product name spans in notifications popover
-- Status: IN PROGRESS
+- Status: COMPLETED (commit 106805b)
 
 ### Issue #147 — Dashboard stat tiles silently show 0 when counts query fails (COMPLETED)
 - File: `src/routes/_authenticated/app.index.tsx`

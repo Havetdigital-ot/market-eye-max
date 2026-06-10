@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -164,8 +165,8 @@ function AuthPage() {
           )}
         </div>
         <div className="mt-6 text-center">
-          <Link to="/" className="text-xs text-muted-foreground hover:underline">
-            ← Back home
+          <Link to="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:underline">
+            <ArrowLeft className="h-3 w-3" /> Back home
           </Link>
         </div>
       </Card>
