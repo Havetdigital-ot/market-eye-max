@@ -470,9 +470,11 @@ function CompetitorsPage() {
     if (!user.user) return;
     let display = name.trim();
     try {
-      if (!display) display = new URL(url).hostname.replace("www.", "");
+      const parsed = new URL(url);
+      if (!["http:", "https:"].includes(parsed.protocol)) throw new Error();
+      if (!display) display = parsed.hostname.replace("www.", "");
     } catch {
-      return toast.error("Enter a valid URL");
+      return toast.error("Enter a valid URL starting with http:// or https://");
     }
     setAdding(true);
     try {

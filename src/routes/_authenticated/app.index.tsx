@@ -309,7 +309,7 @@ function DashboardPage() {
                     <a
                       href={(lastStore as any).details.url}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-[11px] font-mono text-muted-foreground hover:text-foreground transition-colors truncate max-w-full"
                       onClick={(e) => e.stopPropagation()}
                     >

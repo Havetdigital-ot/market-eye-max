@@ -374,7 +374,7 @@ function StorePage() {
                       <a
                         href={url}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
                         title="Open"
                         aria-label="Open store"
@@ -427,7 +427,7 @@ function StorePage() {
                     <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy
                   </Button>
                   <Button size="sm" asChild>
-                    <a href={preview.url} target="_blank" rel="noreferrer">
+                    <a href={preview.url} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Open
                     </a>
                   </Button>

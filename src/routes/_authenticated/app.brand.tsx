@@ -147,6 +147,7 @@ function BrandPage() {
   });
 
   async function generate() {
+    if (phase === "generating") return;
     if (!desc.trim()) {
       toast.error("Describe your product or niche first.");
       return;
