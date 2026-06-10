@@ -2,10 +2,15 @@
 
 ## Current Task
 
-### Issue #150 — Missing type="button" on error boundary and Clear selection buttons
+### Issue #151 — Sidebar branding "Market Eye" → "Market Eye Pro" + user chip title attrs
+- Files: `src/routes/_authenticated/app.tsx`
+- Fix: Update sidebar header text from "Market Eye" to "Market Eye Pro"; add `title` to truncated fullName and company in user chip
+- Status: IN PROGRESS
+
+### Issue #150 — Missing type="button" on error boundary and Clear selection buttons (COMPLETED)
 - Files: `src/routes/__root.tsx`, `src/routes/_authenticated/app.competitors.tsx`
 - Fix: Add `type="button"` to the "Try again" button in ErrorComponent; add `type="button"` to the "Clear selection" button in bulk-action bar
-- Status: IN PROGRESS
+- Status: COMPLETED (commit ef3e778)
 
 ### Issue #149 — Unicode arrow in auth page + missing title on tasks summary column (COMPLETED)
 - Files: `src/routes/auth.tsx`, `src/routes/_authenticated/app.tasks.tsx`

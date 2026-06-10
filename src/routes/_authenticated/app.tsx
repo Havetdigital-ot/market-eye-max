@@ -177,7 +177,7 @@ function AppShell() {
               />
               <div className="leading-tight flex items-baseline gap-1.5">
                 <span className="text-white font-extrabold text-[17px] tracking-tight">
-                  Market Eye
+                  Market Eye Pro
                 </span>
               </div>
             </Link>
@@ -235,10 +235,10 @@ function AppShell() {
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-semibold text-white leading-tight truncate">
+                <div className="text-[13px] font-semibold text-white leading-tight truncate" title={fullName}>
                   {fullName}
                 </div>
-                <div className="text-[12px] text-sidebar-foreground/60 truncate">
+                <div className="text-[12px] text-sidebar-foreground/60 truncate" title={company}>
                   {company}
                 </div>
               </div>
