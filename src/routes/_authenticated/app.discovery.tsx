@@ -136,8 +136,8 @@ function DiscoveryPage() {
             </p>
           </div>
           <div className="space-y-2">
-            <p className="text-sm font-semibold">Platforms</p>
-            <div className="flex flex-wrap gap-2">
+            <p id="platforms-label" className="text-sm font-semibold">Platforms</p>
+            <div role="group" aria-labelledby="platforms-label" className="flex flex-wrap gap-2">
               {PLATFORMS.map((p) => {
                 const on = selected[p];
                 return (

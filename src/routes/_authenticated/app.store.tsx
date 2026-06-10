@@ -423,7 +423,7 @@ function StorePage() {
                   <div className="font-mono text-sm truncate" title={preview.url}>{preview.url}</div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <Button size="sm" variant="outline" onClick={() => copyUrl(preview.url)}>
+                  <Button type="button" size="sm" variant="outline" onClick={() => copyUrl(preview.url)}>
                     <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy
                   </Button>
                   <Button size="sm" asChild>

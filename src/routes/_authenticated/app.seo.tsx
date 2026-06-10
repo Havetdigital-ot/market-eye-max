@@ -252,7 +252,7 @@ function SeoPage() {
                 <span className={keywords.length >= 180 ? "text-amber-500" : ""}>{keywords.length}/200</span>
               </p>
             </div>
-            <Button type="submit" disabled={generating} className="w-full h-11 gap-2">
+            <Button type="submit" disabled={generating || !topic.trim()} className="w-full h-11 gap-2">
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
               {generating ? "Generating…" : "Generate content"}
             </Button>

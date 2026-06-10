@@ -2,6 +2,21 @@
 
 ## Current Task
 
+### Issue #173 — Store preview copy button missing type="button" (COMPLETED)
+- File: `src/routes/_authenticated/app.store.tsx`
+- Fix: Add `type="button"` to the copy URL Button in the store preview panel
+- Status: COMPLETED (commit tbd)
+
+### Issue #172 — SEO generate button not disabled when topic is empty (COMPLETED)
+- File: `src/routes/_authenticated/app.seo.tsx`
+- Fix: Add `|| !topic.trim()` to the generate button's `disabled` prop for immediate visual feedback
+- Status: COMPLETED (commit tbd)
+
+### Issue #171 — Discovery platforms toggle group missing accessible group label (COMPLETED)
+- File: `src/routes/_authenticated/app.discovery.tsx`
+- Fix: Add `id="platforms-label"` to the `<p>` label and `role="group" aria-labelledby="platforms-label"` to the button group div
+- Status: COMPLETED (commit tbd)
+
 ### Issue #170 — Notifications popover alert buttons missing aria-labels (COMPLETED)
 - File: `src/components/app/notifications-popover.tsx`
 - Fix: Add `aria-label={\`\${a.type} from \${a.competitor_name}: \${a.product_name}\`}` to each alert button
