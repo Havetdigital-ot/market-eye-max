@@ -107,15 +107,21 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
             .map((l: any) => (typeof l === "string" ? l : (l?.url ?? "")))
             .filter(Boolean);
 
-          const productPat = /\/(products?|shop|store|catalog|collections?|items?|buy|categor)\b/i;
           const skipPat =
             /\/(about|faq|contact|help|blog|news|press|career|legal|terms|privacy|account|cart|checkout|search|wishlist)\b/i;
+          // Prefer collection/category/shop pages (many products at once) over individual product detail pages
+          const collectionPat = /\/(shop|store|catalog|collections?|categor|department)\b/i;
+          const productDetailPat = /\/products?\//i;
 
-          const productLinks = allLinks.filter((u) => productPat.test(u) && !skipPat.test(u));
-          const otherLinks = allLinks.filter((u) => !productPat.test(u) && !skipPat.test(u));
-          const mapped = [...productLinks, ...otherLinks].slice(0, data.limit);
+          const collectionLinks = allLinks.filter((u) => collectionPat.test(u) && !skipPat.test(u));
+          const detailLinks = allLinks.filter((u) => productDetailPat.test(u) && !skipPat.test(u));
+          const otherLinks = allLinks.filter((u) => !collectionPat.test(u) && !productDetailPat.test(u) && !skipPat.test(u));
+
+          // Prefer: collection pages first, then homepage/other, then individual product pages
+          const ranked = [...collectionLinks, ...otherLinks, ...detailLinks];
+          const mapped = ranked.slice(0, data.limit);
           if (mapped.length > 0) urls = mapped;
-          console.log("[crawlCompetitor] mapped", allLinks.length, "→ using", urls.length, "urls");
+          console.log("[crawlCompetitor] mapped", allLinks.length, "→", collectionLinks.length, "collection,", detailLinks.length, "detail → using", urls.length, "urls");
         } catch (mapErr: any) {
           console.warn("[crawlCompetitor] map skipped:", mapErr?.message ?? mapErr, "— using fallback URLs");
         }
