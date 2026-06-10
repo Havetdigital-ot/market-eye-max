@@ -92,6 +92,7 @@ function SeoPage() {
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
+    if (generating) return;
     if (!topic.trim()) return toast.error("Enter a topic");
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;

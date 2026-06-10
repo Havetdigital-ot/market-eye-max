@@ -81,6 +81,7 @@ function DiscoveryPage() {
 
   async function scan(e: React.FormEvent) {
     e.preventDefault();
+    if (running) return;
     const kws = keywords.split(",").map((k) => k.trim()).filter(Boolean);
     if (kws.length === 0) return toast.error("Enter at least one keyword");
     const plats = PLATFORMS.filter((p) => selected[p]);
