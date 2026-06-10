@@ -5,27 +5,27 @@
 ### Issue #162 — Discovery scan() doesn't clear keyword input after successful submission (COMPLETED)
 - File: `src/routes/_authenticated/app.discovery.tsx`
 - Fix: Add `setKeywords("")` after `toast.success(...)` in `scan()` so the form is ready for a new query
-- Status: COMPLETED (commit tbd)
+- Status: COMPLETED (commit df0b158)
 
 ### Issue #161 — Brand builder buttons use hardcoded bg-blue-600 instead of semantic tokens (COMPLETED)
 - File: `src/routes/_authenticated/app.brand.tsx`
 - Fix: Replace `bg-blue-600 hover:bg-blue-700 text-white` with `bg-primary hover:bg-primary/90 text-primary-foreground` on both generate and accept buttons
-- Status: COMPLETED (commit tbd)
+- Status: COMPLETED (commit df0b158)
 
 ### Issue #160 — brand_assets queryFn silently swallows Supabase errors (COMPLETED)
 - File: `src/routes/_authenticated/app.store.tsx`
 - Fix: Destructure `error` from the brand_assets query and `if (error) throw error` so isError becomes reachable
-- Status: COMPLETED (commit tbd)
+- Status: COMPLETED (commit df0b158)
 
 ### Issue #159 — CrawlLogPanel uses hardcoded hex color #0d1117 (COMPLETED)
 - File: `src/routes/_authenticated/app.competitors.tsx`
 - Fix: Replace `bg-[#0d1117] dark:bg-[#0d1117]` with Tailwind `bg-zinc-950`
-- Status: COMPLETED (commit tbd)
+- Status: COMPLETED (commit df0b158)
 
 ### Issue #158 — Alerts markRead() missing per-row loading/disabled guard (COMPLETED)
 - File: `src/routes/_authenticated/app.alerts.tsx`
 - Fix: Add `readingId` state; guard markRead with try/finally; fade row while in-flight with `opacity-50 pointer-events-none`
-- Status: COMPLETED (commit tbd)
+- Status: COMPLETED (commit df0b158)
 
 ### Issue #157 — ProductGrid in competitors has no search/filter for products (COMPLETED)
 - File: `src/routes/_authenticated/app.competitors.tsx`
