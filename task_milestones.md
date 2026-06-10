@@ -2,12 +2,16 @@
 
 ## Current Task
 
-### Issue #147 — Dashboard stat tiles silently show 0 when counts query fails
-- File: `src/routes/_authenticated/app.index.tsx`
-- Fix: throw on any Supabase error in Promise.all; add isError to destructure; show "—" in tiles on error
-- Status: IN PROGRESS
+_Scanning for next issue…_
 
 ### Completed this session
+- Issue #159 (PR #160 merged) — Dashboard "Latest store" card stays stale: invalidate ["store","latest"] on publish + in realtime handler
+- Issue #157 (PR #158 merged) — Dashboard realtime subscriptions + notifications markAllRead missing dashboard-counts invalidation
+- Issue #155 (PR #156 merged) — Dashboard "Saved trends" / "Unread alerts" tiles stale: add dashboard-counts invalidation to toggleSave + openAlert
+- Issue #153 (PR #154 merged) — Dashboard "Active competitors" tile stays stale: add dashboard-counts invalidation to 4 competitor mutations
+- Issue #151 (PR #152 merged) — Notification popover dark-mode icon colours + markAllRead badge invalidation in alerts page
+- Issue #149 (PR #150 merged) — aria-label on role=button library rows in brand.tsx + seo.tsx; type=button on Clear selection in competitors.tsx
+- Issue #147 (already fixed in code) — Dashboard stat tiles show "—" on counts query failure; throw in Promise.all
 - Issue #145 (PR #146 merged) — SEO items + notifications popover queryFns now throw on Supabase error (isError branches reachable)
 - Issue #138 (PR #139 merged) — Character count indicators on Store and SEO bounded text fields
 - Issue #131 (PR #132 merged) — Store Generator form retains stale values after successful publish
