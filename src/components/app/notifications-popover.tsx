@@ -72,6 +72,7 @@ export function NotificationsPopover({ count }: { count: number }) {
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["alerts"] });
     qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
     navigate({ to: "/app/alerts" });
   }
 

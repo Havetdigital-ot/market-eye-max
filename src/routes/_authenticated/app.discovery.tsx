@@ -102,6 +102,7 @@ function DiscoveryPage() {
       const { error } = await supabase.from("trends").update({ saved: !saved }).eq("id", id);
       if (error) return toast.error(error.message);
       qc.invalidateQueries({ queryKey: ["trends"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
     } finally {
       setSavingId(null);
     }
