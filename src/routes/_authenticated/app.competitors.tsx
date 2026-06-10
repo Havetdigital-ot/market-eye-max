@@ -541,6 +541,7 @@ function CompetitorsPage() {
             <Trash2 className="h-3.5 w-3.5" /> Delete selected
           </Button>
           <button
+            type="button"
             className="ml-auto text-xs text-muted-foreground hover:text-foreground"
             onClick={() => setSelected(new Set())}
           >
