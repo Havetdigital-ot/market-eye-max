@@ -5,17 +5,17 @@
 ### Issue #177 — External links missing noopener on target="_blank" (COMPLETED)
 - Files: `app.index.tsx`, `app.discovery.tsx`, `app.store.tsx`
 - Fix: Change `rel="noreferrer"` to `rel="noopener noreferrer"` on all target="_blank" links for defense-in-depth
-- Status: COMPLETED (commit tbd)
+- Status: COMPLETED (commit 4c517b6)
 
 ### Issue #176 — Brand generate() missing re-entrancy guard (COMPLETED)
 - File: `src/routes/_authenticated/app.brand.tsx`
 - Fix: Add `if (phase === "generating") return;` guard at the top of `generate()` for defense-in-depth
-- Status: COMPLETED (commit tbd)
+- Status: COMPLETED (commit 4c517b6)
 
 ### Issue #175 — addCompetitor URL validation skipped when display name is provided (COMPLETED)
 - File: `src/routes/_authenticated/app.competitors.tsx`
 - Fix: Always parse URL with `new URL()` and validate protocol is http/https regardless of whether a display name was entered
-- Status: COMPLETED (commit tbd)
+- Status: COMPLETED (commit 4c517b6)
 
 ### Issue #174 — Cmd+K global shortcut fires inside form inputs, interrupting typing (COMPLETED)
 - File: `src/routes/_authenticated/app.tsx`
