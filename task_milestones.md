@@ -2,10 +2,10 @@
 
 ## Current Task
 
-### Issue #157 — ProductGrid in competitors has no search/filter for products
+### Issue #157 — ProductGrid in competitors has no search/filter for products (COMPLETED)
 - File: `src/routes/_authenticated/app.competitors.tsx`
 - Fix: Add a local text search state to ProductGrid; filter displayed products by name/description/category/SKU; show match count in header
-- Status: IN PROGRESS
+- Status: COMPLETED (commit d9bed08)
 
 ### Issue #156 — Brand library loadFromLibrary doesn't pre-fill description form (COMPLETED)
 - File: `src/routes/_authenticated/app.brand.tsx`
