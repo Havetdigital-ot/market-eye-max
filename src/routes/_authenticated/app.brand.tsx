@@ -112,6 +112,10 @@ function BrandPage() {
     });
     setViewingLibraryId(b.id);
     setPhase("review");
+    if (b.source_description) {
+      setNicheKey("other");
+      setDesc(b.source_description);
+    }
   }
 
   function closeLibraryView() {

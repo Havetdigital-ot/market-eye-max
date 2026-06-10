@@ -2,10 +2,15 @@
 
 ## Current Task
 
-### Issue #155 — Alerts page "Mark all read" missing loading state guard
+### Issue #156 — Brand library loadFromLibrary doesn't pre-fill description form
+- File: `src/routes/_authenticated/app.brand.tsx`
+- Fix: When loading a library brand for review, also set `desc = b.source_description` and `nicheKey = "other"` so after closing the review panel the form is ready to regenerate
+- Status: IN PROGRESS
+
+### Issue #155 — Alerts page "Mark all read" missing loading state guard (COMPLETED)
 - File: `src/routes/_authenticated/app.alerts.tsx`
 - Fix: Add `marking` state + `Loader2` spinner to prevent double-click on "Mark all read" AlertDialogAction
-- Status: IN PROGRESS
+- Status: COMPLETED (commit a1cffce)
 
 ### Issue #154 — Store generator right panel shows empty state on page load even when stores exist (COMPLETED)
 - File: `src/routes/_authenticated/app.store.tsx`
