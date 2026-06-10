@@ -154,6 +154,7 @@ export function NotificationsPopover({ count }: { count: number }) {
                 <button
                   key={a.id}
                   type="button"
+                  aria-label={`${a.type} from ${a.competitor_name}: ${a.product_name}`}
                   onClick={() => openAlert(a.id)}
                   className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-muted/50 transition-colors flex gap-3 ${
                     !a.is_read ? "bg-blue-50/40 dark:bg-blue-950/20" : ""

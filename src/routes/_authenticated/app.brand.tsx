@@ -122,6 +122,8 @@ function BrandPage() {
     setPhase("idle");
     setDraft(null);
     setViewingLibraryId(null);
+    setDesc("");
+    setNicheKey("");
   }
 
   async function deleteBrand(id: string) {

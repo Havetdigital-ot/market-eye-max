@@ -327,6 +327,7 @@ function CompetitorsPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -519,13 +520,19 @@ function CompetitorsPage() {
   }
 
   async function bulkDelete() {
-    const ids = Array.from(selected);
-    const { error } = await supabase.from("competitors").delete().in("id", ids);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["competitors"] });
-    qc.invalidateQueries({ queryKey: ["products"] });
-    setSelected(new Set());
-    toast.success(`Removed ${ids.length} competitor${ids.length > 1 ? "s" : ""}`);
+    if (bulkDeleting) return;
+    setBulkDeleting(true);
+    try {
+      const ids = Array.from(selected);
+      const { error } = await supabase.from("competitors").delete().in("id", ids);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["competitors"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+      setSelected(new Set());
+      toast.success(`Removed ${ids.length} competitor${ids.length > 1 ? "s" : ""}`);
+    } finally {
+      setBulkDeleting(false);
+    }
   }
 
   async function recrawl(id: string) {
@@ -880,6 +887,7 @@ function CompetitorsPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={bulkDeleting}
               onClick={() => { bulkDelete(); setBulkDeleteOpen(false); }}
             >
               Remove {selected.size}

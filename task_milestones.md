@@ -2,6 +2,21 @@
 
 ## Current Task
 
+### Issue #170 — Notifications popover alert buttons missing aria-labels (COMPLETED)
+- File: `src/components/app/notifications-popover.tsx`
+- Fix: Add `aria-label={\`\${a.type} from \${a.competitor_name}: \${a.product_name}\`}` to each alert button
+- Status: COMPLETED (commit tbd)
+
+### Issue #169 — Bulk delete in competitors missing loading/disabled guard (COMPLETED)
+- File: `src/routes/_authenticated/app.competitors.tsx`
+- Fix: Add `bulkDeleting` state + try/finally to `bulkDelete()`; disable AlertDialogAction while in-flight
+- Status: COMPLETED (commit tbd)
+
+### Issue #168 — Brand closeLibraryView() doesn't clear desc/nicheKey form fields (COMPLETED)
+- File: `src/routes/_authenticated/app.brand.tsx`
+- Fix: Add `setDesc("")` and `setNicheKey("")` to `closeLibraryView()` for consistent field cleanup
+- Status: COMPLETED (commit tbd)
+
 ### Issue #167 — SEO deleteItem missing double-submit guard + dialog action not disabled (COMPLETED)
 - File: `src/routes/_authenticated/app.seo.tsx`
 - Fix: Add `deleting` state + try/finally to `deleteItem()`; disable AlertDialogAction while deleting
