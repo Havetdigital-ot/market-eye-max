@@ -84,11 +84,11 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
         await setProgress("mapping", { target: competitor.display_name, domain: hostname });
 
         const base = competitor.url.replace(/\/$/, "");
+        // Most Shopify stores expose products at /collections/all; also cover WooCommerce /shop
         const fallbackUrls = [
+          `${base}/collections/all`,
           `${base}/products`,
           `${base}/shop`,
-          `${base}/collections`,
-          `${base}/collections/all`,
           `${base}/catalog`,
           base,
         ].slice(0, data.limit);
@@ -147,10 +147,12 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
                     {
                       type: "json",
                       prompt:
-                        "Extract every distinct product visible on this page. For each product return: name (string), url (absolute product URL string), description (short string), image_url (string), category (string), sku (string), price (number).",
+                        "Extract every distinct product visible on this page. For each product return: name (string), url (absolute product URL string), description (short string), image_url (absolute image URL string), category (string), sku (string), price (number in USD).",
                       schema: productExtractionSchema,
                     } as any,
                   ],
+                  onlyMainContent: true,
+                  waitFor: 1500,
                 }),
                 new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), TIMEOUT)),
               ]),
@@ -160,7 +162,12 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
             if (r.status === "fulfilled") {
               const doc: any = r.value;
               const raw = doc?.json ?? doc?.extract;
-              const list: any[] = Array.isArray(raw) ? raw : (raw?.products ?? []);
+              const list: any[] = Array.isArray(raw)
+                ? raw
+                : Array.isArray(raw?.products)
+                  ? raw.products
+                  : [];
+              console.log("[crawlCompetitor] extracted", list.length, "products from url");
               products.push(...list);
             } else {
               console.error("[crawlCompetitor] scrape rejected:", r.reason?.message ?? r.reason);
