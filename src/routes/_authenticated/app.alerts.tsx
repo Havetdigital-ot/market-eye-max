@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Bell, CheckCheck, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
+import { Bell, CheckCheck, ChevronLeft, ChevronRight, AlertCircle, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,7 @@ function AlertsPage() {
   const [typeFilter, setTypeFilter] = useState<AlertType>("All");
   const [readFilter, setReadFilter] = useState<ReadFilter>("All");
   const [page, setPage] = useState(1);
+  const [marking, setMarking] = useState(false);
 
   const { data: alerts = [], isLoading, isError } = useQuery({
     queryKey: ["alerts"],
@@ -62,17 +63,23 @@ function AlertsPage() {
   }
 
   async function markAllRead() {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase
-      .from("alerts")
-      .update({ is_read: true })
-      .eq("user_id", u.user.id)
-      .eq("is_read", false);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["alerts"] });
-    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
-    toast.success("Marked all as read");
+    if (marking) return;
+    setMarking(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { error } = await supabase
+        .from("alerts")
+        .update({ is_read: true })
+        .eq("user_id", u.user.id)
+        .eq("is_read", false);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+      toast.success("Marked all as read");
+    } finally {
+      setMarking(false);
+    }
   }
 
   const filtered = alerts.filter((a: any) => {
@@ -122,9 +129,10 @@ function AlertsPage() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={markAllRead}>
-                Mark all read
+              <AlertDialogCancel disabled={marking}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={markAllRead} disabled={marking} className="gap-1.5">
+                {marking && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {marking ? "Marking…" : "Mark all read"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

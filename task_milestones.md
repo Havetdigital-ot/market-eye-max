@@ -2,10 +2,15 @@
 
 ## Current Task
 
-### Issue #154 — Store generator right panel shows empty state on page load even when stores exist
+### Issue #155 — Alerts page "Mark all read" missing loading state guard
+- File: `src/routes/_authenticated/app.alerts.tsx`
+- Fix: Add `marking` state + `Loader2` spinner to prevent double-click on "Mark all read" AlertDialogAction
+- Status: IN PROGRESS
+
+### Issue #154 — Store generator right panel shows empty state on page load even when stores exist (COMPLETED)
 - File: `src/routes/_authenticated/app.store.tsx`
 - Fix: When `previousStores` loads and `lastUrl` is null, auto-set `lastUrl` to the most recent store's URL so the preview panel populates on first visit
-- Status: IN PROGRESS
+- Status: COMPLETED (commit 75b6658)
 
 ### Issue #153 — DeltaHint missing currency sign on average price change (COMPLETED)
 - File: `src/routes/_authenticated/app.index.tsx`
