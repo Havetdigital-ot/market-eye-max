@@ -39,6 +39,7 @@ function AlertsPage() {
   const [typeFilter, setTypeFilter] = useState<AlertType>("All");
   const [readFilter, setReadFilter] = useState<ReadFilter>("All");
   const [page, setPage] = useState(1);
+  const [markingId, setMarkingId] = useState<string | null>(null);
 
   const { data: alerts = [], isLoading, isError } = useQuery({
     queryKey: ["alerts"],
@@ -54,11 +55,17 @@ function AlertsPage() {
   });
 
   async function markRead(id: string) {
-    const { error } = await supabase.from("alerts").update({ is_read: true }).eq("id", id);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["alerts"] });
-    qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
-    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    if (markingId === id) return;
+    setMarkingId(id);
+    try {
+      const { error } = await supabase.from("alerts").update({ is_read: true }).eq("id", id);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    } finally {
+      setMarkingId(null);
+    }
   }
 
   async function markAllRead() {
@@ -232,10 +239,10 @@ function AlertsPage() {
                 return (
                   <tr
                     key={a.id}
-                    onClick={!a.is_read ? () => markRead(a.id) : undefined}
-                    tabIndex={!a.is_read ? 0 : undefined}
+                    onClick={!a.is_read && markingId !== a.id ? () => markRead(a.id) : undefined}
+                    tabIndex={!a.is_read && markingId !== a.id ? 0 : undefined}
                     aria-label={!a.is_read ? "Mark as read" : undefined}
-                    onKeyDown={!a.is_read ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); markRead(a.id); } } : undefined}
+                    onKeyDown={!a.is_read && markingId !== a.id ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); markRead(a.id); } } : undefined}
                     className={cn(
                       "border-t transition-colors",
                       !a.is_read &&
