@@ -16,18 +16,19 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       .object({
         competitorId: z.string().uuid(),
         taskId: z.string().uuid(),
-        limit: z.number().min(1).max(20).optional().default(5),
+        limit: z.number().min(1).max(20).optional().default(3),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { waitUntil } = await import("./execution-context");
 
-    // Return immediately so the HTTP connection closes before the proxy times out.
-    // The actual crawl is extended past the response via ctx.waitUntil() so the
-    // Cloudflare Workers runtime keeps it alive (setImmediate alone is killed
-    // the moment the response is returned).
+    // We previously detached this work via ctx.waitUntil() so the HTTP
+    // response could return immediately. That didn't survive on this runtime
+    // (the isolate is terminated when the response is flushed), leaving every
+    // task stuck "Running" until the orphan sweeper marked it failed. Now we
+    // await the crawl inside the request — the HTTP connection holds the
+    // isolate open. Budget is kept under ~30s end-to-end.
     const work = (async () => {
       const { getFirecrawl, productExtractionSchema } = await import("./firecrawl.server");
 
@@ -98,7 +99,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           const mapRes: any = await Promise.race([
             firecrawl.map(competitor.url, { limit: data.limit * 4 }),
             new Promise((_, rej) =>
-              setTimeout(() => rej(new Error("map timeout after 25s")), 25_000)
+              setTimeout(() => rej(new Error("map timeout after 10s")), 10_000)
             ),
           ]);
           // SDK v4 returns { links: SearchResultWeb[] } — extract url string from each entry.
@@ -127,8 +128,8 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           urls: urls.slice(0, 8),
         });
 
-        const BATCH = 2;
-        const TIMEOUT = 60_000;
+        const BATCH = 3;
+        const TIMEOUT = 20_000;
         const products: any[] = [];
 
         for (let i = 0; i < urls.length; i += BATCH) {
@@ -297,7 +298,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       }
     })();
 
-    waitUntil(work);
+    await work;
     return { ok: true, started: true };
   });
 

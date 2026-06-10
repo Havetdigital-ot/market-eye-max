@@ -59,8 +59,10 @@ export async function startCompetitorCrawl(competitorId: string) {
     .single();
   if (error || !task) throw error ?? new Error("Failed to create task");
 
-  // Fire and forget; UI watches background_tasks via realtime.
-  void crawlCompetitor({ data: { competitorId, taskId: task.id } });
+  // Awaited so failures surface; UI also watches background_tasks via realtime.
+  void crawlCompetitor({ data: { competitorId, taskId: task.id } }).catch((e) => {
+    console.error("[startCompetitorCrawl] crawl failed:", e);
+  });
   return { taskId: task.id };
 }
 
