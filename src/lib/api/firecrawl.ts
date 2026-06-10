@@ -3,7 +3,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { crawlCompetitor, scanTrends } from "@/lib/firecrawl.functions";
 
-const CRAWL_ACTIVE_MS = 5 * 60 * 1000; // 5 minutes
+const CRAWL_ACTIVE_MS = 90_000; // 90 seconds — matches the 60s hard timeout + buffer
 
 export async function startCompetitorCrawl(competitorId: string) {
   const { data: userRes } = await supabase.auth.getUser();

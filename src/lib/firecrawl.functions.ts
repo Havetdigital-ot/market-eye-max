@@ -16,7 +16,8 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
       .object({
         competitorId: z.string().uuid(),
         taskId: z.string().uuid(),
-        limit: z.number().min(1).max(20).optional().default(3),
+        // Keep small: budget is ≤ 30s end-to-end (map 8s + scrape 20s + save)
+        limit: z.number().min(1).max(5).optional().default(2),
       })
       .parse(input),
   )
@@ -53,20 +54,18 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           .eq("id", data.taskId);
       };
 
-      // Hard 5-minute overall timeout — guards against server restart leaving
-      // the task stuck "Running" forever. Uses .eq("status","Running") so it
-      // won't overwrite a task that already completed normally.
+      // Hard 60s timeout — budget is ~30s; anything beyond 60s is stuck.
       const hardTimeoutId = setTimeout(async () => {
         await supabase
           .from("background_tasks")
           .update({
             status: "Failed",
-            error_message: "Crawl timed out after 5 minutes",
+            error_message: "Crawl timed out after 60 seconds",
             updated_at: new Date().toISOString(),
           })
           .eq("id", data.taskId)
           .eq("status", "Running");
-      }, 5 * 60 * 1000);
+      }, 60_000);
 
       try {
         const { data: competitor, error: cErr } = await supabase
@@ -99,7 +98,7 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           const mapRes: any = await Promise.race([
             firecrawl.map(competitor.url, { limit: data.limit * 4 }),
             new Promise((_, rej) =>
-              setTimeout(() => rej(new Error("map timeout after 10s")), 10_000)
+              setTimeout(() => rej(new Error("map timeout after 8s")), 8_000)
             ),
           ]);
           // SDK v4 returns { links: SearchResultWeb[] } — extract url string from each entry.
@@ -128,8 +127,8 @@ export const crawlCompetitor = createServerFn({ method: "POST" })
           urls: urls.slice(0, 8),
         });
 
-        const BATCH = 3;
-        const TIMEOUT = 20_000;
+        const BATCH = data.limit; // scrape all at once (limit=2 default)
+        const TIMEOUT = 25_000;
         const products: any[] = [];
 
         for (let i = 0; i < urls.length; i += BATCH) {
