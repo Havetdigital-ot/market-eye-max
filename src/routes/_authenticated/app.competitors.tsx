@@ -447,6 +447,7 @@ function CompetitorsPage() {
       if (error || !inserted) return toast.error(error?.message ?? "Failed");
       setName(""); setUrl(""); setOpen(false);
       qc.invalidateQueries({ queryKey: ["competitors"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
       setExpanded((prev) => new Set([...prev, inserted.id]));
       toast.success("Competitor added — crawl starting…");
       try {
@@ -468,6 +469,7 @@ function CompetitorsPage() {
       const { error } = await supabase.from("competitors").update({ status: next }).eq("id", id);
       if (error) return toast.error(error.message);
       qc.invalidateQueries({ queryKey: ["competitors"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
     } finally {
       setTogglingId(null);
     }
@@ -477,6 +479,7 @@ function CompetitorsPage() {
     const { error } = await supabase.from("competitors").delete().eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["competitors"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
     setExpanded((prev) => { const next = new Set(prev); next.delete(id); return next; });
     setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
     toast.success("Removed");
@@ -488,6 +491,7 @@ function CompetitorsPage() {
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["competitors"] });
     qc.invalidateQueries({ queryKey: ["products"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
     setSelected(new Set());
     toast.success(`Removed ${ids.length} competitor${ids.length > 1 ? "s" : ""}`);
   }
