@@ -317,6 +317,7 @@ function BrandPage() {
                   <div
                     role="button"
                     tabIndex={0}
+                    aria-label={`Load ${b.brand_name ?? "brand"} into editor`}
                     className="flex items-center gap-3 flex-1 min-w-0 px-5 py-3.5 hover:bg-muted/40 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:rounded"
                     onClick={() => loadFromLibrary(b)}
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); loadFromLibrary(b); } }}

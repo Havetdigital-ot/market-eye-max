@@ -291,6 +291,7 @@ function SeoPage() {
                   <div
                     role="button"
                     tabIndex={0}
+                    aria-label={`Open ${s.title}`}
                     className="flex-1 text-left min-w-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:rounded-sm"
                     onClick={() => openItem(s)}
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openItem(s); } }}
