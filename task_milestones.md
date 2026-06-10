@@ -2,10 +2,15 @@
 
 ## Current Task
 
-### Issue #147 — Dashboard stat tiles silently show 0 when counts query fails
+### Issue #148 — Emoji in CrawlLogPanel + missing title attributes on truncated text
+- Files: `src/routes/_authenticated/app.competitors.tsx`, `src/components/app/notifications-popover.tsx`
+- Fix: Replace `✓` emoji in CrawlLogPanel with `<Check>` icon; add `title` on product name/description `line-clamp-2` elements in ProductGrid; add `title` on truncated competitor name and product name spans in notifications popover
+- Status: IN PROGRESS
+
+### Issue #147 — Dashboard stat tiles silently show 0 when counts query fails (COMPLETED)
 - File: `src/routes/_authenticated/app.index.tsx`
 - Fix: throw on any Supabase error in Promise.all; add isError to destructure; show "—" in tiles on error
-- Status: IN PROGRESS
+- Status: COMPLETED (already in codebase)
 
 ### Completed this session
 - Issue #145 (PR #146 merged) — SEO items + notifications popover queryFns now throw on Supabase error (isError branches reachable)

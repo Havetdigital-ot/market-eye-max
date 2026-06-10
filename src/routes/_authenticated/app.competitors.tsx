@@ -160,8 +160,9 @@ function CrawlLogPanel({
           );
         })}
         {task.status === "Completed" && (
-          <div className="pt-2 border-t border-white/10 text-emerald-400">
-            ✓ Crawl complete — scroll down to see products
+          <div className="pt-2 border-t border-white/10 text-emerald-400 flex items-center gap-1.5">
+            <Check className="h-3.5 w-3.5 shrink-0" />
+            Crawl complete — scroll down to see products
           </div>
         )}
       </div>
@@ -261,9 +262,9 @@ function ProductGrid({ competitorId, isActive }: { competitorId: string; isActiv
             )}
           </div>
           <div className="p-3 flex flex-col gap-1 flex-1">
-            <p className="text-xs font-medium line-clamp-2 leading-snug">{p.name}</p>
+            <p className="text-xs font-medium line-clamp-2 leading-snug" title={p.name}>{p.name}</p>
             {p.description && (
-              <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">{p.description}</p>
+              <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug" title={p.description}>{p.description}</p>
             )}
             {p.latestPrice && (
               <p className="mt-auto pt-1 text-sm font-semibold">

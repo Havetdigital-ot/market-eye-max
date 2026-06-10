@@ -163,10 +163,10 @@ export function NotificationsPopover({ count }: { count: number }) {
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">
+                    <div className="text-sm font-medium truncate" title={`${a.type} · ${a.competitor_name}`}>
                       {a.type} · {a.competitor_name}
                     </div>
-                    <div className="text-xs text-muted-foreground truncate">
+                    <div className="text-xs text-muted-foreground truncate" title={a.product_name}>
                       {a.product_name}
                       {a.old_price != null && a.new_price != null && (
                         <> · ${Number(a.old_price).toFixed(2)} → ${Number(a.new_price).toFixed(2)}</>
