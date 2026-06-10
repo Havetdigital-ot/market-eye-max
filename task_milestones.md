@@ -2,10 +2,15 @@
 
 ## Current Task
 
-### Issue #151 — Sidebar branding "Market Eye" → "Market Eye Pro" + user chip title attrs
+### Issue #152 — Competitor search aria-label + dismissible store DNS notice
+- Files: `src/routes/_authenticated/app.competitors.tsx`, `src/routes/_authenticated/app.store.tsx`
+- Fix: Add `aria-label` to the unlabeled competitor search input; add a "Got it" dismiss button on the DNS notice that persists to localStorage
+- Status: IN PROGRESS
+
+### Issue #151 — Sidebar branding "Market Eye" → "Market Eye Pro" + user chip title attrs (COMPLETED)
 - Files: `src/routes/_authenticated/app.tsx`
 - Fix: Update sidebar header text from "Market Eye" to "Market Eye Pro"; add `title` to truncated fullName and company in user chip
-- Status: IN PROGRESS
+- Status: COMPLETED (commit 2cbdb50)
 
 ### Issue #150 — Missing type="button" on error boundary and Clear selection buttons (COMPLETED)
 - Files: `src/routes/__root.tsx`, `src/routes/_authenticated/app.competitors.tsx`

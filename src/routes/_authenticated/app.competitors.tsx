@@ -520,6 +520,7 @@ function CompetitorsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search competitors…"
+              aria-label="Search competitors"
               className="pl-8 h-9 w-48 text-sm"
             />
           </div>

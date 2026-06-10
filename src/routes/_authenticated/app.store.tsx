@@ -18,7 +18,7 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Store as StoreIcon, Loader2, Copy, ExternalLink, AlertCircle, Trash2 } from "lucide-react";
+import { Store as StoreIcon, Loader2, Copy, ExternalLink, AlertCircle, Trash2, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
@@ -43,6 +43,8 @@ function storeUrl(slug: string) {
   return `https://${slug}.${STORE_DOMAIN}`;
 }
 
+const DNS_DISMISSED_KEY = "store-dns-notice-dismissed";
+
 function StorePage() {
   const qc = useQueryClient();
   const [name, setName] = useState("");
@@ -53,6 +55,9 @@ function StorePage() {
   const [generating, setGenerating] = useState(false);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [dnsDismissed, setDnsDismissed] = useState(
+    () => typeof localStorage !== "undefined" && localStorage.getItem(DNS_DISMISSED_KEY) === "1"
+  );
 
   const effectiveSlug = slugDirty ? slug : slugify(name);
 
@@ -270,22 +275,35 @@ function StorePage() {
             </Button>
           </form>
 
-          <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900/60 p-4 flex gap-3">
-            <div className="h-9 w-9 rounded-[10px] grid place-items-center bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 shrink-0">
-              <StoreIcon className="h-4 w-4" />
-            </div>
-            <div className="text-sm">
-              <div className="font-semibold text-amber-900 dark:text-amber-200">
-                DNS setup required
+          {!dnsDismissed && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900/60 p-4 flex gap-3">
+              <div className="h-9 w-9 rounded-[10px] grid place-items-center bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 shrink-0">
+                <StoreIcon className="h-4 w-4" />
               </div>
-              <p className="text-amber-800/80 dark:text-amber-300/80 mt-0.5">
-                Add a wildcard <span className="font-mono">CNAME *.market-eye → {STORE_DOMAIN}</span>{" "}
-                in Cloudflare and connect <span className="font-mono">*.{STORE_DOMAIN}</span> as
-                a custom domain on this project. Until then, stores publish but their subdomain
-                won't resolve.
-              </p>
+              <div className="flex-1 text-sm">
+                <div className="font-semibold text-amber-900 dark:text-amber-200">
+                  DNS setup required
+                </div>
+                <p className="text-amber-800/80 dark:text-amber-300/80 mt-0.5">
+                  Add a wildcard <span className="font-mono">CNAME *.market-eye → {STORE_DOMAIN}</span>{" "}
+                  in Cloudflare and connect <span className="font-mono">*.{STORE_DOMAIN}</span> as
+                  a custom domain on this project. Until then, stores publish but their subdomain
+                  won't resolve.
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Dismiss DNS notice"
+                className="shrink-0 h-6 w-6 grid place-items-center rounded hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-600 dark:text-amber-400"
+                onClick={() => {
+                  localStorage.setItem(DNS_DISMISSED_KEY, "1");
+                  setDnsDismissed(true);
+                }}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
-          </div>
+          )}
 
           <div className="rounded-xl border bg-card overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b">
