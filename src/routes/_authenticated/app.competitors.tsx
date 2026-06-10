@@ -342,7 +342,8 @@ function CompetitorsPage() {
   const { data: productCounts = [] } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
-      const { data } = await supabase.from("competitor_products").select("id, competitor_id").limit(10000);
+      const { data, error } = await supabase.from("competitor_products").select("id, competitor_id").limit(10000);
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -351,13 +352,14 @@ function CompetitorsPage() {
     queryKey: ["crawl-tasks"],
     queryFn: async () => {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("background_tasks")
         .select("id, status, error_message, details, updated_at")
         .eq("task_type", "Crawl Competitor")
         .eq("dismissed", false)
         .gte("created_at", since)
         .order("created_at", { ascending: false });
+      if (error) throw error;
       return data ?? [];
     },
     refetchInterval: (q) => {

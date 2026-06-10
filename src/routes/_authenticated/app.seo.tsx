@@ -72,6 +72,7 @@ function SeoPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [pendingSwitchItem, setPendingSwitchItem] = useState<any>(null);
 
   const { data: items = [], isLoading: itemsLoading, isError: itemsError } = useQuery({
@@ -185,11 +186,17 @@ function SeoPage() {
   }
 
   async function deleteItem(id: string) {
-    const { error } = await supabase.from("seo_content").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    if (selectedId === id) { setSelectedId(null); setEditTitle(""); setEditBody(""); }
-    qc.invalidateQueries({ queryKey: ["seo"] });
-    toast.success("Deleted");
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from("seo_content").delete().eq("id", id);
+      if (error) return toast.error(error.message);
+      if (selectedId === id) { setSelectedId(null); setEditTitle(""); setEditBody(""); }
+      qc.invalidateQueries({ queryKey: ["seo"] });
+      toast.success("Deleted");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -291,6 +298,7 @@ function SeoPage() {
                   <div
                     role="button"
                     tabIndex={0}
+                    aria-label={`Open ${s.title}`}
                     className="flex-1 text-left min-w-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:rounded-sm"
                     onClick={() => openItem(s)}
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openItem(s); } }}
@@ -409,6 +417,7 @@ function SeoPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleting}
               onClick={() => { if (pendingDeleteId) { deleteItem(pendingDeleteId); setPendingDeleteId(null); } }}
             >
               Delete

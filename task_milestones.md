@@ -2,6 +2,31 @@
 
 ## Current Task
 
+### Issue #167 — SEO deleteItem missing double-submit guard + dialog action not disabled (COMPLETED)
+- File: `src/routes/_authenticated/app.seo.tsx`
+- Fix: Add `deleting` state + try/finally to `deleteItem()`; disable AlertDialogAction while deleting
+- Status: COMPLETED (commit tbd)
+
+### Issue #166 — Tasks filter SelectTriggers missing aria-labels (COMPLETED)
+- File: `src/routes/_authenticated/app.tasks.tsx`
+- Fix: Add `aria-label="Filter by task type"` and `aria-label="Filter by status"` to the two SelectTriggers
+- Status: COMPLETED (commit tbd)
+
+### Issue #165 — SEO content item role="button" div missing aria-label (COMPLETED)
+- File: `src/routes/_authenticated/app.seo.tsx`
+- Fix: Add `aria-label={\`Open \${s.title}\`}` to the clickable content item div
+- Status: COMPLETED (commit tbd)
+
+### Issue #164 — crawlTasks queryFn silently swallows Supabase errors (COMPLETED)
+- File: `src/routes/_authenticated/app.competitors.tsx`
+- Fix: Destructure `error` and add `if (error) throw error` to crawl-tasks queryFn
+- Status: COMPLETED (commit tbd)
+
+### Issue #163 — productCounts queryFn silently swallows Supabase errors (COMPLETED)
+- File: `src/routes/_authenticated/app.competitors.tsx`
+- Fix: Destructure `error` and add `if (error) throw error` to products queryFn
+- Status: COMPLETED (commit tbd)
+
 ### Issue #162 — Discovery scan() doesn't clear keyword input after successful submission (COMPLETED)
 - File: `src/routes/_authenticated/app.discovery.tsx`
 - Fix: Add `setKeywords("")` after `toast.success(...)` in `scan()` so the form is ready for a new query

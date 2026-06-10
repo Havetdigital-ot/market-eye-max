@@ -189,7 +189,7 @@ function TasksPage() {
           <Filter className="h-3.5 w-3.5" /> Filter
         </div>
         <Select value={type} onValueChange={setType}>
-          <SelectTrigger className="w-[180px] h-10 rounded-full bg-card">
+          <SelectTrigger className="w-[180px] h-10 rounded-full bg-card" aria-label="Filter by task type">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -202,7 +202,7 @@ function TasksPage() {
           </SelectContent>
         </Select>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-[180px] h-10 rounded-full bg-card">
+          <SelectTrigger className="w-[180px] h-10 rounded-full bg-card" aria-label="Filter by status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
