@@ -146,10 +146,10 @@ export function NotificationsPopover({ count }: { count: number }) {
               const Icon =
                 a.type === "New Product" ? Sparkles : dropped ? TrendingDown : TrendingUp;
               const iconColor = a.type === "New Product"
-                ? "text-violet-600 bg-violet-50"
+                ? "text-violet-600 bg-violet-50 dark:text-violet-300 dark:bg-violet-950/40"
                 : dropped
-                ? "text-emerald-600 bg-emerald-50"
-                : "text-rose-600 bg-rose-50";
+                ? "text-emerald-600 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40"
+                : "text-rose-600 bg-rose-50 dark:text-rose-300 dark:bg-rose-950/40";
               return (
                 <button
                   key={a.id}
