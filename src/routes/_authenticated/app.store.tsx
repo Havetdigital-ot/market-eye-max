@@ -149,6 +149,7 @@ function StorePage() {
       setBrandId("none");
       qc.invalidateQueries({ queryKey: ["generated_stores"] });
       qc.invalidateQueries({ queryKey: ["badge", "tasks"] });
+      qc.invalidateQueries({ queryKey: ["store", "latest"] });
       toast.success("Store published", { description: url });
     } finally {
       setGenerating(false);

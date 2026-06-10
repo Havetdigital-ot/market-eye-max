@@ -130,6 +130,7 @@ function AppShell() {
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
         queryClient.invalidateQueries({ queryKey: ["crawl-tasks"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard-counts"] });
+        queryClient.invalidateQueries({ queryKey: ["store", "latest"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "competitor_products" }, () =>
         queryClient.invalidateQueries({ queryKey: ["products"] }),
