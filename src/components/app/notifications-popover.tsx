@@ -106,7 +106,7 @@ export function NotificationsPopover({ count }: { count: number }) {
               type="button"
               onClick={markAllRead}
               disabled={marking}
-              className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {marking ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -190,7 +190,7 @@ export function NotificationsPopover({ count }: { count: number }) {
         <button
           type="button"
           onClick={() => navigate({ to: "/app/alerts" })}
-          className="w-full px-4 py-2.5 text-xs font-medium text-blue-600 hover:bg-muted/50 border-t"
+          className="w-full px-4 py-2.5 text-xs font-medium text-primary hover:text-primary/80 hover:bg-muted/50 border-t"
         >
           View all alerts
         </button>

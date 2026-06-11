@@ -428,7 +428,7 @@ function DashboardPage() {
                     variant="ghost"
                     className="w-full justify-start gap-2.5 h-10 font-medium"
                   >
-                    <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <Icon className="h-4 w-4 text-primary" />
                     <span className="flex-1 text-left">{l.label}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                   </Button>
