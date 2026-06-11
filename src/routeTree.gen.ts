@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as DashRouteImport } from './routes/dash'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -25,6 +26,11 @@ import { Route as AuthenticatedAppBrandRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppAlertsRouteImport } from './routes/_authenticated/app.alerts'
 import { Route as ApiPublicHooksDbBackupRouteImport } from './routes/api/public/hooks/db-backup'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashRoute = DashRouteImport.update({
   id: '/dash',
   path: '/dash',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dash': typeof DashRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/s/$slug': typeof SSlugRoute
   '/app/alerts': typeof AuthenticatedAppAlertsRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dash': typeof DashRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/s/$slug': typeof SSlugRoute
   '/app/alerts': typeof AuthenticatedAppAlertsRoute
   '/app/brand': typeof AuthenticatedAppBrandRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/dash': typeof DashRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/s/$slug': typeof SSlugRoute
   '/_authenticated/app/alerts': typeof AuthenticatedAppAlertsRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dash'
+    | '/sitemap.xml'
     | '/app'
     | '/s/$slug'
     | '/app/alerts'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dash'
+    | '/sitemap.xml'
     | '/s/$slug'
     | '/app/alerts'
     | '/app/brand'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/dash'
+    | '/sitemap.xml'
     | '/_authenticated/app'
     | '/s/$slug'
     | '/_authenticated/app/alerts'
@@ -207,12 +219,20 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DashRoute: typeof DashRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SSlugRoute: typeof SSlugRoute
   ApiPublicHooksDbBackupRoute: typeof ApiPublicHooksDbBackupRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dash': {
       id: '/dash'
       path: '/dash'
@@ -362,6 +382,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DashRoute: DashRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SSlugRoute: SSlugRoute,
   ApiPublicHooksDbBackupRoute: ApiPublicHooksDbBackupRoute,
 }
