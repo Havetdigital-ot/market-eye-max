@@ -294,6 +294,7 @@ function CompetitorsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [crawlingId, setCrawlingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: competitors = [], isLoading: competitorsLoading, isError: competitorsError } = useQuery({
@@ -479,6 +480,8 @@ function CompetitorsPage() {
     const { error } = await supabase.from("competitors").delete().eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["competitors"] });
+    qc.invalidateQueries({ queryKey: ["products"] });
+    qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
     qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
     setExpanded((prev) => { const next = new Set(prev); next.delete(id); return next; });
     setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
@@ -497,6 +500,8 @@ function CompetitorsPage() {
   }
 
   async function recrawl(id: string) {
+    if (crawlingId === id) return;
+    setCrawlingId(id);
     try {
       setExpanded((prev) => new Set([...prev, id]));
       toast.info("Starting crawl…");
@@ -504,6 +509,8 @@ function CompetitorsPage() {
       qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to start crawl");
+    } finally {
+      setCrawlingId(null);
     }
   }
 
@@ -621,10 +628,12 @@ function CompetitorsPage() {
             const count = productCounts.filter((p) => p.competitor_id === c.id).length;
             const activeTask = taskByCompetitor.get(c.id);
             // Treat Running tasks older than 5 min as stale (server restart orphan).
+            // crawlingId gives an optimistic guard before the server task is created.
             const isCrawling =
-              activeTask?.status === "Running" &&
-              activeTask.updated_at != null &&
-              Date.now() - new Date(activeTask.updated_at).getTime() < CRAWL_TIMEOUT_MS;
+              crawlingId === c.id ||
+              (activeTask?.status === "Running" &&
+                activeTask.updated_at != null &&
+                Date.now() - new Date(activeTask.updated_at).getTime() < CRAWL_TIMEOUT_MS);
             const isExpanded = expanded.has(c.id);
             const isSelected = selected.has(c.id);
             const stale = isStale(c, count, isCrawling);
