@@ -86,6 +86,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Market Eye Pro" },
       { name: "twitter:description", content: "Track competitor prices, discover trending products, and generate SEO content." },
+      { name: "google-site-verification", content: "VhIiGteYtjhli_VkBDGqQ-QYSHW-fwTyX3yIfGbsmt8" },
+
     ],
     links: [
       {
