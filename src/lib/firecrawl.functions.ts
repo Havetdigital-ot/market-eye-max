@@ -441,7 +441,7 @@ export const scanTrends = createServerFn({ method: "POST" })
 
 export const generateBrandIdentity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ description: z.string() }).parse(input))
+  .inputValidator((input) => z.object({ description: z.string().min(1).max(500) }).parse(input))
   .handler(async ({ data, context }) => {
     const { getFirecrawl, brandExtractionSchema } = await import("./firecrawl.server");
     const firecrawl = getFirecrawl();
