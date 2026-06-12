@@ -146,6 +146,7 @@ function AlertsPage() {
             <button
               key={t}
               type="button"
+              aria-pressed={typeFilter === t}
               onClick={() => handleFilterChange(t)}
               className={cn(
                 "px-3 py-1 rounded-md text-xs font-medium transition-colors",
@@ -163,6 +164,7 @@ function AlertsPage() {
             <button
               key={r}
               type="button"
+              aria-pressed={readFilter === r}
               onClick={() => handleFilterChange(undefined, r)}
               className={cn(
                 "px-3 py-1 rounded-md text-xs font-medium transition-colors",
