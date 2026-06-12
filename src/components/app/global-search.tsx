@@ -33,6 +33,7 @@ const PAGES = [
   { to: "/app/brand", label: "Brand Builder", icon: Star },
   { to: "/app/seo", label: "SEO Content", icon: FileText },
   { to: "/app/store", label: "Store Generator", icon: StoreIcon },
+  { to: "/app/alerts", label: "Alerts", icon: Bell },
   { to: "/app/tasks", label: "Task Log", icon: ListChecks },
 ] as const;
 

@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Bell, CheckCheck, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
+import { Bell, CheckCheck, ChevronLeft, ChevronRight, AlertCircle, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,7 @@ function AlertsPage() {
   const [readFilter, setReadFilter] = useState<ReadFilter>("All");
   const [page, setPage] = useState(1);
   const [markingId, setMarkingId] = useState<string | null>(null);
+  const [markingAll, setMarkingAll] = useState(false);
 
   const { data: alerts = [], isLoading, isError } = useQuery({
     queryKey: ["alerts"],
@@ -69,18 +70,24 @@ function AlertsPage() {
   }
 
   async function markAllRead() {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase
-      .from("alerts")
-      .update({ is_read: true })
-      .eq("user_id", u.user.id)
-      .eq("is_read", false);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["alerts"] });
-    qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
-    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
-    toast.success("Marked all as read");
+    if (markingAll) return;
+    setMarkingAll(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { error } = await supabase
+        .from("alerts")
+        .update({ is_read: true })
+        .eq("user_id", u.user.id)
+        .eq("is_read", false);
+      if (error) return toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      qc.invalidateQueries({ queryKey: ["badge", "alerts"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+      toast.success("Marked all as read");
+    } finally {
+      setMarkingAll(false);
+    }
   }
 
   const filtered = alerts.filter((a: any) => {
@@ -116,9 +123,12 @@ function AlertsPage() {
             <Button
               variant="outline"
               className="gap-1.5"
-              disabled={unreadCount === 0}
+              disabled={unreadCount === 0 || markingAll}
             >
-              <CheckCheck className="h-4 w-4" /> Mark all read
+              {markingAll
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <CheckCheck className="h-4 w-4" />}
+              {markingAll ? "Marking…" : "Mark all read"}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
