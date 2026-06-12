@@ -23,9 +23,9 @@ const DEMO_NAME = "Joe Demo";
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState(DEMO_EMAIL);
-  const [password, setPassword] = useState(DEMO_PASSWORD);
-  const [fullName, setFullName] = useState(DEMO_NAME);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -99,10 +99,6 @@ function AuthPage() {
             {mode === "signin" ? "Sign in to your dashboard" : "Create your account"}
           </p>
         </div>
-        <div className="mb-4 rounded-md border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground">
-
-          Demo mode — credentials are pre-filled. Just click <span className="font-medium text-foreground">Sign in</span> to explore the dashboard.
-        </div>
         <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           {mode === "signup" && (
             <div className="space-y-2">
@@ -115,9 +111,6 @@ function AuthPage() {
               />
             </div>
           )}
-          {/* honeypot to discourage browser autofill of saved creds */}
-          <input type="text" name="username" autoComplete="username" defaultValue={DEMO_EMAIL} style={{ display: "none" }} readOnly />
-          <input type="password" name="password" autoComplete="current-password" defaultValue="" style={{ display: "none" }} readOnly />
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
