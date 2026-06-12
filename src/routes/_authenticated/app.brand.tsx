@@ -415,7 +415,7 @@ function EmptyState() {
 function GenLoader() {
   return (
     <div className="h-full min-h-[460px] flex flex-col items-center justify-center text-center p-8">
-      <div className="w-14 h-14 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mb-4" />
+      <div className="w-14 h-14 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-4" />
       <h3 className="text-lg font-bold">Designing your brand…</h3>
       <p className="text-sm text-muted-foreground mt-1">
         Synthesizing name, persona, voice and palette

@@ -145,6 +145,7 @@ function DiscoveryPage() {
                   <button
                     type="button"
                     key={p}
+                    aria-pressed={on}
                     onClick={() => setSelected((s) => ({ ...s, [p]: !s[p] }))}
                     disabled={running}
                     className={`inline-flex items-center gap-1.5 px-3.5 h-9 rounded-full text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
