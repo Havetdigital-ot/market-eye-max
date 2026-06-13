@@ -18,7 +18,7 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Sparkles, Star, ChevronRight, Loader2, AlertCircle, Trash2 } from "lucide-react";
+import { Sparkles, Star, ChevronRight, Loader2, AlertCircle, Trash2, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { generateBrandIdentity } from "@/lib/firecrawl.functions";
@@ -128,7 +128,7 @@ function BrandPage() {
     toast.success("Brand removed");
   }
 
-  const { data: assets = [], isLoading: assetsLoading, isError: assetsError } = useQuery({
+  const { data: assets = [], isLoading: assetsLoading, isError: assetsError, refetch: refetchAssets } = useQuery({
     queryKey: ["brand_assets"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -256,7 +256,7 @@ function BrandPage() {
             <Button
               onClick={generate}
               disabled={phase === "generating" || !nicheKey || !desc.trim()}
-              className="w-full mt-3.5 h-11 gap-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full mt-3.5 h-11 gap-2 text-sm font-semibold"
             >
               {phase === "generating" ? (
                 <>
@@ -281,6 +281,9 @@ function BrandPage() {
               <div className="px-5 py-8 flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
                 <AlertCircle className="h-5 w-5 text-destructive" />
                 <span>Failed to load brand library — check your connection.</span>
+                <Button size="sm" variant="outline" className="gap-1.5 mt-1" onClick={() => refetchAssets()}>
+                  <RefreshCw className="h-3.5 w-3.5" /> Try again
+                </Button>
               </div>
             ) : assetsLoading ? (
               <div className="divide-y">
@@ -441,7 +444,7 @@ function BrandReview({
     <div>
       <div className="flex items-center px-5 py-4 border-b">
         <h3 className="font-semibold text-[15px]">Review generated brand</h3>
-        <span className="ml-auto inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold">
+        <span className="ml-auto inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
           <Sparkles className="h-3 w-3" /> AI draft
         </span>
       </div>
@@ -507,7 +510,7 @@ function BrandReview({
               <Button
                 onClick={onAccept}
                 disabled={accepting}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                className="flex-1 gap-2"
               >
                 {accepting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Accept & save

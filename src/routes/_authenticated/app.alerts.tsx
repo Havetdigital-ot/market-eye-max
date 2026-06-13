@@ -243,7 +243,7 @@ function AlertsPage() {
                     key={a.id}
                     onClick={!a.is_read && markingId !== a.id ? () => markRead(a.id) : undefined}
                     tabIndex={!a.is_read && markingId !== a.id ? 0 : undefined}
-                    aria-label={!a.is_read ? "Mark as read" : undefined}
+                    aria-label={!a.is_read ? `Mark as read: ${a.competitor_name} – ${a.product_name}` : undefined}
                     onKeyDown={!a.is_read && markingId !== a.id ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); markRead(a.id); } } : undefined}
                     className={cn(
                       "border-t transition-colors",

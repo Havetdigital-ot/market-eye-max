@@ -134,7 +134,7 @@ function DashboardPage() {
       label: "Active competitors",
       key: "competitors" as const,
       icon: Radar,
-      iconBg: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+      iconBg: "bg-primary/10 text-primary",
       to: "/app/competitors",
     },
     {
@@ -258,7 +258,7 @@ function DashboardPage() {
                       <td className="px-3 py-3 text-muted-foreground max-w-[200px] truncate" title={a.product_name}>{a.product_name}</td>
                       <td className="px-3 py-3 font-mono text-[13px]">
                         {a.type === "New Product" ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-xs font-medium">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-medium">
                             New · {money0(a.new_price)}
                           </span>
                         ) : (
@@ -428,7 +428,7 @@ function DashboardPage() {
                     variant="ghost"
                     className="w-full justify-start gap-2.5 h-10 font-medium"
                   >
-                    <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <Icon className="h-4 w-4 text-primary" />
                     <span className="flex-1 text-left">{l.label}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                   </Button>
@@ -470,6 +470,7 @@ function DeltaHint({ alerts }: { alerts: any[] }) {
       (s, a) => s + (Number(a.new_price) - Number(a.old_price)),
       0,
     ) / priceChanges.length;
+  if (avg === 0) return null;
   const up = avg > 0;
   const Icon = up ? TrendingUp : TrendingDown;
   return (
