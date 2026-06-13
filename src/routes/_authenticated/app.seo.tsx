@@ -208,7 +208,7 @@ function SeoPage() {
           <form onSubmit={generate} className="rounded-xl border bg-card p-5 space-y-4">
             <div className="space-y-2">
               <label htmlFor="seo-type" className="text-sm font-semibold">Content type</label>
-              <Select value={type} onValueChange={setType}>
+              <Select value={type} onValueChange={setType} disabled={generating}>
                 <SelectTrigger id="seo-type">
                   <SelectValue />
                 </SelectTrigger>
@@ -227,6 +227,7 @@ function SeoPage() {
                 value={topic}
                 maxLength={200}
                 onChange={(e) => setTopic(e.target.value)}
+                disabled={generating}
               />
               <p className="text-xs text-muted-foreground text-right tabular-nums">
                 <span className={topic.length >= 180 ? "text-amber-500" : ""}>{topic.length}/200</span>
@@ -240,6 +241,7 @@ function SeoPage() {
                 value={keywords}
                 maxLength={200}
                 onChange={(e) => setKeywords(e.target.value)}
+                disabled={generating}
               />
               <p className="text-xs text-muted-foreground flex justify-between tabular-nums">
                 <span>Optional, comma-separated</span>
