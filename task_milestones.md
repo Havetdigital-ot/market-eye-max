@@ -2,7 +2,23 @@
 
 ## Current Task
 
-_Scanning for next issue…_
+**Completed** — commit 1517278 on `claude/festive-edison-j0x162`
+
+### Fixes shipped (6 files, 1 commit)
+
+**Issue #120** — Brand library retry + alerts aria-label context
+- `app.brand.tsx`: Added "Try again" button (wired to `refetchAssets`) in brand library error state
+- `app.alerts.tsx`: Unread row `aria-label` now reads `"Mark as read: {competitor} – {product}"` instead of the generic `"Mark as read"`
+
+**Issue #143** — Store preview race condition · SEO dirty-dot · DeltaHint zero-avg
+- `app.store.tsx`: Replaced `lastUrl` + `useMemo` (depended on stale query cache) with `previewData` state set directly from the Supabase insert result — preview now appears immediately after publish
+- `app.seo.tsx`: Amber dot shown next to TypePill for the selected sidebar item when `isDirty` — user gets an unsaved-changes warning before clicking away
+- `app.index.tsx`: `DeltaHint` now returns `null` when `avg === 0` (was rendering a green TrendingDown icon implying prices dropped when they were flat)
+
+**Issues #86 / #165** — Hardcoded `blue-*` → `primary` CSS token
+- `app.brand.tsx`: Stripped `bg-blue-600 hover:bg-blue-700 text-white` from Generate brand + Accept & save buttons (default Button variant already applies `bg-primary`); `bg-blue-50 text-blue-700` → `bg-primary/10 text-primary` on AI draft badge
+- `app.index.tsx`: Active competitors `iconBg`, New Product badge, quick-action icons — all swapped from `blue-*` literals to `text-primary` / `bg-primary/10`
+- `notifications-popover.tsx`: Mark all read + View all alerts → `text-primary`; unread row bg → `bg-primary/5`; unread dot → `bg-primary`
 
 ### Completed this session
 - Issue #161 (PR #162 merged) — Missing early re-entrancy guard in SEO generate, Discovery scan, Brand generate
