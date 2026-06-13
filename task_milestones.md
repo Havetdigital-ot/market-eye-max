@@ -5,6 +5,7 @@
 _Scanning for next issue…_
 
 ### Completed this session
+- Issue #170 (PR #171 merged) — SEO & Brand Builder form inputs not disabled during generation: stale-state UX bug
 - Issue #161 (PR #162 merged) — Missing early re-entrancy guard in SEO generate, Discovery scan, Brand generate
 - Issue #159 (PR #160 merged) — Dashboard "Latest store" card stays stale: invalidate ["store","latest"] on publish + in realtime handler
 - Issue #157 (PR #158 merged) — Dashboard realtime subscriptions + notifications markAllRead missing dashboard-counts invalidation
