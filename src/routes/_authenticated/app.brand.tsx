@@ -221,6 +221,7 @@ function BrandPage() {
                   setDesc(preset?.description ?? "");
                 }
               }}
+              disabled={phase === "generating"}
             >
               <SelectTrigger id="brand-niche" className="mt-2 h-11">
                 <SelectValue placeholder="Choose a niche…" />
@@ -246,6 +247,7 @@ function BrandPage() {
                   placeholder="e.g. Premium home espresso gear for design-conscious enthusiasts who care about ritual and craft…"
                   className="mt-2 min-h-[120px] resize-none"
                   maxLength={500}
+                  disabled={phase === "generating"}
                 />
                 <p className="text-xs text-muted-foreground mt-1.5 flex justify-between">
                   <span>The more specific, the better the result.</span>
