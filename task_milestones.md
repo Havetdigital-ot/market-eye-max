@@ -2,9 +2,12 @@
 
 ## Current Task
 
-_Scanning for next issue…_
+_No active task — session complete._
 
 ### Completed this session
+- Issue #172 (committed to claude/festive-edison-40ibqn) — Global search `anyError` logic bug (`&&` → `||`) so any single failing query shows the error banner; suppress `CommandEmpty` when error is shown; BrandReview null-guards on `color_palette` and `font_choices`
+
+### Completed previous session
 - Issue #161 (PR #162 merged) — Missing early re-entrancy guard in SEO generate, Discovery scan, Brand generate
 - Issue #159 (PR #160 merged) — Dashboard "Latest store" card stays stale: invalidate ["store","latest"] on publish + in realtime handler
 - Issue #157 (PR #158 merged) — Dashboard realtime subscriptions + notifications markAllRead missing dashboard-counts invalidation
