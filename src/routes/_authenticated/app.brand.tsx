@@ -460,7 +460,7 @@ function BrandReview({
             Color palette
           </div>
           <div className="flex gap-2">
-            {draft.color_palette.map((c: string, i: number) => (
+            {(draft.color_palette ?? []).map((c: string, i: number) => (
               <div
                 key={i}
                 className="flex-1 h-16 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono font-semibold text-white/90"
@@ -481,9 +481,9 @@ function BrandReview({
           </div>
           <div className="p-4 rounded-lg bg-muted/50">
             <div className="text-xs text-muted-foreground">Primary</div>
-            <div className="text-lg font-bold">{draft.font_choices.primary}</div>
+            <div className="text-lg font-bold">{draft.font_choices?.primary}</div>
             <div className="text-xs text-muted-foreground mt-2">Secondary</div>
-            <div className="text-base">{draft.font_choices.secondary}</div>
+            <div className="text-base">{draft.font_choices?.secondary}</div>
           </div>
         </div>
 

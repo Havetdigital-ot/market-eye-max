@@ -116,7 +116,7 @@ export function GlobalSearch({
   });
 
   const anyLoading = enabled && (competitorsLoading || productsLoading || trendsLoading || alertsLoading);
-  const anyError = enabled && !anyLoading && (competitorsError && productsError && trendsError && alertsError);
+  const anyError = enabled && !anyLoading && (competitorsError || productsError || trendsError || alertsError);
 
   const go = (to: string) => {
     onOpenChange(false);
@@ -135,7 +135,7 @@ export function GlobalSearch({
         onValueChange={setQuery}
       />
       <CommandList>
-        {!anyLoading && (
+        {!anyLoading && !anyError && (
           <CommandEmpty>
             {debounced
               ? `No results for "${debounced}" — try a competitor name, product, or keyword.`
