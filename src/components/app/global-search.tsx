@@ -116,7 +116,8 @@ export function GlobalSearch({
   });
 
   const anyLoading = enabled && (competitorsLoading || productsLoading || trendsLoading || alertsLoading);
-  const anyError = enabled && !anyLoading && (competitorsError && productsError && trendsError && alertsError);
+  const allError = enabled && !anyLoading && (competitorsError && productsError && trendsError && alertsError);
+  const someError = enabled && !anyLoading && (competitorsError || productsError || trendsError || alertsError) && !allError;
 
   const go = (to: string) => {
     onOpenChange(false);
@@ -154,10 +155,17 @@ export function GlobalSearch({
           </CommandGroup>
         )}
 
-        {anyError && (
+        {allError && (
           <div className="flex items-center gap-2 px-3 py-4 text-sm text-muted-foreground">
             <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
             <span>Search failed — check your connection and try again.</span>
+          </div>
+        )}
+
+        {someError && (
+          <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground border-b border-border">
+            <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+            <span>Some results may be incomplete — one or more search sources failed.</span>
           </div>
         )}
 
