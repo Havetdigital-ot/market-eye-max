@@ -5,6 +5,9 @@
 _Scanning for next issue…_
 
 ### Completed this session
+- Issue #174 (committed fee96fd) — SEO page: Publish auto-saves unsaved edits first; button label changes to "Save & Publish" when isDirty
+
+### Completed this session
 - Issue #161 (PR #162 merged) — Missing early re-entrancy guard in SEO generate, Discovery scan, Brand generate
 - Issue #159 (PR #160 merged) — Dashboard "Latest store" card stays stale: invalidate ["store","latest"] on publish + in realtime handler
 - Issue #157 (PR #158 merged) — Dashboard realtime subscriptions + notifications markAllRead missing dashboard-counts invalidation
