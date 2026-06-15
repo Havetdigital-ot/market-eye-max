@@ -5,6 +5,7 @@
 _Scanning for next issue…_
 
 ### Completed this session
+- Issue #175 (PR #176 merged) — deleteStore missing ["store","latest"] invalidation; toggleSave silent success; bulkDelete missing ["crawl-tasks"] invalidation
 - Issue #161 (PR #162 merged) — Missing early re-entrancy guard in SEO generate, Discovery scan, Brand generate
 - Issue #159 (PR #160 merged) — Dashboard "Latest store" card stays stale: invalidate ["store","latest"] on publish + in realtime handler
 - Issue #157 (PR #158 merged) — Dashboard realtime subscriptions + notifications markAllRead missing dashboard-counts invalidation
