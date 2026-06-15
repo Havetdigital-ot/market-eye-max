@@ -169,6 +169,13 @@ function SeoPage() {
     if (!selected || saving) return;
     setSaving(true);
     try {
+      if (isDirty) {
+        const { error: saveErr } = await supabase
+          .from("seo_content")
+          .update({ title: editTitle, body: editBody })
+          .eq("id", selected.id);
+        if (saveErr) return toast.error(saveErr.message);
+      }
       const next = selected.status === "Published" ? "Draft" : "Published";
       const { error } = await supabase
         .from("seo_content")
@@ -340,7 +347,11 @@ function SeoPage() {
                   </Button>
                   <Button size="sm" onClick={togglePublish} disabled={saving} className="gap-1.5">
                     {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                    {selected.status === "Published" ? "Unpublish" : "Publish"}
+                    {selected.status === "Published"
+                      ? "Unpublish"
+                      : isDirty
+                        ? "Save & Publish"
+                        : "Publish"}
                   </Button>
                 </div>
               </div>
