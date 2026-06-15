@@ -169,6 +169,7 @@ function StorePage() {
     const { error } = await supabase.from("generated_stores").delete().eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["generated_stores"] });
+    qc.invalidateQueries({ queryKey: ["store", "latest"] });
     toast.success("Store removed");
   }
 
