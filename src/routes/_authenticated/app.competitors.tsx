@@ -494,6 +494,7 @@ function CompetitorsPage() {
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["competitors"] });
     qc.invalidateQueries({ queryKey: ["products"] });
+    qc.invalidateQueries({ queryKey: ["crawl-tasks"] });
     qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
     setSelected(new Set());
     toast.success(`Removed ${ids.length} competitor${ids.length > 1 ? "s" : ""}`);
