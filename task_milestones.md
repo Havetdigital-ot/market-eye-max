@@ -2,7 +2,13 @@
 
 ## Current Task
 
-_Scanning for next issue…_
+Issue #177 — committed & pushed to `claude/festive-edison-ig4w7g`
+
+**4 fixes bundled:**
+1. `app.tasks.tsx` — `aria-expanded={isOpen}` on task row expand button (a11y)
+2. `app.brand.tsx` — Removed hardcoded `bg-blue-600` from "Generate brand" + "Accept & save" buttons (dark-mode consistency)
+3. `app.competitors.tsx` — Character counters for URL (>240 chars) and name (>70 chars) inputs in Add competitor dialog
+4. `app.store.tsx` — Removed misleading `hover:bg-muted/30` from non-clickable published-store rows
 
 ### Completed this session
 - Issue #161 (PR #162 merged) — Missing early re-entrancy guard in SEO generate, Discovery scan, Brand generate
