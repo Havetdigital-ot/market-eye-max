@@ -289,12 +289,12 @@ function TasksPage() {
                     <div className="h-9 w-9 rounded-[10px] grid place-items-center bg-muted text-muted-foreground shrink-0">
                       <Icon className="h-4 w-4" />
                     </div>
-                    <div className="font-medium truncate">{t.task_type}</div>
+                    <div className="font-medium truncate" title={t.task_type}>{t.task_type}</div>
                   </div>
                   <div>
                     <StatusPill status={t.status} />
                   </div>
-                  <div className={`text-sm truncate ${failed ? "text-red-600 dark:text-red-400" : ""}`}>
+                  <div className={`text-sm truncate ${failed ? "text-red-600 dark:text-red-400" : ""}`} title={summaryText(t)}>
                     {summaryText(t)}
                   </div>
                   <div className="text-xs text-muted-foreground font-mono">
