@@ -281,6 +281,7 @@ function TasksPage() {
               <div key={t.id} className="border-b last:border-b-0">
                 <button
                   type="button"
+                  aria-expanded={isOpen}
                   onClick={() => toggle(t.id)}
                   className="w-full grid grid-cols-[24px_1.4fr_0.9fr_2fr_0.8fr_0.8fr_0.7fr] gap-4 px-6 py-4 items-center text-left hover:bg-muted/30 transition-colors"
                 >

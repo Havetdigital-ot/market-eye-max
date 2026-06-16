@@ -801,11 +801,21 @@ function CompetitorsPage() {
               <Label htmlFor="url">Store URL</Label>
               <Input id="url" type="url" placeholder="https://competitor.com"
                 value={url} onChange={(e) => setUrl(e.target.value)} required autoFocus maxLength={300} />
+              {url.length > 240 && (
+                <p className="text-xs text-right tabular-nums">
+                  <span className={url.length >= 280 ? "text-amber-500" : "text-muted-foreground"}>{url.length}/300</span>
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Display name</Label>
               <Input id="name" placeholder="Optional — defaults to the domain"
                 value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
+              {name.length > 70 && (
+                <p className="text-xs text-right tabular-nums">
+                  <span className={name.length >= 90 ? "text-amber-500" : "text-muted-foreground"}>{name.length}/100</span>
+                </p>
+              )}
             </div>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={adding}>Cancel</Button>
