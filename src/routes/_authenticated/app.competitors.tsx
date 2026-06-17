@@ -399,6 +399,23 @@ function CompetitorsPage() {
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id: string) => selected.has(id));
   const someVisibleSelected = visibleIds.some((id: string) => selected.has(id));
 
+  useEffect(() => {
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const visible = new Set(visibleIds);
+      const next = new Set<string>();
+      let changed = false;
+      prev.forEach((id) => {
+        if (visible.has(id)) next.add(id);
+        else changed = true;
+      });
+      return changed ? next : prev;
+    });
+    // Prune selection to currently-visible rows whenever the search filter changes,
+    // so bulk delete can never act on competitors hidden by the active filter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
   function toggleSelectAll() {
     if (allVisibleSelected) {
       setSelected((prev) => {

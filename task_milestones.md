@@ -5,6 +5,7 @@
 _Scanning for next issue…_
 
 ### Completed this session
+- Issue #180 (fixed on claude/festive-edison-n7kkbz, not yet merged) — Competitors page: selection (`selected` Set) wasn't pruned when the search filter changed, so bulk-delete could silently delete competitors hidden by the active filter. Added a `useEffect` keyed on `searchQuery` that intersects `selected` with the currently visible rows. (Note: the "superpowers" plugin skills referenced by the autonomous-routine prompt — brainstorming/writing-plans/executing-plans/etc. — aren't installed in this environment; this fix was scoped, implemented, lint+build-verified, and committed using native tools instead. No automated test added — no test framework is configured per CLAUDE.md.)
 - Issue #178 (PR #179 merged) — title tooltips on truncated text: Tasks task_type + summaryText, sidebar fullName + company, notifications alert·competitor + product_name
 - Issue #161 (PR #162 merged) — Missing early re-entrancy guard in SEO generate, Discovery scan, Brand generate
 - Issue #159 (PR #160 merged) — Dashboard "Latest store" card stays stale: invalidate ["store","latest"] on publish + in realtime handler
