@@ -5,6 +5,7 @@
 _Scanning for next issue…_
 
 ### Completed this session
+- Brand Builder crash on malformed AI extraction — generateBrandIdentity only checked `payload.brand_name`; a non-array/missing `color_palette` from Firecrawl extraction would crash app.brand.tsx:463 (`draft.color_palette.map`) since, unlike the brand-library row renderer, the live review panel had no `Array.isArray` guard. Fixed at the system boundary in src/lib/firecrawl.functions.ts `generateBrandIdentity`: now validates `color_palette` is a non-empty array and `font_primary`/`font_secondary` are strings before returning `ok: true`, otherwise throws "Extraction failed" (caught and surfaced as a toast, same as the existing `brand_name` check).
 - Issue #178 (PR #179 merged) — title tooltips on truncated text: Tasks task_type + summaryText, sidebar fullName + company, notifications alert·competitor + product_name
 - Issue #161 (PR #162 merged) — Missing early re-entrancy guard in SEO generate, Discovery scan, Brand generate
 - Issue #159 (PR #160 merged) — Dashboard "Latest store" card stays stale: invalidate ["store","latest"] on publish + in realtime handler

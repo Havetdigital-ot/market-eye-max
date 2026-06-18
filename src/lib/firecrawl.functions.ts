@@ -463,7 +463,16 @@ export const generateBrandIdentity = createServerFn({ method: "POST" })
         schema: brandExtractionSchema as any,
       });
       const payload = extractRes?.data ?? extractRes;
-      if (!payload || !payload.brand_name) throw new Error("Extraction failed");
+      if (
+        !payload ||
+        !payload.brand_name ||
+        !Array.isArray(payload.color_palette) ||
+        payload.color_palette.length === 0 ||
+        typeof payload.font_primary !== "string" ||
+        typeof payload.font_secondary !== "string"
+      ) {
+        throw new Error("Extraction failed");
+      }
       return { ok: true, data: payload };
     } catch (err: any) {
       return { ok: false, error: err?.message ?? String(err) };
