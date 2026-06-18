@@ -4,6 +4,12 @@
 
 _Scanning for next issue…_
 
+### Process note (2026-06-18)
+- Two PRs have been open and unmerged for 9+ days and are now 60-63 commits behind `main`, with fixes that are NOT superseded (verified live in current code):
+  - PR #144 (`claude/festive-edison-h7qq3z` → main) — store preview race, SEO dirty-dot, **DeltaHint zero-avg guard still missing in app.index.tsx**.
+  - PR #137 (`claude/friendly-gauss-3hmlif` → main) — primary-token cleanup, **app.brand.tsx still hardcodes `bg-blue-600` on two buttons**.
+  - Flagged to the user; not merged/closed here per this session's branch-restriction rules (no pushes to main, no PR creation without explicit ask).
+
 ### Completed this session
 - Brand Builder crash on malformed AI extraction — generateBrandIdentity only checked `payload.brand_name`; a non-array/missing `color_palette` from Firecrawl extraction would crash app.brand.tsx:463 (`draft.color_palette.map`) since, unlike the brand-library row renderer, the live review panel had no `Array.isArray` guard. Fixed at the system boundary in src/lib/firecrawl.functions.ts `generateBrandIdentity`: now validates `color_palette` is a non-empty array and `font_primary`/`font_secondary` are strings before returning `ok: true`, otherwise throws "Extraction failed" (caught and surfaced as a toast, same as the existing `brand_name` check).
 - Issue #178 (PR #179 merged) — title tooltips on truncated text: Tasks task_type + summaryText, sidebar fullName + company, notifications alert·competitor + product_name
