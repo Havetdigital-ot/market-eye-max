@@ -300,7 +300,16 @@ function SeoPage() {
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openItem(s); } }}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <TypePill type={s.type} />
+                      <div className="flex items-center gap-1.5">
+                        <TypePill type={s.type} />
+                        {selectedId === s.id && isDirty && (
+                          <span
+                            className="h-2 w-2 rounded-full bg-amber-400 shrink-0"
+                            title="Unsaved changes"
+                            aria-label="Unsaved changes"
+                          />
+                        )}
+                      </div>
                       <StatusPill status={s.status} />
                     </div>
                     <div className="font-semibold mt-2 text-sm leading-snug">{s.title}</div>

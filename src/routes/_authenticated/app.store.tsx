@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +51,12 @@ function StorePage() {
   const [slugDirty, setSlugDirty] = useState(false);
   const [brandId, setBrandId] = useState<string>("none");
   const [generating, setGenerating] = useState(false);
-  const [lastUrl, setLastUrl] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<{
+    name: string;
+    desc: string;
+    palette: string[];
+    url: string;
+  } | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const effectiveSlug = slugDirty ? slug : slugify(name);
@@ -80,18 +85,6 @@ function StorePage() {
     },
   });
 
-  const preview = useMemo(() => {
-    if (!lastUrl) return null;
-    const store = previousStores.find((s: any) => storeUrl(s.slug) === lastUrl);
-    if (!store) return null;
-    const palette = (store.palette as string[]) ?? [];
-    return {
-      name: store.name,
-      desc: store.description,
-      palette: palette.length ? palette : ["#1F2A24", "#3E7C5A", "#A8C3A0", "#E9F0E6"],
-      url: lastUrl,
-    };
-  }, [lastUrl, previousStores]);
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
@@ -141,7 +134,13 @@ function StorePage() {
       });
 
       const url = storeUrl(inserted.slug);
-      setLastUrl(url);
+      const insertedPalette = (inserted.palette as string[]) ?? [];
+      setPreviewData({
+        name: inserted.name,
+        desc: inserted.description ?? "",
+        palette: insertedPalette.length ? insertedPalette : ["#1F2A24", "#3E7C5A", "#A8C3A0", "#E9F0E6"],
+        url,
+      });
       setName("");
       setDesc("");
       setSlug("");
@@ -168,6 +167,10 @@ function StorePage() {
   async function deleteStore(id: string) {
     const { error } = await supabase.from("generated_stores").delete().eq("id", id);
     if (error) return toast.error(error.message);
+    const deletedStore = previousStores.find((s: any) => s.id === id);
+    if (deletedStore && previewData?.url === storeUrl(deletedStore.slug)) {
+      setPreviewData(null);
+    }
     qc.invalidateQueries({ queryKey: ["generated_stores"] });
     qc.invalidateQueries({ queryKey: ["store", "latest"] });
     toast.success("Store removed");
@@ -377,10 +380,10 @@ function StorePage() {
 
         {/* Right column: preview */}
         <div className="rounded-xl border bg-card min-h-[560px] p-8 flex flex-col items-center justify-center text-center">
-          {preview ? (
+          {previewData ? (
             <div className="w-full max-w-2xl space-y-6">
               <div className="flex items-center gap-1.5">
-                {preview.palette.slice(0, 5).map((c: string, i: number) => (
+                {previewData.palette.slice(0, 5).map((c: string, i: number) => (
                   <div
                     key={i}
                     className="h-8 flex-1 rounded-md border"
@@ -389,22 +392,22 @@ function StorePage() {
                 ))}
               </div>
               <div>
-                <h2 className="text-3xl font-bold tracking-tight">{preview.name}</h2>
-                <p className="text-muted-foreground mt-2">{preview.desc}</p>
+                <h2 className="text-3xl font-bold tracking-tight">{previewData.name}</h2>
+                <p className="text-muted-foreground mt-2">{previewData.desc}</p>
               </div>
               <div className="rounded-lg border bg-muted/30 p-4 flex items-center justify-between gap-3">
                 <div className="text-left min-w-0">
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Live URL
                   </div>
-                  <div className="font-mono text-sm truncate" title={preview.url}>{preview.url}</div>
+                  <div className="font-mono text-sm truncate" title={previewData.url}>{previewData.url}</div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <Button size="sm" variant="outline" onClick={() => copyUrl(preview.url)}>
+                  <Button size="sm" variant="outline" onClick={() => copyUrl(previewData.url)}>
                     <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy
                   </Button>
                   <Button size="sm" asChild>
-                    <a href={preview.url} target="_blank" rel="noreferrer">
+                    <a href={previewData.url} target="_blank" rel="noreferrer">
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Open
                     </a>
                   </Button>

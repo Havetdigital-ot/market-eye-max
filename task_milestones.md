@@ -2,7 +2,7 @@
 
 ## Current Task
 
-_Scanning for next issue…_
+- Issue #143 (PR #144 opened) — Store preview race, SEO dirty-dot, DeltaHint zero-avg
 
 ### Completed this session
 - Issue #178 (PR #179 merged) — title tooltips on truncated text: Tasks task_type + summaryText, sidebar fullName + company, notifications alert·competitor + product_name
